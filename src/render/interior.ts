@@ -138,6 +138,22 @@ export function buildInterior(scene: Scene, addCaster: (m: Mesh) => void): Inter
   food.parent = dinner;
   const dinnerMat = material(scene, 'dinnerFoodMat', '#ffd23f', 0.3, 0.2);
   food.material = dinnerMat;
+  // Drinks come in a big cup with a handle instead of on the plate.
+  const drinkCup = new TransformNode('dinnerCup', scene);
+  drinkCup.parent = dinner;
+  const mug = MeshBuilder.CreateCylinder('cup', { height: 0.5, diameterTop: 0.42, diameterBottom: 0.36, tessellation: 24 }, scene);
+  mug.material = pink;
+  mug.parent = drinkCup;
+  mug.position.y = 0.25;
+  const handle = MeshBuilder.CreateTorus('cupHandle', { diameter: 0.26, thickness: 0.06, tessellation: 16 }, scene);
+  handle.material = pink;
+  handle.parent = drinkCup;
+  handle.rotation.x = Math.PI / 2;
+  handle.position.set(0.24, 0.26, 0);
+  const drink = MeshBuilder.CreateCylinder('cupDrink', { height: 0.02, diameter: 0.36, tessellation: 24 }, scene);
+  drink.material = dinnerMat;
+  drink.parent = drinkCup;
+  drink.position.y = 0.46;
   dinner.setEnabled(false);
   put(MeshBuilder.CreateCylinder('tableTop', { height: 0.15, diameter: 2.6, tessellation: 32 }, scene), wood, table.x, 1.2, table.z);
   put(MeshBuilder.CreateCylinder('tableLeg', { height: 1.2, diameter: 0.25 }, scene), darkWood, table.x, 0.6, table.z);
@@ -267,7 +283,12 @@ export function buildInterior(scene: Scene, addCaster: (m: Mesh) => void): Inter
     setMeal(recipeId: string | null) {
       const r = recipeId === null ? undefined : recipe(recipeId);
       dinner.setEnabled(r !== undefined);
-      if (r) dinnerMat.diffuseColor = Color3.FromHexString(r.color);
+      if (!r) return;
+      dinnerMat.diffuseColor = Color3.FromHexString(r.color);
+      const drinking = r.drink === true;
+      drinkCup.setEnabled(drinking);
+      dinnerPlate.setEnabled(!drinking);
+      food.setEnabled(!drinking);
     },
   };
 }

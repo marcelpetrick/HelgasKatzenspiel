@@ -112,6 +112,6 @@ Kampf, kein Krieg.
 - [x] Große Katzen wachsen weiter, wenn man sie streichelt und füttert (bis 25 % größer).
 - [x] Je mehr Herzen, desto schneller Münzen: erst alle 3 Herzen, ab 60 Herzen alle 2, ab 250 für jedes.
 - [x] Münzen tauchen auch am Anziehschrank auf.
-- [ ] Getränke für das Mädchen: Kakao und Orangensaft in der Küche machen und trinken.
+- [x] Getränke für das Mädchen: Kakao und Orangensaft in der Küche machen und trinken.
 - [ ] Hosen als Unterteil (bisher nur Röcke).
 - [ ] HUD: „H: Hilfe“ bleibt sichtbar, Esc steht in der Liste; Klick-Geräusch für H, T und Esc.

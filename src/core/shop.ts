@@ -34,10 +34,10 @@ export interface SupplyItem {
 export type Toy = 'yarn' | 'ball' | 'mouse' | 'feather';
 /** Things the girl owns once: a backpack for cats and kitchen tools. */
 export type Gear = 'backpack' | 'pan' | 'pot' | 'cutlery';
-/** Food for the girl, cooked at the stove. */
-export type Grocery = 'tomato' | 'leek' | 'egg' | 'bread' | 'cheese' | 'apple';
+/** Food and drinks for the girl, made in the kitchen. `dairy` is milk for the girl (`milk` is the cats'). */
+export type Grocery = 'tomato' | 'leek' | 'egg' | 'bread' | 'cheese' | 'apple' | 'dairy' | 'cocoa' | 'orange';
 
-export const GROCERIES: readonly Grocery[] = ['tomato', 'leek', 'egg', 'bread', 'cheese', 'apple'];
+export const GROCERIES: readonly Grocery[] = ['tomato', 'leek', 'egg', 'bread', 'cheese', 'apple', 'dairy', 'cocoa', 'orange'];
 
 export interface ToyItem {
   kind: 'toy';
@@ -154,6 +154,9 @@ export const CATALOG: readonly ShopItem[] = [
   { kind: 'grocery', id: 'bread', name: 'Brot', icon: '🍞', description: 'Frisch vom Bäcker', price: 1 },
   { kind: 'grocery', id: 'cheese', name: 'Käse', icon: '🧀', description: 'Mit Löchern', price: 2 },
   { kind: 'grocery', id: 'apple', name: 'Apfel', icon: '🍎', description: 'Knackig', price: 1 },
+  { kind: 'grocery', id: 'dairy', name: 'Milch', icon: '🥛', description: 'Für Kakao', price: 1 },
+  { kind: 'grocery', id: 'cocoa', name: 'Kakaopulver', icon: '🍫', description: 'Für Kakao', price: 2 },
+  { kind: 'grocery', id: 'orange', name: 'Orange', icon: '🍊', description: 'Für Orangensaft', price: 1 },
   deco('deco-kratzbaum', 'Kratzbaum', '🌳', 'Zum Klettern und Kratzen, im Flur', 12),
   deco('deco-kissen', 'Kuschelkissen', '🛋️', 'Weiche Kissen im Flur', 4),
   deco('deco-blumen', 'Blumentöpfe', '🌷', 'Bunte Blumen für die Küche', 6),
@@ -206,7 +209,7 @@ export function newWardrobe(): Wardrobe {
     toys: [],
     gear: [],
     wearBackpack: false,
-    pantry: { tomato: 0, leek: 0, egg: 0, bread: 0, cheese: 0, apple: 0 },
+    pantry: { tomato: 0, leek: 0, egg: 0, bread: 0, cheese: 0, apple: 0, dairy: 0, cocoa: 0, orange: 0 },
     deco: [],
     look: { ...DEFAULT_LOOK },
   };

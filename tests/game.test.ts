@@ -698,6 +698,28 @@ describe('cooking', () => {
     run(out, 8, { fly: true });
     expect(out.girl.y).toBeGreaterThan(groundY(out.girl.x) + FLY_CEILING + 2);
   });
+
+  it('makes cocoa in the pot and orange juice, and drinks them at the table without cutlery', () => {
+    const g = new Game();
+    quiet(g);
+    goInside(g);
+    expect(g.missingFor('kakao')).toEqual(['dairy', 'cocoa', 'pot']);
+    g.wardrobe.pantry.dairy = 1;
+    g.wardrobe.pantry.cocoa = 1;
+    g.wardrobe.gear.push('pot');
+    expect(g.cookMeal('kakao')).toBe('ok');
+    expect(g.wardrobe.pantry).toMatchObject({ dairy: 0, cocoa: 0 });
+    const table = spot('table');
+    g.girl.x = table.x;
+    g.girl.z = table.z;
+    g.drainEvents();
+    tap(g, { pet: true });
+    expect(g.drainEvents()).toContainEqual({ type: 'meal', recipe: 'kakao', ok: true });
+    g.wardrobe.pantry.orange = 2;
+    expect(g.cookMeal('orangensaft')).toBe('ok');
+    tap(g, { pet: true });
+    expect(g.meal).toBeNull();
+  });
 });
 
 describe('walls', () => {

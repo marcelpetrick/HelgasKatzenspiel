@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Marcel Petrick <mail@marcelpetrick.it>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-/** Cooking at the stove: recipes from groceries, with a pan or a pot, eaten at the table. */
+/** Cooking at the stove: recipes from groceries, with a pan or a pot, eaten (or drunk) at the table. */
 
 import type { Gear, Grocery, Wardrobe } from './shop';
 
@@ -14,8 +14,10 @@ export interface Recipe {
   tool: Gear | null;
   /** Soup and eggs are eaten with cutlery; bread and apples with the fingers. */
   cutlery: boolean;
-  /** Colour of the food on the plate. */
+  /** Colour of the food on the plate, or of the drink in the cup. */
   color: string;
+  /** Drinks come in a cup and are drunk, not eaten. */
+  drink?: boolean;
 }
 
 export const RECIPES: readonly Recipe[] = [
@@ -25,6 +27,8 @@ export const RECIPES: readonly Recipe[] = [
   { id: 'tomatensalat', name: 'Tomatensalat', icon: '🥗', needs: { tomato: 2 }, tool: null, cutlery: true, color: '#ff5a4e' },
   { id: 'kaesebrot', name: 'Käsebrot', icon: '🥪', needs: { bread: 1, cheese: 1 }, tool: null, cutlery: false, color: '#e8b75a' },
   { id: 'obstteller', name: 'Apfelschnitze', icon: '🍎', needs: { apple: 1 }, tool: null, cutlery: false, color: '#ff6b6b' },
+  { id: 'kakao', name: 'Heißer Kakao', icon: '☕', needs: { dairy: 1, cocoa: 1 }, tool: 'pot', cutlery: false, color: '#8b5a3c', drink: true },
+  { id: 'orangensaft', name: 'Orangensaft', icon: '🧃', needs: { orange: 2 }, tool: null, cutlery: false, color: '#ffa531', drink: true },
 ];
 
 export function recipe(id: string): Recipe | undefined {

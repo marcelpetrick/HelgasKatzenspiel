@@ -68,18 +68,22 @@ a wood with hiding bushes, and far to the right a beach with the sea, palm trees
 Walk up into a door to go in. The house has a kitchen (bowls, stove, table), a hall, a bathroom and
 a bedroom with the wardrobe.
 
-**Coins.** Every three hearts a happy cat drops a coin; walk over coins to collect them. At school,
+**Coins.** Every three hearts a happy cat drops a coin — after 60 hearts every two, after 250 every
+heart; walk over coins to collect them. Indoors they turn up on the table, in the bowls, on the tub and
+at the wardrobe. At school,
 five sums earn a German grade (1–6) and up to 30 coins. Cupboards in the house hide coins that refill
 over time — faster the more the house is decorated. Cats that empty a kitchen bowl leave a coin in
 it, and finding every cat at hide-and-seek pays two coins per cat.
 
 **Cats.** Food makes cats rounder; chasing toys slims them down again. Thrown toys stay on the floor,
 and cats play with them by themselves. A new cat costs 100 coins. With four or more cats, happy
-grown-ups have kittens, which grow up with every heart.
+grown-ups have kittens, which grow up with every heart. Grown cats keep growing slowly when they are
+petted and fed, up to a quarter bigger.
 
-**Cooking.** Buy groceries (tomato, leek, egg, bread, cheese, apple), a pan, a pot and cutlery. At
-the stove, cook a fried egg, an omelette, leek soup, tomato salad, a cheese sandwich or apple slices;
-eat it at the table, and for a minute the girl can fly twice as high.
+**Cooking.** Buy groceries (tomato, leek, egg, bread, cheese, apple, milk, cocoa, oranges), a pan, a
+pot and cutlery. At the stove, cook a fried egg, an omelette, leek soup, tomato salad, a cheese
+sandwich or apple slices, or make hot cocoa or orange juice; eat or drink it at the table, and for a
+minute the girl can fly twice as high.
 
 **Sound.** Every action has a small synthesized sound — meows, purrs, a squabbling hiss, coin
 plings, sparkles, a doorbell, a shop bell — made with the Web Audio API, no sound files.

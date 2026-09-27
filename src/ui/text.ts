@@ -79,7 +79,7 @@ export const TEXT = {
     if (f.kind === 'toy') return `Enter: ${TEXT.toyNames[f.toy.kind] ?? 'Spielzeug'} aufheben`;
     if (f.spot.id === 'table' && meal) {
       const r = recipe(meal);
-      if (r) return `Enter: ${r.name} essen ${r.icon}`;
+      if (r) return `Enter: ${r.name} ${r.drink ? 'trinken' : 'essen'} ${r.icon}`;
     }
     return SPOT_ACTIONS[f.spot.id];
   },
@@ -100,12 +100,23 @@ export const TEXT = {
   seekStop: 'Verstecken beendet.',
   seekNoCats: 'Zum Verstecken müssen Katzen draußen im Garten sein.',
   seeking: (found: number, of: number) => `🙈 Verstecken: ${found} von ${of} gefunden`,
-  cooked: (id: string) => `${recipe(id)?.name ?? 'Essen'} steht auf dem Tisch! Guten Appetit! 🍽️`,
+  cooked: (id: string) =>
+    recipe(id)?.drink ? `${recipe(id)?.name} steht auf dem Tisch! Zum Wohl! 🥤` : `${recipe(id)?.name ?? 'Essen'} steht auf dem Tisch! Guten Appetit! 🍽️`,
   meal: (id: string, ok: boolean) =>
     ok
-      ? `Lecker, ${recipe(id)?.name ?? 'das Essen'}! 😋 Jetzt kannst du eine Minute lang doppelt so hoch fliegen!`
+      ? `${recipe(id)?.drink ? 'Mmh, was für ein' : 'Lecker,'} ${recipe(id)?.name ?? 'das Essen'}! 😋 Jetzt kannst du eine Minute lang doppelt so hoch fliegen!`
       : 'Ohne Besteck geht das nicht — kauf Besteck im Katzenladen (K)! 🍴',
-  groceries: { tomato: 'Tomate', leek: 'Lauch', egg: 'Ei', bread: 'Brot', cheese: 'Käse', apple: 'Apfel' } satisfies Record<Grocery, string>,
+  groceries: {
+    tomato: 'Tomate',
+    leek: 'Lauch',
+    egg: 'Ei',
+    bread: 'Brot',
+    cheese: 'Käse',
+    apple: 'Apfel',
+    dairy: 'Milch',
+    cocoa: 'Kakaopulver',
+    orange: 'Orange',
+  } satisfies Record<Grocery, string>,
   gearNames: { backpack: 'Rucksack', pan: 'Bratpfanne', pot: 'Kochtopf', cutlery: 'Besteck' } satisfies Record<Gear, string>,
   searched: (spot: SpotId, found: number) =>
     found === 0
@@ -141,7 +152,8 @@ export const TEXT = {
     tabDeco: '🏠 Deko',
     tabKitchen: '🍅 Küche',
     takeOff: 'Ausziehen',
-    kitchenHint: 'In der Küche am Herd kannst du kochen: Spiegelei, Omelett, Lauchsuppe, Tomatensalat, Käsebrot und Apfelschnitze. Danach am Tisch essen!',
+    kitchenHint:
+      'In der Küche am Herd kannst du kochen: Spiegelei, Omelett, Lauchsuppe, Tomatensalat, Käsebrot und Apfelschnitze — und zum Trinken Kakao und Orangensaft. Danach am Tisch essen und trinken!',
     decoHint: 'Deko macht das Haus gemütlich. Je schöner das Haus, desto schneller tauchen Münzen in den Schränken auf!',
     free: 'gratis',
     buy: 'Kaufen',
@@ -175,7 +187,7 @@ export const TEXT = {
     title: '🍳 Kochen',
     close: 'Fertig (Esc)',
     cook: 'Kochen',
-    hint: 'Zutaten und Küchensachen gibt es im Katzenladen (K) unter „Küche“. Das Essen kommt auf den Tisch — dort mit Enter essen.',
+    hint: 'Zutaten und Küchensachen gibt es im Katzenladen (K) unter „Küche“. Essen und Trinken kommen auf den Tisch — dort mit Enter essen oder trinken.',
     busy: 'Auf dem Tisch steht schon ein Essen. Iss es zuerst auf!',
     missing: 'Dafür fehlt noch etwas — schau im Katzenladen (K) unter „Küche“.',
   },
