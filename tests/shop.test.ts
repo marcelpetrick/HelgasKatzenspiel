@@ -67,7 +67,13 @@ describe('shop', () => {
     expect(back).toEqual(w);
     expect(loadWardrobe(null)).toEqual(newWardrobe());
     expect(loadWardrobe('x')).toEqual(newWardrobe());
-    const broken = loadWardrobe({ money: -3, owned: ['food', 42, 'top-lila'], outfit: { top: 'top-sonne' }, supplies: { food: 'x', treat: 2.7 }, hasYarn: 'yes' });
+    const broken = loadWardrobe({
+      money: -3,
+      owned: ['food', 42, 'top-lila'],
+      outfit: { top: 'top-sonne' },
+      supplies: { food: 'x', treat: 2.7 },
+      hasYarn: 'yes',
+    });
     expect(broken.money).toBe(0);
     expect(broken.owned).toContain('top-lila');
     expect(broken.owned).not.toContain('food');
