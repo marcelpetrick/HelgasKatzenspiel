@@ -86,7 +86,7 @@ export class Hud {
       this.bump(this.money);
     }
     const room = ROOMS.find((r) => g.x >= r.from && g.x < r.to);
-    const where = g.place === 'house' && room ? TEXT.inHouse(room.name) : TEXT.garden;
+    const where = g.place === 'shop' ? TEXT.inShop : g.place === 'house' && room ? TEXT.inHouse(room.name) : TEXT.garden;
     this.sub.textContent = `${where} · ${TEXT.catsCount(this.game.cats.length)}`;
 
     const w = this.game.wardrobe;
@@ -121,7 +121,8 @@ export class Hud {
       let tag = this.tags.get(c.id);
       if (!tag) {
         tag = el('div', 'cat-tag');
-        this.root.append(tag);
+        // First in the overlay, so the panels (key list, supplies) are drawn over a tag, not under it.
+        this.root.prepend(tag);
         this.tags.set(c.id, tag);
       }
       const top = world.catTop(c.id);
