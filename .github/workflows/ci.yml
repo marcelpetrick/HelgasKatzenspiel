@@ -35,7 +35,8 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       # Exactly what runs locally before every commit.
-      - run: ./localPipeline.sh
+      # The Docker image is built and checked by docker.yml; building it here too would be a duplicate.
+      - run: ./localPipeline.sh --no-docker
 
       - name: Upload Playwright results
         if: failure()
