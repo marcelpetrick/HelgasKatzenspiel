@@ -98,7 +98,8 @@ docker run --rm -p 8080:80 helgas-katzenspiel      # open http://localhost:8080
 ```
 
 Every push to `main` publishes `ghcr.io/marcelpetrick/helgas-katzenspiel:latest` (plus `main` and
-`sha-<commit>`); every release tag publishes the version, e.g. `:0.10.0`.
+`sha-<commit>`); every release tag publishes the version, e.g. `:0.10.0`. The repository is private, so the
+package is too: `docker login ghcr.io` with a token that has `read:packages` before pulling.
 [`scripts/docker-check.sh`](scripts/docker-check.sh) builds the image and proves it serves the page
 and its bundle.
 

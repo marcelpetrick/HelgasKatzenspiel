@@ -20,5 +20,7 @@ fliegt, geht zur Schule, verdient Münzen, kauft im Katzenladen ein und schmück
 
 - **Web-Paket:** `helgas-katzenspiel-<version>-web.zip` entpacken, mit einem beliebigen statischen
   Webserver ausliefern (z. B. `npx serve`) und im Browser öffnen.
-- **Docker:** `docker run --rm -p 8080:80 ghcr.io/marcelpetrick/helgas-katzenspiel:<version>` und
+- **Docker:** Das Paket ist privat wie das Repository, deshalb zuerst mit einem GitHub-Token
+  (Recht `read:packages`) anmelden: `docker login ghcr.io -u <github-name>`. Dann
+  `docker run --rm -p 8080:80 ghcr.io/marcelpetrick/helgas-katzenspiel:<version>` und
   <http://localhost:8080> öffnen.
