@@ -39,54 +39,63 @@ It is designed together with Helga, who decides what goes in; her wishes are col
   </tr>
   <tr>
     <td width="50%"><img src="docs/screenshots/beach.jpg" alt="The beach at the end of the garden: sand, palms, a sunshade and the sea"></td>
-    <td width="50%"><img src="docs/screenshots/shop.jpg" alt="The cat shop with clothes in many colours"></td>
+    <td width="50%"><img src="docs/screenshots/shop.jpg" alt="Inside the cat shop: shelves with clothes, cat things, kitchen things and decoration, and a cat at the till"></td>
   </tr>
 </table>
 
 ## How to play
 
-| Key       | Action                                                                               |
-| --------- | ------------------------------------------------------------------------------------ |
-| ← →       | walk                                                                                 |
-| ↑ ↓       | walk further back / to the front; ↑ at a door goes in                                |
-| Space     | jump — **hold** to fly, let go to float down                                         |
-| Enter     | pet the cat next to you, pick up a toy, or use a door, cupboard, bowl, stove, table  |
-| N         | pick up the nearest cat, or put it down — you can fly with it                        |
-| R         | put the cat in your arms into the backpack (up to three), or take one out again      |
-| 1 / 4     | put down a bowl of food / milk — the cats come running, eat in turn, and squabble    |
-| 2         | give the cat next to you a treat                                                     |
-| 3 / 5     | throw a toy (yarn ball, bell ball, toy mouse) / wave the feather wand                |
-| Z (or Y)  | cast a spell: sparkles, and every cat nearby is delighted                            |
-| V         | hide-and-seek: the cats hide behind the bushes, walk past a bush to find them        |
-| K         | the cat shop: clothes, jewellery, a backpack, cat things, kitchen things, decoration |
-| M / F     | "Meine Katzen" (name, colour, size) / "Meine Figur" (skin, hair, hairstyle, face)    |
-| S / T / H | save the whole game / sound on or off / hide the list of keys                        |
-| Esc       | close a menu                                                                         |
+| Key       | Action                                                                                                         |
+| --------- | -------------------------------------------------------------------------------------------------------------- |
+| ← →       | walk                                                                                                           |
+| ↑ ↓       | walk further back / to the front; ↑ at a door goes through it                                                  |
+| Space     | jump; **hold** to fly, let go to float down                                                                    |
+| Enter     | pet the cat next to you, pick up a toy, or use the door, shelf, cupboard, bowl, stove or table in front of you |
+| N         | pick up the nearest cat or put it down; you can fly with it                                                    |
+| R         | put the cat in your arms into the backpack (up to three), or take one out                                      |
+| 1 / 4     | put down a bowl of food / milk: the cats come running, eat in turn, and squabble                               |
+| 2         | give the cat next to you a treat                                                                               |
+| 3 / 5     | throw a toy (yarn ball, bell ball, toy mouse) / wave the feather wand                                          |
+| Z (or Y)  | cast a spell: sparkles, and every cat nearby is delighted                                                      |
+| V         | hide-and-seek: the cats hide behind bushes; walk past a bush to find them                                      |
+| K         | open the shop menu from anywhere                                                                               |
+| M / F     | "Meine Katzen" (name, colour, size) / "Meine Figur" (skin, hair, hairstyle, face)                              |
+| S / T / H | save the game / sound on or off / hide or show the list of keys                                                |
+| Esc       | close a menu                                                                                                   |
 
-**The world.** A long garden: the school on the left, the girl's house and the cat shop, a meadow,
-a wood with hiding bushes, and far to the right a beach with the sea, palm trees and a sunshade.
-Walk up into a door to go in. The house has a kitchen (bowls, stove, table), a hall, a bathroom and
-a bedroom with the wardrobe.
+The number keys and Enter on the number pad work too. The game also saves when the page is closed.
 
-**Coins.** Every three hearts a happy cat drops a coin — after 60 hearts every two, after 250 every
-heart; walk over coins to collect them. Indoors they turn up on the table, in the bowls, on the tub and
-at the wardrobe. At school,
-five sums earn a German grade (1–6) and up to 30 coins. Cupboards in the house hide coins that refill
-over time — faster the more the house is decorated. Cats that empty a kitchen bowl leave a coin in
-it, and finding every cat at hide-and-seek pays two coins per cat.
+**The world.** A long garden with no fences: the school on the left, the girl's house and the cat
+shop, a meadow, a wood with hiding bushes, and far to the right a beach with the sea, palm trees and
+a sunshade. Walk up into a door to go in.
 
-**Cats.** Food makes cats rounder; chasing toys slims them down again. Thrown toys stay on the floor,
-and cats play with them by themselves. A new cat costs 100 coins. With four or more cats, happy
-grown-ups have kittens, which grow up with every heart. Grown cats keep growing slowly when they are
-petted and fed, up to a quarter bigger.
+- **House:** kitchen (bowls, stove, table, cupboards), hall, bathroom and bedroom with the wardrobe.
+  Everything bought in the shop is kept in the wardrobe.
+- **Cat shop:** four shelves (clothes, cat things, kitchen things, decoration); Enter at a shelf opens
+  that page of the shop. A cat keeps the till.
+- **School:** five sums at one of three levels; the grade (1–6) earns up to 30 coins.
+
+**Coins.** A happy cat drops a coin every three hearts; after 60 hearts every two, after 250 every
+heart. Walk over a coin to collect it. Indoors coins turn up on the table, in the bowls, on the tub and
+at the wardrobe; cupboards fill up over time, faster the more the house is decorated. A cat that
+empties a kitchen bowl leaves a coin in it, and finding every cat at hide-and-seek pays two coins per
+cat.
+
+**Cats.** Petting makes hearts. Food makes cats rounder, chasing toys slims them down again. Thrown
+toys stay on the floor, and the cats play with them by themselves. A new cat costs 100 coins (at most
+16 cats). With four or more cats, happy grown-ups have kittens, which grow up with every heart; grown
+cats keep growing slowly when they are petted and fed, up to a quarter bigger.
+
+**Dressing up.** Shirts, skirts and trousers, shoes, cat-ear headbands, bows, clips, earrings and nail
+polish; eight hairstyles and many hair colours in the figure editor; a backpack for carrying cats.
 
 **Cooking.** Buy groceries (tomato, leek, egg, bread, cheese, apple, milk, cocoa, oranges), a pan, a
 pot and cutlery. At the stove, cook a fried egg, an omelette, leek soup, tomato salad, a cheese
-sandwich or apple slices, or make hot cocoa or orange juice; eat or drink it at the table, and for a
+sandwich or apple slices, or make hot cocoa or orange juice. Eat or drink it at the table, and for a
 minute the girl can fly twice as high.
 
-**Sound.** Every action has a small synthesized sound — meows, purrs, a squabbling hiss, coin
-plings, sparkles, a doorbell, a shop bell — made with the Web Audio API, no sound files.
+**Sound.** Every action has a small synthesized sound (meows, purrs, a squabbling hiss, coin plings,
+sparkles, a doorbell, a shop bell), made with the Web Audio API, no sound files.
 
 ## Setup
 
@@ -97,7 +106,9 @@ npm install
 npm run dev        # http://localhost:5273
 ```
 
-`npm run build` writes a static site to `dist/`; `npm run preview` serves it on port 4273.
+`npm run build` writes a static site to `dist/`; `npm run preview` serves it on port 4273. Both ports
+are fixed in [`vite.config.ts`](vite.config.ts) (not Vite's defaults, so other Vite projects never get
+in the way); if one is taken, Vite stops with an error instead of picking another.
 
 ## Docker
 
@@ -129,7 +140,7 @@ and serve the folder with any static web server.
 
 | Stage     | What it checks                                                       |
 | --------- | -------------------------------------------------------------------- |
-| install   | `npm ci` when dependencies are missing or stale                      |
+| install   | `npm ci` when `node_modules` does not match `package-lock.json`      |
 | eslint    | type-aware `typescript-eslint` strict rules                          |
 | prettier  | formatting                                                           |
 | stylelint | CSS                                                                  |
@@ -160,9 +171,10 @@ Single steps: `npm test`, `npm run coverage`, `npm run lint`, `npm run typecheck
 ```text
 src/core/    game rules without Babylon or the DOM (unit tested): world layout, cats, shop,
              school, kitchen, the girl's look, saving
-src/render/  Babylon.js scene: garden, house interior, shop, school, girl, cats, effects
-src/ui/      HUD, title screen, menus (shop, cats, figure, school), German texts, storage
+src/render/  Babylon.js scene: garden, house and shop interiors, school, girl, cats, props, effects
+src/ui/      HUD, title screen, menus (shop, cats, figure, school, cooking), German texts, storage
 src/audio.ts synthesized sound effects
+src/app.ts   keyboard, game loop, wires everything together
 e2e/         Playwright browser tests
 tests/       Vitest unit tests
 ```

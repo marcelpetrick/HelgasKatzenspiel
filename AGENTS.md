@@ -8,7 +8,9 @@
 - Helgas Katzenspiel ist ein Browserspiel für ein Kind, gebaut zusammen mit ihrem Papa.
 - **Mit den Nutzern wird Deutsch gesprochen**, einfach und kindgerecht. Code, Kommentare und
   Commit-Messages sind Englisch.
-- Die Spieloberfläche ist Deutsch (niedlich, kindgerecht); alle sichtbaren Texte stehen in `src/ui/text.ts`.
+- Die Spieloberfläche ist Deutsch (niedlich, kindgerecht). Alle Sätze, Hinweise und Schilder stehen in
+  `src/ui/text.ts`; nur die Namen der Dinge (Katalog, Rezepte, Frisuren, Katzenfarben, Räume) stehen als
+  Daten neben ihren Regeln in `src/core`.
 - Jede neue Aktion bekommt ein Geräusch (`src/audio.ts`) und, wenn nötig, einen Hinweis im HUD.
 - Die Anforderungen stehen in [`visions.md`](visions.md). Neue Wünsche dort eintragen, bevor sie
   umgesetzt werden.
@@ -33,13 +35,13 @@ scripts/docker-check.sh            # Docker-Image bauen und prüfen
 ## Aufbau
 
 - `src/core/` — Spielregeln ohne Babylon und DOM, alle unit-getestet:
-  - `world.ts` Weltaufbau (Garten, Haus-Inneres, Gebäude, Türen, Schränke),
+  - `world.ts` Weltaufbau: drei Orte (Garten, Haus, Laden), Gebäude, Türen, Schränke, Regale,
   - `game.ts` Mädchen, Katzen, Münzen, Füttern, Tragen, Babys,
   - `shop.ts` Katalog und Kleiderschrank, `look.ts` Aussehen des Mädchens,
   - `cats.ts` Katzenfarben und -namen, `school.ts` Rechenaufgaben und Noten, `kitchen.ts` Rezepte,
     `save.ts` Speichern (Version 2; Version 1 wird noch gelesen).
-- `src/render/` — Babylon-Szene: Landschaft mit Wald und Strand, Haus, Hausinneres, Laden, Schule,
-  Mädchen, Katzen, Näpfe und Spielzeug (`props.ts`), Effekte.
+- `src/render/` — Babylon-Szene: Landschaft mit Wald und Strand, Haus und Hausinneres, Laden und
+  Ladeninneres (`shopInterior.ts`), Schule, Mädchen, Katzen, Näpfe und Spielzeug (`props.ts`), Effekte.
 - `src/ui/` — DOM-Overlay (HUD, Startbildschirm, Menüs für Laden, Katzen, Figur, Schule, Kochen), Texte,
   CSS, `localStorage`.
 - `src/audio.ts` — niedliche Geräusche, synthetisch mit Web Audio.

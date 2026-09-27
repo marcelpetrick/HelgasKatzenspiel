@@ -9,7 +9,7 @@
  * Defaults: url http://localhost:5273/, outDir docs/screenshots.
  *
  * Writes title.jpg (title screen), play.jpg (feeding the cats in the garden, with a backpack),
- * house.jpg (cats eating in the kitchen), shop.jpg (the cat shop), school.jpg (a sum at school) and
+ * house.jpg (cats eating in the kitchen), shop.jpg (inside the cat shop), school.jpg (a sum at school) and
  * beach.jpg (the beach at the far end of the garden). It starts from a fresh
  * game, so it clears the game's saved state in that browser profile (a throwaway one by default).
  */
@@ -83,10 +83,23 @@ await page.evaluate(() => {
 await page.waitForTimeout(2500);
 await shot('house');
 
-await page.keyboard.press('KeyK');
-await page.waitForTimeout(400);
+// The cat shop: walk in through the door and stand at the shelf with things for cats.
+await page.evaluate(() => {
+  const { game } = window.__katzen.app;
+  game.girl.place = 'garden';
+  game.girl.x = 96;
+  game.girl.z = 1;
+});
+await page.keyboard.press('ArrowUp');
+await page.waitForFunction(() => window.__katzen.app.game.girl.place === 'shop');
+await page.evaluate(() => {
+  const { game } = window.__katzen.app;
+  game.girl.x = game.girl.x - 5.5;
+  game.girl.z = 0.2;
+  game.girl.facing = -1;
+});
+await page.waitForTimeout(2500);
 await shot('shop');
-await page.keyboard.press('Escape');
 
 await page.evaluate(() => {
   const { game } = window.__katzen.app;
