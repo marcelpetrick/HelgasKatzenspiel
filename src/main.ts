@@ -10,4 +10,9 @@ if (!canvas || !ui) throw new Error('index.html is missing #stage or #ui');
 const app = new App(canvas, ui);
 
 /** Hook for automated browser tests and screenshots. */
-(window as unknown as { __katzen: unknown }).__katzen = { app, start: () => app.start(ui) };
+(window as unknown as { __katzen: unknown }).__katzen = {
+  app,
+  start: () => {
+    app.start(ui);
+  },
+};

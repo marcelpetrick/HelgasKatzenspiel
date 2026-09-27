@@ -82,14 +82,19 @@ export class GirlView {
       shoulder.parent = this.body;
       shoulder.position.set(side * 0.3, 1.62, 0);
       shoulder.rotation.z = side * 0.25;
-      add(MeshBuilder.CreateCylinder('sleeve', { height: 0.3, diameterTop: 0.2, diameterBottom: 0.17, tessellation: 10 }, scene), top, shoulder).position.y = -0.12;
+      add(MeshBuilder.CreateCylinder('sleeve', { height: 0.3, diameterTop: 0.2, diameterBottom: 0.17, tessellation: 10 }, scene), top, shoulder).position.y =
+        -0.12;
       add(MeshBuilder.CreateCylinder('arm', { height: 0.34, diameter: 0.13, tessellation: 10 }, scene), skin, shoulder).position.y = -0.4;
       add(MeshBuilder.CreateSphere('hand', { diameter: 0.17, segments: 8 }, scene), skin, shoulder).position.y = -0.58;
       this.arms.push(shoulder);
     }
 
     // Magic wand in the right hand, topped with a glowing star.
-    const wand = add(MeshBuilder.CreateCylinder('wand', { height: 0.55, diameter: 0.05, tessellation: 6 }, scene), material(scene, 'wandMat', '#ffffff', 0.5, 0.3), this.arms[1]);
+    const wand = add(
+      MeshBuilder.CreateCylinder('wand', { height: 0.55, diameter: 0.05, tessellation: 6 }, scene),
+      material(scene, 'wandMat', '#ffffff', 0.5, 0.3),
+      this.arms[1],
+    );
     wand.position.set(0, -0.62, -0.18);
     wand.rotation.x = -1.1;
     this.wandStar = fanMesh(scene, 'wandStar', starOutline());
@@ -131,7 +136,11 @@ export class GirlView {
       cheek.scaling.set(1, 0.6, 0.3);
       cheek.position.set(side * 0.25, -0.13, -0.33);
     }
-    const mouth = add(MeshBuilder.CreateTorus('mouth', { diameter: 0.1, thickness: 0.025, tessellation: 12 }, scene), material(scene, 'mouthMat', '#c2456a', 0.1, 0.1), head);
+    const mouth = add(
+      MeshBuilder.CreateTorus('mouth', { diameter: 0.1, thickness: 0.025, tessellation: 12 }, scene),
+      material(scene, 'mouthMat', '#c2456a', 0.1, 0.1),
+      head,
+    );
     mouth.rotation.x = Math.PI / 2;
     mouth.scaling.set(1, 1, 0.5);
     mouth.position.set(0, -0.19, -0.39);

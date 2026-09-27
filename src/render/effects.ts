@@ -45,8 +45,8 @@ export class Effects {
     this.heart.isVisible = false;
     glow.addIncludedOnlyMesh(this.heart);
     this.stars = SPARKLE_COLORS.map((c, i) => {
-      const s = fanMesh(scene, 'star' + i, starOutline());
-      s.material = glowMaterial(scene, 'starMat' + i, c);
+      const s = fanMesh(scene, `star${i}`, starOutline());
+      s.material = glowMaterial(scene, `starMat${i}`, c);
       s.isVisible = false;
       glow.addIncludedOnlyMesh(s);
       return s;
@@ -129,7 +129,7 @@ export class Effects {
   addCoin(id: number, x: number, y: number): void {
     const node = new TransformNode('coinNode', this.scene);
     node.position.set(x, y, -0.3);
-    const m = this.coinTemplate.createInstance('coin' + id);
+    const m = this.coinTemplate.createInstance(`coin${id}`);
     m.parent = node;
     m.rotation.x = Math.PI / 2;
     this.coins.set(id, { node, age: 0 });

@@ -121,7 +121,7 @@ export function buy(w: Wardrobe, id: string): BuyResult {
 /** Put on something already owned. */
 export function wearItem(w: Wardrobe, id: string): boolean {
   const item = findItem(id);
-  if (!item || item.kind !== 'wear' || !w.owned.includes(id)) return false;
+  if (item?.kind !== 'wear' || !w.owned.includes(id)) return false;
   w.outfit[item.slot] = id;
   return true;
 }
@@ -129,7 +129,7 @@ export function wearItem(w: Wardrobe, id: string): boolean {
 /** The colour worn in a slot. */
 export function outfitColor(w: Wardrobe, slot: Slot): string {
   const item = findItem(w.outfit[slot]);
-  return item && item.kind === 'wear' ? item.color : '#ffffff';
+  return item?.kind === 'wear' ? item.color : '#ffffff';
 }
 
 /** Read a saved wardrobe back, repairing anything missing or broken. */

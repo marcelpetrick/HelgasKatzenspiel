@@ -107,7 +107,11 @@ export class CatView {
       const ear = add(MeshBuilder.CreateCylinder('catEar', { height: 0.26, diameterTop: 0, diameterBottom: 0.24, tessellation: 4 }, scene), fur, this.head);
       ear.position.set(0.02, 0.3, side * 0.17);
       ear.rotation.set(side * 0.35, Math.PI / 4, 0);
-      const inner = add(MeshBuilder.CreateCylinder('catEarIn', { height: 0.16, diameterTop: 0, diameterBottom: 0.14, tessellation: 4 }, scene), pink, this.head);
+      const inner = add(
+        MeshBuilder.CreateCylinder('catEarIn', { height: 0.16, diameterTop: 0, diameterBottom: 0.14, tessellation: 4 }, scene),
+        pink,
+        this.head,
+      );
       inner.position.set(0.07, 0.28, side * 0.16);
       inner.rotation.set(side * 0.35, Math.PI / 4, 0);
 

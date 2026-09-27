@@ -102,8 +102,10 @@ export class Hud {
   }
 
   private bump(e: HTMLElement): void {
+    // Restart the animation on the next frame, after the removal has been rendered.
     e.classList.remove('bump');
-    void e.offsetWidth;
-    e.classList.add('bump');
+    requestAnimationFrame(() => {
+      e.classList.add('bump');
+    });
   }
 }

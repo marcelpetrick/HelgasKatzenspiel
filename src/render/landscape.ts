@@ -147,8 +147,8 @@ export function buildLandscape(scene: Scene, addCaster: (m: Mesh) => void): (t: 
 
   // Flowers dotted over the grass.
   const petals = ['#ff8fb8', '#ffd166', '#b69cff', '#ffffff', '#ff6b6b'].map((c, i) => {
-    const m = MeshBuilder.CreateSphere('flower' + i, { diameter: 0.22, segments: 6 }, scene);
-    m.material = material(scene, 'flowerMat' + i, c, 0.1, 0.2);
+    const m = MeshBuilder.CreateSphere(`flower${i}`, { diameter: 0.22, segments: 6 }, scene);
+    m.material = material(scene, `flowerMat${i}`, c, 0.1, 0.2);
     m.isVisible = false;
     return m;
   });
@@ -174,7 +174,7 @@ export function buildLandscape(scene: Scene, addCaster: (m: Mesh) => void): (t: 
     mid.position.set(0, 0.52, -0.03);
     mid.material = heartMat;
     parts.push(mid);
-    const petalMat = material(scene, 'petal' + i, c, 0.1, 0.2);
+    const petalMat = material(scene, `petal${i}`, c, 0.1, 0.2);
     for (let p = 0; p < 5; p++) {
       const a = (p / 5) * Math.PI * 2;
       const petal = MeshBuilder.CreateSphere('petal', { diameter: 0.16, segments: 6 }, scene);

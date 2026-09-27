@@ -36,7 +36,9 @@ export class ShopMenu {
     this.money = el('div', 'shop-money');
     const close = el('button', 'shop-close', TEXT.shop.close);
     close.type = 'button';
-    close.addEventListener('click', () => this.close());
+    close.addEventListener('click', () => {
+      this.close();
+    });
     head.append(el('h2', '', TEXT.shop.title), this.money, close);
     const tabs = el('div', 'shop-tabs');
     for (const [id, label] of [
@@ -83,7 +85,9 @@ export class ShopMenu {
     this.toast.classList.toggle('bad', !good);
     this.toast.classList.add('show');
     window.clearTimeout(this.toastTimer);
-    this.toastTimer = window.setTimeout(() => this.toast.classList.remove('show'), 2200);
+    this.toastTimer = window.setTimeout(() => {
+      this.toast.classList.remove('show');
+    }, 2200);
   }
 
   private act(item: ShopItem): void {
@@ -128,7 +132,9 @@ export class ShopMenu {
       b.textContent = TEXT.shop.buy;
       if (w.money < item.price) c.classList.add('poor');
     }
-    b.addEventListener('click', () => this.act(item));
+    b.addEventListener('click', () => {
+      this.act(item);
+    });
     c.append(icon, info, price, b);
     return c;
   }

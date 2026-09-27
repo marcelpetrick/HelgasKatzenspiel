@@ -1,0 +1,13 @@
+// SPDX-FileCopyrightText: 2026 Marcel Petrick <mail@marcelpetrick.it>
+// SPDX-License-Identifier: GPL-3.0-or-later
+{
+  "config": {
+    // Prose wraps at about 100 characters, but tables, links and badges run longer.
+    "MD013": false,
+    // Badges and the centred screenshot need inline HTML.
+    "MD033": false,
+    // visions.md numbers its wishes straight through all sections so each one has a stable number.
+    "MD029": false,
+  },
+  "ignores": ["node_modules", "dist", "test-results", "playwright-report", "coverage"],
+}
