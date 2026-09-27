@@ -20,9 +20,9 @@ export default defineConfig({
   webServer: {
     command: 'npm run build && npm run preview',
     url: 'http://localhost:4273',
-    // Always test a fresh build locally; a server left on the port could be serving a stale dist/.
-    // The port is our own (not Vite's default 4173), so other Vite projects' previews don't get in the way.
-    reuseExistingServer: !process.env.CI,
+    // Always test a fresh build: a server left on the port could be serving a stale dist/. The port is
+    // our own (strictPort), so a leftover preview makes the run fail loudly instead of testing it.
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 });
