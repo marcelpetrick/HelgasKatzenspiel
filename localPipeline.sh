@@ -7,7 +7,7 @@
 # Usage: ./localPipeline.sh [--no-e2e] [--no-docker] [--help]
 #
 # Stages, in order; the first failure stops the run:
-#   1. install     npm ci when node_modules is missing or older than package-lock.json
+#   1. install     npm ci when node_modules does not match package-lock.json
 #   2. eslint      type-aware lint of all TypeScript
 #   3. prettier    formatting check
 #   4. stylelint   CSS lint
@@ -72,11 +72,27 @@ summary() {
   fi
 }
 
+# Are the installed packages exactly the ones in package-lock.json? Only names and versions count, so
+# the version bump in every commit does not trigger a reinstall. A reinstall wipes Vite's dependency
+# cache in node_modules/.vite and breaks a dev server that is running at the same time.
+deps_match_lock() {
+  [[ -f node_modules/.package-lock.json ]] || return 1
+  node -e '
+    const lock = require("./package-lock.json").packages;
+    const installed = require("./node_modules/.package-lock.json").packages;
+    // Optional packages for other platforms (e.g. rolldown for macOS) are never installed here.
+    const ok =
+      Object.entries(lock).every(([k, p]) => k === "" || (installed[k] ? installed[k].version === p.version : p.optional === true)) &&
+      Object.keys(installed).every((k) => k in lock);
+    process.exit(ok ? 0 : 1);
+  '
+}
+
 install_deps() {
-  if [[ ! -d node_modules || package-lock.json -nt node_modules ]]; then
-    npm ci
+  if deps_match_lock; then
+    echo "node_modules matches package-lock.json"
   else
-    echo "node_modules is up to date"
+    npm ci
   fi
 }
 
