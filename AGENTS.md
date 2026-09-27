@@ -62,4 +62,4 @@ explizit importieren.
 - Neue Dateien bekommen den SPDX-Header (GPL-3.0-or-later, Marcel Petrick).
 - Pushen nach `main` ist erlaubt, wenn die Pipeline grün ist. Releases entstehen über Tags `vX.Y.Z`
   (Workflow `release.yml`); das Docker-Image landet auf ghcr (`docker.yml`).
-- Nach jedem größeren Schritt das Spiel in Firefox öffnen, damit Helga es ausprobieren kann.
+- Das Spiel nur dann in Firefox öffnen, wenn der Nutzer es ausdrücklich sagt — nie von selbst zwischendurch.
