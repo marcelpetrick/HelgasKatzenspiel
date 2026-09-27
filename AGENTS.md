@@ -19,11 +19,13 @@
 ## Befehle
 
 ```sh
-npm install        # Abhängigkeiten (exakt gepinnte Versionen)
-npm run dev        # Dev-Server, http://localhost:5173
-npm test           # Unit-Tests (Vitest)
-npm run typecheck  # TypeScript strict
-npm run build      # Typecheck + Produktions-Build nach dist/
+npm install          # Abhängigkeiten (exakt gepinnte Versionen)
+npm run dev          # Dev-Server, http://localhost:5173
+./localPipeline.sh   # komplette Prüfung: Lint, Format, Typen, Tests+Coverage, Build, E2E
+npm test             # nur Unit-Tests (Vitest)
+npm run e2e          # nur Browser-Tests (Playwright)
+npm run format       # Formatierung automatisch reparieren
+node scripts/screenshot.mjs [url]  # README-Screenshots neu aufnehmen
 ```
 
 ## Aufbau
@@ -34,6 +36,7 @@ npm run build      # Typecheck + Produktions-Build nach dist/
 - `src/ui/` — DOM-Overlay (HUD, Startbildschirm), Texte, CSS.
 - `src/app.ts` — Tastatur, Spielschleife, verbindet alles.
 - `tests/` — Vitest-Tests für `src/core`.
+- `e2e/` — Playwright-Tests im echten Browser (Hook: `window.__katzen`).
 
 Babylon immer per Deep-Import einbinden (`@babylonjs/core/…`), nie über das Paket-Root. Fehlende
 Seiteneffekte (z. B. `Meshes/instancedMesh`, `Lights/Shadows/shadowGeneratorSceneComponent`)
@@ -43,7 +46,8 @@ explizit importieren.
 
 - Direkt auf `main`, atomare Commits, Conventional Commits.
 - Jeder Commit hebt die Version in `package.json` an: Patch für Kleines, Minor für neue Features.
-- Vor jedem Commit: `npm run build` und `npm test` müssen grün sein.
+- Vor jedem Commit: `./localPipeline.sh` muss grün sein (GitHub Actions führt dasselbe aus).
+- Coverage von `src/core` ≥ 95 %; neue Regeln gehören nach `src/core` und bekommen Tests.
 - Neue Dateien bekommen den SPDX-Header (GPL-3.0-or-later, Marcel Petrick).
-- Geplant, aber noch nicht da: `localPipeline.sh`, Coverage ≥ 95 %, Playwright-E2E, GitHub
-  Actions, Docker/ghcr, README mit Badges und Screenshot.
+- Pushen nur, wenn die Nutzer es wollen. Docker/ghcr kommt später.
+- Nach jedem größeren Schritt das Spiel in Firefox öffnen, damit Helga es ausprobieren kann.
