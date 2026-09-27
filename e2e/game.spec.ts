@@ -29,10 +29,10 @@ test('title screen, walking, petting and magic work without errors', async ({ pa
   await expect(page.getByText('streicheln · benutzen')).toBeVisible();
 
   const x0 = await page.evaluate(() => window.__katzen.app.game.girl.x);
+  // Software rendering on CI can take a long time per frame, so wait for the result, not a fixed time.
   await page.keyboard.down('ArrowRight');
-  await page.waitForTimeout(600);
+  await expect.poll(() => page.evaluate(() => window.__katzen.app.game.girl.x)).toBeGreaterThan(x0);
   await page.keyboard.up('ArrowRight');
-  expect(await page.evaluate(() => window.__katzen.app.game.girl.x)).toBeGreaterThan(x0);
 
   await page.evaluate(() => {
     const { game } = window.__katzen.app;
@@ -48,8 +48,7 @@ test('title screen, walking, petting and magic work without errors', async ({ pa
 
   await page.keyboard.press('KeyZ');
   await page.keyboard.down('Space');
-  await page.waitForTimeout(800);
-  expect(await page.evaluate(() => window.__katzen.app.game.girl.onGround)).toBe(false);
+  await expect.poll(() => page.evaluate(() => window.__katzen.app.game.girl.onGround)).toBe(false);
   await page.keyboard.up('Space');
   expect(errors).toEqual([]);
 });
