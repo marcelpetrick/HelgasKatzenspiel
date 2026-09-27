@@ -25,6 +25,7 @@ import { buildHouse } from './house';
 import { buildInterior, type Interior } from './interior';
 import { buildLandscape } from './landscape';
 import { material } from './shapes';
+import { buildSchool } from './schoolBuilding';
 import { buildShop } from './shopBuilding';
 
 /** Camera distance and height above the girl, outdoors and in the house. */
@@ -100,6 +101,7 @@ export class World {
     this.tickLandscape = buildLandscape(scene, this.addCaster);
     buildHouse(scene, this.addCaster);
     buildShop(scene, this.addCaster);
+    buildSchool(scene, this.addCaster);
     this.interior = buildInterior(scene, this.addCaster);
     this.girl = new GirlView(scene, DEFAULT_STYLE, this.addCaster);
     this.refreshOutfit();

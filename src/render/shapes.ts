@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { Scene } from '@babylonjs/core/scene';
+import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
@@ -65,4 +66,23 @@ export function starOutline(): [number, number][] {
     out.push([Math.cos(a) * r, Math.sin(a) * r]);
   }
   return out;
+}
+
+/** A sign drawn onto a texture, for building names. */
+export function signMaterial(scene: Scene, name: string, text: string, ink: string, paper: string): StandardMaterial {
+  const tex = new DynamicTexture(name, { width: 1024, height: 256 }, scene, true);
+  const ctx = tex.getContext() as CanvasRenderingContext2D;
+  ctx.fillStyle = paper;
+  ctx.fillRect(0, 0, 1024, 256);
+  ctx.fillStyle = ink;
+  ctx.font = 'bold 130px Fredoka, "Nunito", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 512, 136);
+  tex.update();
+  const m = new StandardMaterial(`${name}Mat`, scene);
+  m.diffuseTexture = tex;
+  m.emissiveColor = new Color3(0.45, 0.45, 0.45);
+  m.specularColor = Color3.Black();
+  return m;
 }

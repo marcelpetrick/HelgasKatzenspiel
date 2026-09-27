@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { Focus } from '../core/game';
-import type { SpotId } from '../core/world';
+import type { Building, SpotId } from '../core/world';
 
 const SPOT_ACTIONS: Record<SpotId, string> = {
   exit: '↑ oder Enter: nach draußen gehen 🌳',
@@ -14,6 +14,12 @@ const SPOT_ACTIONS: Record<SpotId, string> = {
   bathCabinet: 'Enter: Badschrank durchsuchen',
   wardrobe: 'Enter: Anziehschrank öffnen 👗',
   bed: 'Das Bett — gemütlich! 💤',
+};
+
+const DOOR_ACTIONS: Record<Building['id'], string> = {
+  house: '↑ oder Enter: ins Haus gehen 🏠',
+  shop: '↑ oder Enter: in den Katzenladen gehen 🛍️',
+  school: '↑ oder Enter: in die Schule gehen ✏️',
 };
 
 const SPOT_NAMES: Record<SpotId, string> = {
@@ -61,7 +67,7 @@ export const TEXT = {
       return f.cat.mood === 'carried'
         ? `Enter: ${f.cat.name} kuscheln 💕 · N: absetzen`
         : `Enter: ${f.cat.name} streicheln 💕${carrying ? '' : ' · N: hochnehmen'}`;
-    if (f.kind === 'door') return f.building.id === 'shop' ? '↑ oder Enter: in den Katzenladen gehen 🛍️' : '↑ oder Enter: ins Haus gehen 🏠';
+    if (f.kind === 'door') return DOOR_ACTIONS[f.building.id];
     return SPOT_ACTIONS[f.spot.id];
   },
   searched: (spot: SpotId, found: number) =>
@@ -100,6 +106,20 @@ export const TEXT = {
     newCat: 'Neue Katze',
     newCatDesc: 'Eine neue Katze zieht bei dir ein',
     tooManyCats: 'Mehr Katzen passen gerade nicht ins Haus.',
+  },
+  school: {
+    title: '✏️ Schule',
+    close: 'Nach Hause (Esc)',
+    intro: 'Guten Morgen! Wie schwer sollen die Rechenaufgaben heute sein?',
+    progress: (n: number, of: number) => `Aufgabe ${n} von ${of}`,
+    right: 'Richtig! Super gerechnet! ⭐',
+    wrong: (answer: number) => `Fast! Richtig ist ${answer}. Beim nächsten Mal klappt’s! 💪`,
+    report: '📜 Zeugnis',
+    score: (right: number, of: number) => `${right} von ${of} Aufgaben richtig`,
+    coins: (n: number) => `Du bekommst ${n} Münzen! 🪙`,
+    noCoins: 'Diesmal gibt es noch keine Münzen. Üben macht schlau!',
+    again: 'Nochmal rechnen',
+    home: 'Nach Hause gehen',
   },
   catsMenu: {
     title: '✏️ Meine Katzen',

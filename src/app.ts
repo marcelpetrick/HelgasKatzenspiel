@@ -8,6 +8,7 @@ import { World } from './render/world';
 import { CatsMenu } from './ui/catsMenu';
 import { el } from './ui/dom';
 import { Hud } from './ui/hud';
+import { type SchoolEvent, SchoolMenu } from './ui/schoolMenu';
 import { clearSave, hasSave, loadGame, saveGame } from './ui/save';
 import { type ShopAction, ShopMenu } from './ui/shop';
 import { TEXT } from './ui/text';
@@ -49,6 +50,7 @@ export class App {
   private readonly hud: Hud;
   readonly shop: ShopMenu;
   readonly catsMenu: CatsMenu;
+  readonly school: SchoolMenu;
   private readonly held = new Set<string>();
   private pressed = new Set<string>();
   private started = false;
@@ -68,6 +70,9 @@ export class App {
     this.catsMenu = new CatsMenu(ui, this.game, () => {
       this.world.syncCats();
       this.sound.play('click');
+    });
+    this.school = new SchoolMenu(ui, (e) => {
+      this.onSchool(e);
     });
     this.showTitle();
 
@@ -95,7 +100,7 @@ export class App {
   }
 
   private get menuOpen(): boolean {
-    return this.shop.isOpen || this.catsMenu.isOpen;
+    return this.shop.isOpen || this.catsMenu.isOpen || this.school.isOpen;
   }
 
   private onKey(e: KeyboardEvent): void {
@@ -110,8 +115,11 @@ export class App {
     if (e.code === 'Escape') {
       this.shop.close();
       this.catsMenu.close();
+      this.school.close();
       return;
     }
+    // In class there is only sums: no shopping, no cat menu.
+    if (this.school.isOpen) return;
     if (e.code === 'KeyK' && !this.catsMenu.isOpen) {
       if (this.shop.isOpen) this.shop.close();
       else this.openShop('shop');
@@ -150,6 +158,20 @@ export class App {
     this.world.syncCats();
     const sounds: Record<ShopAction, SoundName> = { bought: 'buy', poor: 'nope', wear: 'click', newCat: 'kitten', full: 'nope' };
     this.sound.play(sounds[action]);
+  }
+
+  private onSchool(e: SchoolEvent): void {
+    if (e.type === 'answer') {
+      this.sound.play(e.right ? 'found' : 'nope');
+      return;
+    }
+    if (e.type === 'home') {
+      this.game.goHome();
+      return;
+    }
+    this.game.earn(e.coins);
+    this.sound.play(e.coins > 0 ? 'coin' : 'empty');
+    if (e.grade <= 2) this.sound.play('magic');
   }
 
   private showTitle(): void {
@@ -215,6 +237,11 @@ export class App {
           break;
         case 'openShop':
           this.openShop('shop');
+          break;
+        case 'openSchool':
+          this.held.clear();
+          this.school.open();
+          this.sound.play('door');
           break;
         case 'openWardrobe':
           this.openShop('wardrobe');

@@ -20,6 +20,7 @@ export const GARDEN_MAX_Z = 2.6;
 export const HOUSE_X = 60;
 export const HOUSE_HALF_WIDTH = 8;
 export const SHOP_X = 96;
+export const SCHOOL_X = 22;
 
 export const INTERIOR_X = 400;
 export const INTERIOR_WIDTH = 52;
@@ -28,7 +29,7 @@ export const INTERIOR_MAX_Z = 1.9;
 
 /** A building in the garden. Its front wall blocks the way; its door lets you in. */
 export interface Building {
-  id: 'house' | 'shop';
+  id: 'house' | 'shop' | 'school';
   x: number;
   halfWidth: number;
   /** z of the front wall. */
@@ -38,6 +39,7 @@ export interface Building {
 export const BUILDINGS: readonly Building[] = [
   { id: 'house', x: HOUSE_X, halfWidth: 6, front: 1.2 },
   { id: 'shop', x: SHOP_X, halfWidth: 5, front: 1.4 },
+  { id: 'school', x: SCHOOL_X, halfWidth: 6, front: 1.3 },
 ];
 
 /** How close in x to a door's middle you have to be to walk through it. */

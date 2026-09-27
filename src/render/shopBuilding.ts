@@ -2,14 +2,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { Scene } from '@babylonjs/core/scene';
-import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture';
-import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
-import { Color3 } from '@babylonjs/core/Maths/math.color';
+import type { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import type { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { BUILDINGS, groundY } from '../core/world';
-import { material } from './shapes';
+import { material, signMaterial } from './shapes';
 
 const W = 10;
 const H = 5.5;
@@ -45,21 +43,8 @@ export function buildShop(scene: Scene, addCaster: (m: Mesh) => void): Transform
     s.rotation.x = -0.45;
   }
 
-  // Sign with the shop's name, drawn onto a texture.
-  const tex = new DynamicTexture('shopSign', { width: 1024, height: 256 }, scene, true);
-  const ctx = tex.getContext() as CanvasRenderingContext2D;
-  ctx.fillStyle = '#fff4fa';
-  ctx.fillRect(0, 0, 1024, 256);
-  ctx.fillStyle = '#e0567a';
-  ctx.font = 'bold 130px Fredoka, "Nunito", sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('🐱 Katzenladen', 512, 136);
-  tex.update();
-  const signMat = new StandardMaterial('signMat', scene);
-  signMat.diffuseTexture = tex;
-  signMat.emissiveColor = new Color3(0.45, 0.45, 0.45);
-  signMat.specularColor = Color3.Black();
+  // Sign with the shop's name.
+  const signMat = signMaterial(scene, 'shopSign', '🐱 Katzenladen', '#e0567a', '#fff4fa');
   const sign = put(MeshBuilder.CreatePlane('sign', { width: 6, height: 1.5 }, scene), signMat, 0, H + 1.4, front - 0.05, false);
   put(box(6.3, 1.8, 0.15), material(scene, 'signFrame', '#8f6bd8', 0.2, 0.05), 0, H + 1.4, front + 0.05);
   sign.rotation.y = 0;

@@ -196,6 +196,7 @@ export type GameEvent =
   | { type: 'coin'; coin: number }
   | { type: 'place'; place: Place }
   | { type: 'openShop' }
+  | { type: 'openSchool' }
   | { type: 'openWardrobe' }
   | { type: 'search'; spot: SpotId; found: number }
   | { type: 'bowls'; milk: boolean; food: boolean; noFood: boolean }
@@ -299,6 +300,16 @@ export class Game {
     const cat = this.addCat({ coat, size: 1, growth: 1, x: this.clampX(g.place, g.x + g.facing * 1.5), z: g.z, place: g.place });
     this.events.push({ type: 'newCat', cat: cat.id });
     return cat;
+  }
+
+  /** After school she goes straight home into the hall. */
+  goHome(): void {
+    this.moveGirl('house', HOUSE_ENTRY.x, HOUSE_ENTRY.z - 0.6);
+  }
+
+  /** Coins for a good grade at school. */
+  earn(coins: number): void {
+    this.wardrobe.money += Math.max(0, Math.floor(coins));
   }
 
   /** Change how a cat looks and what it is called. */
@@ -438,9 +449,10 @@ export class Game {
     if (g.place === 'garden') {
       const door = doorAt(g.x, g.z);
       if (!door) return;
-      if (door.id === 'shop') {
+      if (door.id !== 'house') {
+        // Shop and school are menus: she steps back out of the doorway while one is open.
         g.z = door.front - 1.2;
-        this.events.push({ type: 'openShop' });
+        this.events.push({ type: door.id === 'shop' ? 'openShop' : 'openSchool' });
       } else this.moveGirl('house', HOUSE_ENTRY.x, HOUSE_ENTRY.z - 0.6);
     } else {
       const exit = SPOTS.find((s) => s.id === 'exit');

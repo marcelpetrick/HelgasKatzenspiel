@@ -9,7 +9,7 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { createRng } from '../core/game';
-import { groundY, HOUSE_X, SHOP_X } from '../core/world';
+import { BUILDINGS, groundY } from '../core/world';
 import '@babylonjs/core/Meshes/instancedMesh';
 import { material } from './shapes';
 
@@ -139,7 +139,7 @@ export function buildLandscape(scene: Scene, addCaster: (m: Mesh) => void): (t: 
     if (cast) for (const m of [a, b, c]) addCaster(m as unknown as Mesh);
   };
   for (let x = X0; x < X1; x += 3 + rng() * 5) {
-    if (Math.abs(x - HOUSE_X) < 12 || Math.abs(x - SHOP_X) < 9) continue;
+    if (BUILDINGS.some((b) => Math.abs(x - b.x) < b.halfWidth + 5)) continue;
     const z = 7 + rng() * 5;
     tree(x, groundY(x) + (z - 3) * 0.25 - 0.3, z, 0.8 + rng() * 0.5, true);
   }
@@ -192,7 +192,7 @@ export function buildLandscape(scene: Scene, addCaster: (m: Mesh) => void): (t: 
     const x = X0 + rng() * (X1 - X0);
     const z = -3.6 + rng() * 10;
     if (z > -1.2 && z < 1.2) continue;
-    if ((Math.abs(x - HOUSE_X) < 7 || Math.abs(x - SHOP_X) < 6) && z > 1) continue;
+    if (z > 1 && BUILDINGS.some((b) => Math.abs(x - b.x) < b.halfWidth + 1)) continue;
     const lift = z > 3 ? (z - 3) * 0.25 : 0;
     const b = blossoms[Math.floor(rng() * blossoms.length)].createInstance('b');
     b.position.set(x, groundY(x) + lift - 0.02, z);
