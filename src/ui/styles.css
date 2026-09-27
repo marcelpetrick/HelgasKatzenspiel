@@ -1,0 +1,256 @@
+/* SPDX-FileCopyrightText: 2026 Marcel Petrick <mail@marcelpetrick.it> */
+
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
+:root {
+  --font: 'Fredoka', 'Nunito', ui-rounded, system-ui, sans-serif;
+  --glass: rgb(40 20 60 / 50%);
+  --glass-strong: rgb(40 20 60 / 75%);
+  --line: rgb(255 255 255 / 20%);
+  --text: #fff8f0;
+  --muted: rgb(255 248 240 / 75%);
+  --pink: #ff7eb6;
+  --gold: #ffd166;
+  --radius: 18px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #cfe6f7;
+  font-family: var(--font);
+  color: var(--text);
+  user-select: none;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+  outline: none;
+}
+
+#ui {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.panel {
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  padding: 10px 16px;
+}
+
+.hud-top {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.panel-title {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.title-panel {
+  border-left: 6px solid var(--pink);
+}
+
+.panel-sub {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.counters {
+  display: flex;
+  gap: 18px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.count-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.counter {
+  display: inline-block;
+  min-width: 1.4em;
+  text-align: right;
+}
+
+.counter.bump {
+  animation: bump 0.35s ease;
+}
+
+@keyframes bump {
+  40% {
+    transform: scale(1.5);
+    color: var(--gold);
+  }
+}
+
+.help {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  font-size: 14px;
+  display: grid;
+  gap: 4px;
+}
+
+.help-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+kbd {
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 18%);
+  border: 1px solid var(--line);
+  min-width: 2.2em;
+  text-align: center;
+}
+
+.prompt {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  transform: translate(-50%, 20px);
+  opacity: 0;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+  background: var(--glass-strong);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.prompt.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.cat-tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 1px 10px;
+  border-radius: 999px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+  transition: background 0.2s ease;
+}
+
+.cat-tag.near {
+  background: var(--pink);
+}
+
+.cat-tag.happy::after {
+  content: ' 💕';
+}
+
+/* Title screen */
+
+.on-title .hud-top,
+.on-title .help,
+.on-title .prompt,
+.on-title .cat-tag {
+  display: none;
+}
+
+.title-screen {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at center, rgb(255 180 220 / 25%), rgb(40 20 60 / 45%));
+  pointer-events: auto;
+}
+
+.title-card {
+  text-align: center;
+  padding: 32px 48px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  backdrop-filter: blur(12px);
+}
+
+.title-cats {
+  font-size: 40px;
+}
+
+.title-card h1 {
+  margin: 8px 0;
+  font-size: clamp(40px, 7vw, 72px);
+  color: #fff;
+  text-shadow:
+    0 3px 0 var(--pink),
+    0 8px 24px rgb(255 80 160 / 60%);
+}
+
+.title-card p {
+  font-size: 20px;
+  color: var(--muted);
+  margin: 0 0 24px;
+}
+
+.title-card button {
+  font-family: inherit;
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  padding: 12px 36px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff7eb6, #b388ff);
+  box-shadow: 0 6px 20px rgb(255 80 160 / 45%);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.title-card button:hover {
+  transform: scale(1.06);
+}
+
+.title-hint {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--muted);
+}
