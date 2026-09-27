@@ -10,6 +10,8 @@ import {
   Game,
   type GameEvent,
   HEARTS_PER_COIN,
+  heartsPerCoin,
+  MAX_GROWTH,
   HOUSE_FLY_CEILING,
   type Input,
   JUMP_SPEED,
@@ -27,7 +29,7 @@ import {
   SEEK_COINS_PER_CAT,
 } from '../src/core/game';
 import { MEAL_BOOST_TIME } from '../src/core/kitchen';
-import { BUILDINGS, groundY, HOUSE_ENTRY, INTERIOR_X, maxZAt, SHOP_X, spot, WORLD_MAX_X } from '../src/core/world';
+import { BUILDINGS, groundY, HOUSE_COIN_SPOTS, HOUSE_ENTRY, INTERIOR_X, maxZAt, SHOP_X, spot, WORLD_MAX_X } from '../src/core/world';
 
 const idle: Input = { left: false, right: false, jump: false, fly: false, pet: false, magic: false };
 const run = (g: Game, seconds: number, input: Partial<Input> = {}) => {
@@ -488,7 +490,7 @@ describe('the kitchen and the cupboards', () => {
       run(g, PET_COOLDOWN + 0.02);
       cat.x = g.girl.x + 1;
     }
-    expect(g.coins.filter((c) => c.place === 'house').length).toBe(5);
+    expect(g.coins.filter((c) => c.place === 'house').length).toBe(HOUSE_COIN_SPOTS.length);
     expect(Object.values(g.spotCoins).some((n) => n > 0)).toBe(true);
   });
 });
@@ -805,7 +807,8 @@ describe('the cats', () => {
       run(g, PET_COOLDOWN + 0.02);
       kitten.x = g.girl.x + 1;
     }
-    expect(kitten.growth).toBe(1);
+    expect(kitten.growth).toBeGreaterThanOrEqual(1);
+    expect(kitten.growth).toBeLessThan(1.05);
   });
 
   it('no kitten without two loving grown-ups, or with too few cats', () => {
@@ -828,5 +831,50 @@ describe('the cats', () => {
       lonely.x = h.girl.x + 1;
     }
     expect(h.cats.length).toBe(6);
+  });
+});
+
+describe('care', () => {
+  it('grown cats keep growing a little from petting and food, up to a limit', () => {
+    const g = new Game();
+    quiet(g);
+    const cat = beside(g, g.cats[0]);
+    expect(cat.growth).toBe(1);
+    tap(g, { pet: true });
+    expect(cat.growth).toBeGreaterThan(1);
+    const petted = cat.growth;
+    g.wardrobe.supplies.treat = 1;
+    tap(g, { treat: true });
+    expect(cat.growth).toBeGreaterThan(petted);
+    for (let i = 0; i < 400; i++) {
+      run(g, PET_COOLDOWN + 0.02);
+      tap(g, { pet: true });
+    }
+    expect(cat.growth).toBe(MAX_GROWTH);
+  });
+
+  it('the more hearts the cats have made, the fewer hearts a coin takes', () => {
+    expect(heartsPerCoin(0)).toBe(HEARTS_PER_COIN);
+    expect(heartsPerCoin(59)).toBe(HEARTS_PER_COIN);
+    expect(heartsPerCoin(60)).toBe(2);
+    expect(heartsPerCoin(250)).toBe(1);
+    const g = new Game();
+    quiet(g);
+    const cat = beside(g, g.cats[0]);
+    g.hearts = 59;
+    g.drainEvents();
+    tap(g, { pet: true });
+    expect(g.drainEvents()).toContainEqual({ type: 'coinFaster', perCoin: 2 });
+    g.coins.length = 0;
+    g.heartsSinceCoin = 0;
+    const money = g.money;
+    for (let i = 0; i < 4; i++) {
+      run(g, PET_COOLDOWN + 0.02);
+      cat.x = g.girl.x + 1;
+      tap(g, { pet: true });
+    }
+    // A coin that lands at her feet is picked up straight away.
+    expect(g.coins.length + g.money - money).toBe(2);
+    expect(types(g.drainEvents())).not.toContain('coinFaster');
   });
 });

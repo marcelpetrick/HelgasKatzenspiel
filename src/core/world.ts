@@ -167,13 +167,14 @@ export function spot(id: SpotId): Spot {
   return s;
 }
 
-/** Where a coin can appear in the house when the cats are happy: on the table, in the bowls, on the tub. */
+/** Where a coin can appear in the house when the cats are happy: on the table, in the bowls, on the tub, at the wardrobe. */
 export const HOUSE_COIN_SPOTS: readonly { x: number; y: number; z: number }[] = [
   { x: INTERIOR_X + 12.4, y: 1.35, z: 0.6 },
   { x: INTERIOR_X + 13.6, y: 1.35, z: 0.6 },
   { x: INTERIOR_X + 8.3, y: 0.45, z: -0.6 },
   { x: INTERIOR_X + 9.7, y: 0.45, z: -0.6 },
   { x: INTERIOR_X + 30.5, y: 1.25, z: 0.2 },
+  { x: INTERIOR_X + 43, y: 0.6, z: 0.8 },
 ];
 
 /** The two bowls in the kitchen: where they stand and which one is which. */

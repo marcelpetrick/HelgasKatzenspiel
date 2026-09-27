@@ -73,6 +73,7 @@ export class CatsMenu {
     const info = el('div', 'cat-info');
     const facts = [TEXT.catsMenu.where(cat.place === 'house'), TEXT.catsMenu.love(cat.love)];
     if (cat.growth < 1) facts.unshift(TEXT.catsMenu.kitten(Math.round(((cat.growth - 0.5) / 0.5) * 100)));
+    else if (cat.growth > 1) facts.push(TEXT.catsMenu.grown(Math.round((cat.growth - 1) * 100)));
     info.textContent = facts.join(' · ');
     head.append(name, info);
 

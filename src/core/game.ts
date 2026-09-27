@@ -46,8 +46,21 @@ export const TOY_RANGE = 1.4;
 export const PET_COOLDOWN = 0.5;
 /** How long a cat stays happy after being petted. */
 export const HAPPY_TIME = 1.6;
-/** Every this many hearts, a happy cat drops a coin. */
+/** Every this many hearts, a happy cat drops a coin — at first; see `heartsPerCoin`. */
 export const HEARTS_PER_COIN = 3;
+/** The more hearts the cats have made in all, the fewer hearts a coin takes. */
+export const COIN_SPEEDUPS: readonly { hearts: number; perCoin: number }[] = [
+  { hearts: 0, perCoin: HEARTS_PER_COIN },
+  { hearts: 60, perCoin: 2 },
+  { hearts: 250, perCoin: 1 },
+];
+
+/** How many hearts make a coin, once the cats have made `total` hearts altogether. */
+export function heartsPerCoin(total: number): number {
+  let perCoin = HEARTS_PER_COIN;
+  for (const s of COIN_SPEEDUPS) if (total >= s.hearts) perCoin = s.perCoin;
+  return perCoin;
+}
 export const COIN_PICKUP_RANGE = 1.1;
 /** Holding Space in the air lifts the girl with this acceleration (magic flight). */
 export const FLY_LIFT = 52;
@@ -107,6 +120,10 @@ export const PARENT_LOVE = 10;
 export const KITTEN_GROWTH = 0.5;
 /** How much a kitten grows per heart. */
 export const GROWTH_PER_HEART = 0.02;
+/** Grown cats that are loved and fed keep growing slowly, up to this much bigger. */
+export const MAX_GROWTH = 1.25;
+export const ADULT_GROWTH_PER_HEART = 0.002;
+export const GROWTH_PER_FOOD: Record<Supply, number> = { food: 0.01, treat: 0.004, milk: 0.004 };
 /** Well-fed cats get rounder: food adds this much plumpness (0 slim … 1 very round). */
 export const PLUMP_PER_FOOD: Record<Supply, number> = { food: 0.15, treat: 0.07, milk: 0.05 };
 /** Chasing a toy is exercise and slims a cat down again. */
@@ -150,7 +167,7 @@ export interface Cat {
   coat: string;
   /** Grown-up size, chosen in the editor. */
   size: number;
-  /** 0.5 for a new kitten, 1 when fully grown. The cat is drawn at size × growth. */
+  /** 0.5 for a new kitten, 1 when grown up, up to `MAX_GROWTH` when well cared for. The cat is drawn at size × growth. */
   growth: number;
   x: number;
   y: number;
@@ -269,6 +286,7 @@ export type GameEvent =
   | { type: 'noToy'; reason: 'none' | 'lying' }
   | { type: 'feather' }
   | { type: 'coinSpawn'; coin: number }
+  | { type: 'coinFaster'; perCoin: number }
   | { type: 'coin'; coin: number }
   | { type: 'place'; place: Place }
   | { type: 'openShop' }
@@ -846,6 +864,13 @@ export class Game {
 
   private fatten(cat: Cat, food: Supply): void {
     cat.plump = Math.min(1, cat.plump + PLUMP_PER_FOOD[food]);
+    this.grow(cat, GROWTH_PER_FOOD[food]);
+  }
+
+  /** Kittens grow up to 1; grown cats keep growing slowly up to `MAX_GROWTH`. */
+  private grow(cat: Cat, amount: number): void {
+    const cap = cat.growth < 1 ? 1 : MAX_GROWTH;
+    cat.growth = Math.min(cap, cat.growth + amount);
   }
 
   /** 3: throw the next toy she still has in her hand; the rest lie wherever they were thrown. */
@@ -931,12 +956,14 @@ export class Game {
     }
     cat.cooldown = PET_COOLDOWN;
     cat.love += count;
-    if (cat.growth < 1) cat.growth = Math.min(1, cat.growth + count * GROWTH_PER_HEART);
+    this.grow(cat, count * (cat.growth < 1 ? GROWTH_PER_HEART : ADULT_GROWTH_PER_HEART));
+    const perCoin = heartsPerCoin(this.hearts);
     this.hearts += count;
     this.events.push({ type: 'hearts', cat: cat.id, count });
+    if (heartsPerCoin(this.hearts) < perCoin) this.events.push({ type: 'coinFaster', perCoin: heartsPerCoin(this.hearts) });
     this.heartsSinceCoin += count;
-    while (this.heartsSinceCoin >= HEARTS_PER_COIN) {
-      this.heartsSinceCoin -= HEARTS_PER_COIN;
+    while (this.heartsSinceCoin >= heartsPerCoin(this.hearts)) {
+      this.heartsSinceCoin -= heartsPerCoin(this.hearts);
       if (cat.place === 'garden') {
         const side = this.rng() < 0.5 ? -1 : 1;
         this.addGardenCoin(cat.x + side * (1.2 + this.rng() * 1.5), cat.z);

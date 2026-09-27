@@ -116,6 +116,10 @@ export const TEXT = {
     if (noFood) return milk ? 'Milch steht bereit! 🥛 Futter gibt es im Katzenladen (K).' : 'Kein Futter mehr — kauf welches im Katzenladen (K).';
     return milk ? 'Milch steht bereit! 🥛' : 'Die Schüsseln sind schon voll.';
   },
+  coinFaster: (perCoin: number) =>
+    perCoin === 1
+      ? 'Deine Katzen sind überglücklich! Jetzt gibt es für jedes Herz eine Münze. 💖🪙'
+      : `Deine Katzen sind so glücklich! Jetzt gibt es schon alle ${perCoin} Herzen eine Münze. 💖🪙`,
   kitten: (name: string) => `Ein Katzenbaby ist da! Es heißt ${name}. 🍼🐱`,
   newCat: (name: string) => `${name} wohnt jetzt bei dir! 🎉`,
   saved: 'Gespeichert! 💾 Beim nächsten Mal geht es genau hier weiter.',
@@ -195,6 +199,7 @@ export const TEXT = {
     color: 'Farbe',
     size: 'Größe',
     kitten: (percent: number) => `Katzenbaby · ${percent} % gewachsen`,
+    grown: (percent: number) => `vom Streicheln und Füttern ${percent} % größer geworden 🌱`,
     love: (n: number) => `${n} Herzen bekommen`,
     where: (house: boolean) => (house ? 'im Haus 🏠' : 'im Garten 🌳'),
   },

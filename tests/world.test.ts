@@ -26,6 +26,8 @@ describe('world layout', () => {
   it('every spot and coin place is inside a room', () => {
     for (const s of SPOTS) expect(ROOMS.some((r) => s.x >= r.from && s.x < r.to)).toBe(true);
     for (const p of HOUSE_COIN_SPOTS) expect(ROOMS.some((r) => p.x >= r.from && p.x < r.to)).toBe(true);
+    // One coin spot is at the wardrobe in the bedroom.
+    expect(HOUSE_COIN_SPOTS.some((p) => Math.abs(p.x - spot('wardrobe').x) < 1)).toBe(true);
     expect(spot('wardrobe').searchable).toBe(true);
     expect(() => spot('nope' as never)).toThrow();
   });

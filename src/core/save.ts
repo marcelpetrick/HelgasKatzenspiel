@@ -8,7 +8,7 @@
  */
 
 import { clampSize, cleanName, COATS } from './cats';
-import { BACKPACK_SIZE, BOWL_PORTIONS, Game, HEARTS_PER_COIN, KITTEN_GROWTH, KITTEN_HEARTS, MAX_CATS } from './game';
+import { BACKPACK_SIZE, BOWL_PORTIONS, Game, heartsPerCoin, KITTEN_GROWTH, KITTEN_HEARTS, MAX_CATS, MAX_GROWTH } from './game';
 import { MEAL_BOOST_TIME, recipe } from './kitchen';
 import { loadWardrobe, type Wardrobe } from './shop';
 import { bounds, groundY, INTERIOR_X, type Place, SPOTS, type SpotId } from './world';
@@ -91,7 +91,7 @@ export function restore(raw: unknown, seed = 7): Game {
   game.coins.length = 0;
   game.drainEvents();
   game.hearts = Math.max(0, Math.floor(num(raw.hearts, 0)));
-  game.heartsSinceCoin = Math.max(0, Math.floor(num(raw.heartsSinceCoin, 0))) % HEARTS_PER_COIN;
+  game.heartsSinceCoin = Math.max(0, Math.floor(num(raw.heartsSinceCoin, 0))) % heartsPerCoin(game.hearts);
   game.heartsSinceKitten = Math.max(0, Math.floor(num(raw.heartsSinceKitten, 0))) % KITTEN_HEARTS;
 
   for (const c of cats) {
@@ -101,7 +101,7 @@ export function restore(raw: unknown, seed = 7): Game {
       name: cleanName(typeof c.name === 'string' ? c.name : '', ''),
       coat: COATS.some((k) => k.id === c.coat) ? (c.coat as string) : COATS[0].id,
       size: clampSize(num(c.size, 1)),
-      growth: Math.min(1, Math.max(KITTEN_GROWTH, num(c.growth, 1))),
+      growth: Math.min(MAX_GROWTH, Math.max(KITTEN_GROWTH, num(c.growth, 1))),
       x: pos.x,
       z: pos.z,
       place: p,

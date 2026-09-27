@@ -379,6 +379,9 @@ export class App {
         case 'kitten':
           this.say(TEXT.kitten(name(e.cat)), 'kitten');
           break;
+        case 'coinFaster':
+          this.say(TEXT.coinFaster(e.perCoin), 'found');
+          break;
         case 'newCat':
         case 'coinSpawn':
         case 'bowlGone':
