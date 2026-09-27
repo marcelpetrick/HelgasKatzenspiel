@@ -5,12 +5,13 @@
  * The layout of the world: where you can walk, where the buildings stand, where the doors and the
  * cupboards are. x runs left to right, z runs away from the camera (up arrow = further back), y is up.
  *
- * There are two places. The garden is the meadow with the house and the shop. The house interior is
- * built far off to the side of the garden at `INTERIOR_X`, so both share one coordinate system and
- * one scene; walking through a door simply moves the girl from one to the other.
+ * There are three places. The garden is the meadow with the house and the shop. The house interior is
+ * built far off to the side of the garden at `INTERIOR_X`, the inside of the shop at
+ * `SHOP_INTERIOR_X`, so all share one coordinate system and one scene; walking through a door simply
+ * moves the girl from one to the other.
  */
 
-export type Place = 'garden' | 'house';
+export type Place = 'garden' | 'house' | 'shop';
 
 export const WORLD_MIN_X = 2;
 /** The garden runs from the school past the house and the shop, through a wood, down to the beach. */
@@ -30,6 +31,9 @@ export const INTERIOR_X = 2000;
 export const INTERIOR_WIDTH = 52;
 export const INTERIOR_MIN_Z = -2.6;
 export const INTERIOR_MAX_Z = 1.9;
+
+export const SHOP_INTERIOR_X = 3000;
+export const SHOP_INTERIOR_WIDTH = 24;
 
 /** A building in the garden. Its front wall blocks the way; its door lets you in. */
 export interface Building {
@@ -57,9 +61,9 @@ export interface Bounds {
 }
 
 export function bounds(place: Place): Bounds {
-  return place === 'garden'
-    ? { minX: WORLD_MIN_X, maxX: WORLD_MAX_X, minZ: GARDEN_MIN_Z, maxZ: GARDEN_MAX_Z }
-    : { minX: INTERIOR_X + 0.8, maxX: INTERIOR_X + INTERIOR_WIDTH - 0.8, minZ: INTERIOR_MIN_Z, maxZ: INTERIOR_MAX_Z };
+  if (place === 'garden') return { minX: WORLD_MIN_X, maxX: WORLD_MAX_X, minZ: GARDEN_MIN_Z, maxZ: GARDEN_MAX_Z };
+  const [from, width] = place === 'house' ? [INTERIOR_X, INTERIOR_WIDTH] : [SHOP_INTERIOR_X, SHOP_INTERIOR_WIDTH];
+  return { minX: from + 0.8, maxX: from + width - 0.8, minZ: INTERIOR_MIN_Z, maxZ: INTERIOR_MAX_Z };
 }
 
 function smoothstep(e0: number, e1: number, x: number): number {
@@ -94,6 +98,7 @@ export function sandiness(x: number): number {
 }
 
 export function placeOf(x: number): Place {
+  if (x >= SHOP_INTERIOR_X - 500) return 'shop';
   return x >= INTERIOR_X - 500 ? 'house' : 'garden';
 }
 
@@ -118,7 +123,7 @@ export function hideSpot(b: Bush): { x: number; z: number } {
 /** The furthest back you may stand at x, so nobody walks into a building's wall. */
 export function maxZAt(place: Place, x: number): number {
   const b = bounds(place);
-  if (place === 'house') return b.maxZ;
+  if (place !== 'garden') return b.maxZ;
   for (const building of BUILDINGS) if (Math.abs(x - building.x) < building.halfWidth + 0.4) return building.front - 0.35;
   return b.maxZ;
 }
@@ -185,3 +190,24 @@ export const HOUSE_ENTRY = { x: INTERIOR_X + 22, z: 1.0 };
 export function outsideDoor(b: Building): { x: number; z: number } {
   return { x: b.x, z: b.front - 1.4 };
 }
+
+/** A shelf in the shop opens the shop menu on its page; `exit` is the door back to the garden. */
+export type ShelfId = 'clothes' | 'cats' | 'kitchen' | 'deco' | 'exit';
+
+export interface Shelf {
+  id: ShelfId;
+  x: number;
+  z: number;
+}
+
+/** Inside the shop, left to right: clothes, cat things, the door, kitchen things, decorations. */
+export const SHELVES: readonly Shelf[] = [
+  { id: 'clothes', x: SHOP_INTERIOR_X + 3.5, z: 1.9 },
+  { id: 'cats', x: SHOP_INTERIOR_X + 7.5, z: 1.9 },
+  { id: 'exit', x: SHOP_INTERIOR_X + 12, z: 1.9 },
+  { id: 'kitchen', x: SHOP_INTERIOR_X + 16.5, z: 1.9 },
+  { id: 'deco', x: SHOP_INTERIOR_X + 20.5, z: 1.9 },
+];
+
+/** Where you come out when walking into the shop. */
+export const SHOP_ENTRY = { x: SHOP_INTERIOR_X + 12, z: 1.0 };

@@ -85,6 +85,42 @@ test('the shop sells clothes and cat supplies, and remembers them after a reload
   expect(errors).toEqual([]);
 });
 
+test('walk into the cat shop, open a shelf and walk out again', async ({ page }) => {
+  const errors = await open(page);
+  await page.evaluate(() => {
+    localStorage.clear();
+  });
+  await page.keyboard.press('Enter');
+  await page.evaluate(() => {
+    const { game } = window.__katzen.app;
+    for (const c of game.cats) c.x = 130;
+    game.girl.x = 96;
+    game.girl.z = 0;
+  });
+  await page.keyboard.down('ArrowUp');
+  await expect.poll(() => page.evaluate(() => window.__katzen.app.game.girl.place)).toBe('shop');
+  await page.keyboard.up('ArrowUp');
+  await expect(page.locator('.panel-sub')).toContainText('Im Katzenladen');
+
+  // The cat shelf opens the shop on the page with things for cats.
+  await page.evaluate(() => {
+    const { game } = window.__katzen.app;
+    game.girl.x = 3007.5;
+    game.girl.z = 1.9;
+  });
+  await expect(page.locator('.prompt.show')).toContainText('Futter');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.shop-tab.active')).toHaveText('🐱 Für Katzen');
+  await page.keyboard.press('Escape');
+
+  await page.evaluate(() => {
+    window.__katzen.app.game.girl.x = 3012;
+  });
+  await page.keyboard.press('ArrowUp');
+  await expect.poll(() => page.evaluate(() => window.__katzen.app.game.girl.place)).toBe('garden');
+  expect(errors).toEqual([]);
+});
+
 test('walk into the house, fill the bowls, rename a cat, save with S and come back', async ({ page }) => {
   const errors = await open(page);
   await page.evaluate(() => {

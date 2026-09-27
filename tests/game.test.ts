@@ -29,7 +29,7 @@ import {
   SEEK_COINS_PER_CAT,
 } from '../src/core/game';
 import { MEAL_BOOST_TIME } from '../src/core/kitchen';
-import { BUILDINGS, groundY, HOUSE_COIN_SPOTS, HOUSE_ENTRY, INTERIOR_X, maxZAt, SHOP_X, spot, WORLD_MAX_X } from '../src/core/world';
+import { BUILDINGS, groundY, HOUSE_COIN_SPOTS, HOUSE_ENTRY, INTERIOR_X, maxZAt, SHELVES, SHOP_ENTRY, SHOP_X, spot, WORLD_MAX_X } from '../src/core/world';
 
 const idle: Input = { left: false, right: false, jump: false, fly: false, pet: false, magic: false };
 const run = (g: Game, seconds: number, input: Partial<Input> = {}) => {
@@ -164,15 +164,65 @@ describe('doors and the house', () => {
     expect(g.girl.place).toBe('garden');
   });
 
-  it('the shop door opens the shop instead of going in', () => {
+  it('walks into the shop, where each shelf opens its page of the shop, and out again', () => {
     const g = new Game();
     quiet(g);
+    const cat = beside(g, g.cats[0]);
+    tap(g, { carry: true });
     g.girl.x = SHOP_X;
     g.girl.z = 1;
     expect(g.focus()?.kind).toBe('door');
     tap(g, { pet: true });
-    expect(types(g.drainEvents())).toContain('openShop');
+    expect(g.girl).toMatchObject({ place: 'shop', x: SHOP_ENTRY.x });
+    expect(cat.place).toBe('shop');
+    expect(types(g.drainEvents())).toContain('place');
+    for (const shelf of SHELVES.filter((s) => s.id !== 'exit')) {
+      g.girl.x = shelf.x;
+      g.girl.z = shelf.z;
+      expect(g.focus()).toEqual({ kind: 'shelf', shelf });
+      tap(g, { pet: true });
+      expect(g.drainEvents()).toContainEqual({ type: 'openShop', tab: shelf.id });
+    }
+    g.girl.x = 3000 + 12.5;
+    tap(g, { enter: true });
     expect(g.girl.place).toBe('garden');
+    expect(Math.abs(g.girl.x - SHOP_X)).toBeLessThan(1);
+    // Enter on the door works too.
+    g.girl.z = 1;
+    tap(g, { pet: true });
+    expect(g.girl.place).toBe('shop');
+    const exit = SHELVES.find((s) => s.id === 'exit');
+    g.girl.x = exit?.x ?? 0;
+    g.girl.z = exit?.z ?? 0;
+    tap(g, { pet: true });
+    expect(g.girl.place).toBe('garden');
+  });
+
+  it('in the shop she flies no higher than indoors, and happy cats drop coins on the floor', () => {
+    const g = new Game();
+    quiet(g);
+    g.girl.x = SHOP_X;
+    g.girl.z = 1;
+    tap(g, { enter: true });
+    expect(g.girl.place).toBe('shop');
+    g.girl.x = SHOP_ENTRY.x - 4;
+    const cat = beside(g, g.cats[0]);
+    g.coins.length = 0;
+    const money = g.money;
+    for (let i = 0; i < HEARTS_PER_COIN; i++) {
+      tap(g, { pet: true });
+      run(g, PET_COOLDOWN + 0.05);
+      cat.x = g.girl.x + 1;
+    }
+    expect(g.coins.filter((c) => c.place === 'shop').length + g.money - money).toBe(1);
+    tap(g, { jump: true, fly: true });
+    run(g, 5, { fly: true });
+    expect(g.girl.y).toBeLessThan(HOUSE_FLY_CEILING + 0.5);
+    // Away from the door, ↑ does not leave the shop.
+    g.girl.x = SHOP_ENTRY.x - 6;
+    run(g, 5);
+    tap(g, { enter: true });
+    expect(g.girl.place).toBe('shop');
   });
 
   it('↑ away from any door does nothing', () => {

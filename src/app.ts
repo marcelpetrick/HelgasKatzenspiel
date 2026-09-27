@@ -3,7 +3,7 @@
 
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Sound, type SoundName } from './audio';
-import type { Game, GameEvent, Input } from './core/game';
+import type { Game, GameEvent, Input, ShopTab } from './core/game';
 import { World } from './render/world';
 import { CatsMenu } from './ui/catsMenu';
 import { CookMenu } from './ui/cookMenu';
@@ -201,9 +201,9 @@ export class App {
     this.held.add(e.code);
   }
 
-  private openShop(mode: 'shop' | 'wardrobe'): void {
+  private openShop(mode: 'shop' | 'wardrobe', tab?: ShopTab): void {
     this.held.clear();
-    this.shop.open(mode);
+    this.shop.open(mode, tab);
     this.sound.play(mode === 'shop' ? 'shopBell' : 'door');
   }
 
@@ -319,7 +319,7 @@ export class App {
           this.sound.play('door');
           break;
         case 'openShop':
-          this.openShop('shop');
+          this.openShop('shop', e.tab);
           break;
         case 'openWardrobe':
           this.openShop('wardrobe');

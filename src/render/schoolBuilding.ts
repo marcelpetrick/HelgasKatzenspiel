@@ -7,6 +7,7 @@ import type { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { BUILDINGS, groundY } from '../core/world';
+import { TEXT } from '../ui/text';
 import { material, signMaterial } from './shapes';
 
 const W = 12;
@@ -49,7 +50,7 @@ export function buildSchool(scene: Scene, addCaster: (m: Mesh) => void): Transfo
 
   put(
     MeshBuilder.CreatePlane('schoolSign', { width: 5, height: 1.25 }, scene),
-    signMaterial(scene, 'schoolSign', '✏️ Schule', '#3f7bd9', '#fffbe8'),
+    signMaterial(scene, 'schoolSign', TEXT.signs.school, '#3f7bd9', '#fffbe8'),
     0,
     H - 0.8,
     front - 0.06,
@@ -67,7 +68,7 @@ export function buildSchool(scene: Scene, addCaster: (m: Mesh) => void): Transfo
   put(box(2.2, 1.4, 0.15), material(scene, 'chalkFrame', '#a0633b', 0.1, 0.03), -3.3, 1.2, front - 0.6);
   put(
     MeshBuilder.CreatePlane('chalk', { width: 2, height: 1.2 }, scene),
-    signMaterial(scene, 'chalkText', '2 + 3 = 5', '#ffffff', '#2f5d3a', 2 / 1.2),
+    signMaterial(scene, 'chalkText', TEXT.signs.board, '#ffffff', '#2f5d3a', 2 / 1.2),
     -3.3,
     1.2,
     front - 0.69,

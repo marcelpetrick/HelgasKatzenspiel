@@ -25,11 +25,13 @@ import { buildLandscape } from './landscape';
 import { buildSchool } from './schoolBuilding';
 import { Props } from './props';
 import { buildShop } from './shopBuilding';
+import { buildShopInterior, type ShopInterior } from './shopInterior';
 
-/** Camera distance and height above the girl, outdoors and in the house. */
+/** Camera distance and height above the girl, outdoors, in the house and in the shop. */
 const VIEW = {
   garden: { distance: 20, lift: 2.2, look: 2.4, halfWidth: 3, sun: 1.6, ambient: 0.75, bloom: 0.3 },
   house: { distance: 14, lift: 1.2, look: 2.6, halfWidth: 9, sun: 0.75, ambient: 0.5, bloom: 0.08 },
+  shop: { distance: 14, lift: 1.2, look: 2.6, halfWidth: 9, sun: 0.75, ambient: 0.5, bloom: 0.08 },
 } as const;
 const SUN_DIR = new Vector3(-0.45, -0.8, 0.55).normalize();
 
@@ -43,6 +45,7 @@ export class World {
   private readonly cats = new Map<number, CatView>();
   private readonly effects: Effects;
   private readonly interior: Interior;
+  private readonly shopInterior: ShopInterior;
   private readonly tickLandscape: (dt: number) => void;
   private readonly focus: Vector3;
   private readonly sun: DirectionalLight;
@@ -103,6 +106,7 @@ export class World {
     buildShop(scene, this.addCaster);
     buildSchool(scene, this.addCaster);
     this.interior = buildInterior(scene, this.addCaster);
+    this.shopInterior = buildShopInterior(scene, this.addCaster);
     this.girl = new GirlView(scene, girlLook(game.wardrobe), this.addCaster);
     this.girlKey = JSON.stringify(girlLook(game.wardrobe));
     this.effects = new Effects(scene, glow);
@@ -229,6 +233,7 @@ export class World {
     this.interior.setBowls(this.game.kitchenBowl('milk').portions > 0, this.game.kitchenBowl('food').portions > 0);
     this.interior.setMeal(this.game.meal);
     this.interior.setDeco(this.game.wardrobe.deco);
+    this.shopInterior.tick(dt);
     this.effects.update(dt);
     this.tickLandscape(dt);
     this.followGirl(Math.min(1, dt * 3));
@@ -246,7 +251,7 @@ export class World {
     this.camera.setTarget(new Vector3(this.focus.x, this.focus.y, 0));
     this.sun.position = new Vector3(this.focus.x, this.focus.y, 0).subtract(SUN_DIR.scale(70));
     // Indoors the light is softer, so the pale walls do not glow.
-    this.scene.fogDensity = g.place === 'house' ? 0 : 0.006;
+    this.scene.fogDensity = g.place === 'garden' ? 0.006 : 0;
     this.sun.intensity = view.sun;
     this.hemi.intensity = view.ambient;
     this.pipeline.bloomWeight = view.bloom;

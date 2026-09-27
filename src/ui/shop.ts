@@ -1,12 +1,12 @@
 // SPDX-FileCopyrightText: 2026 Marcel Petrick <mail@marcelpetrick.it>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { CAT_PRICE, type Game, MAX_CATS } from '../core/game';
+import { CAT_PRICE, type Game, MAX_CATS, type ShopTab } from '../core/game';
 import { buy, CATALOG, owns, SLOT_NAMES, type ShopItem, type Slot, type Wardrobe, wearItem } from '../core/shop';
 import { el } from './dom';
 import { TEXT } from './text';
 
-type Tab = 'clothes' | 'cats' | 'kitchen' | 'deco';
+type Tab = ShopTab;
 /** The shop sells everything; the wardrobe at home only shows the clothes you already have. */
 export type ShopMode = 'shop' | 'wardrobe';
 /** What just happened, so the app can play a sound or react. */
@@ -76,9 +76,11 @@ export class ShopMenu {
     else this.open();
   }
 
-  open(mode: ShopMode = 'shop'): void {
+  /** Open the shop (on a page, e.g. from a shelf in the shop) or the wardrobe at home. */
+  open(mode: ShopMode = 'shop', tab?: Tab): void {
     this.mode = mode;
     if (mode === 'wardrobe') this.tab = 'clothes';
+    else if (tab) this.tab = tab;
     this.title.textContent = mode === 'shop' ? TEXT.shop.title : TEXT.shop.wardrobeTitle;
     this.tabBar.style.display = mode === 'shop' ? '' : 'none';
     this.isOpen = true;

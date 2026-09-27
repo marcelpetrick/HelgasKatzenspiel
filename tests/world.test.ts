@@ -3,7 +3,21 @@
 
 import { describe, expect, it } from 'vitest';
 import { clampSize, cleanName, coat, COATS, sizeName } from '../src/core/cats';
-import { BUILDINGS, doorAt, groundY, HOUSE_COIN_SPOTS, INTERIOR_X, maxZAt, placeOf, ROOMS, spot, SPOTS } from '../src/core/world';
+import {
+  bounds,
+  BUILDINGS,
+  doorAt,
+  groundY,
+  HOUSE_COIN_SPOTS,
+  INTERIOR_X,
+  maxZAt,
+  placeOf,
+  ROOMS,
+  SHELVES,
+  SHOP_INTERIOR_X,
+  spot,
+  SPOTS,
+} from '../src/core/world';
 
 describe('world layout', () => {
   it('the ground is flat under buildings and indoors', () => {
@@ -14,6 +28,9 @@ describe('world layout', () => {
   it('knows the places, walls and doors', () => {
     expect(placeOf(10)).toBe('garden');
     expect(placeOf(INTERIOR_X + 1)).toBe('house');
+    expect(placeOf(SHOP_INTERIOR_X + 1)).toBe('shop');
+    expect(maxZAt('shop', SHOP_INTERIOR_X + 3)).toBe(bounds('shop').maxZ);
+    for (const s of SHELVES) expect(s.x > bounds('shop').minX && s.x < bounds('shop').maxX).toBe(true);
     const house = BUILDINGS[0];
     expect(maxZAt('garden', house.x)).toBeLessThan(house.front);
     expect(maxZAt('garden', 10)).toBeGreaterThan(house.front);

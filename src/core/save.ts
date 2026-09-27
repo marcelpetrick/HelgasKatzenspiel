@@ -73,7 +73,7 @@ export function snapshot(game: Game): SaveData {
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
 const num = (v: unknown, fallback: number): number => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
-const place = (v: unknown): Place => (v === 'house' ? 'house' : 'garden');
+const place = (v: unknown): Place => (v === 'house' || v === 'shop' ? v : 'garden');
 
 function inside(p: Place, rawX: number, z: number): { x: number; z: number } {
   const b = bounds(p);

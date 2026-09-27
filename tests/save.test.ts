@@ -58,6 +58,11 @@ describe('saving and loading', () => {
     expect(back.girl.boost).toBeCloseTo(30, 1);
     expect(back.spotCoins.fridge).toBe(3);
     expect(back.girl).toMatchObject({ x: 30, place: 'garden', carrying: back.cats[0].id });
+    // A cat left in the shop stays in the shop.
+    const shopCat = g.cats[3];
+    shopCat.place = 'shop';
+    shopCat.x = bounds('shop').minX + 2;
+    expect(restore(JSON.parse(JSON.stringify(snapshot(g)))).cats[3]).toMatchObject({ place: 'shop', x: shopCat.x });
     expect(back.drainEvents()).toEqual([]);
   });
 

@@ -4,7 +4,7 @@
 import type { Focus } from '../core/game';
 import { recipe } from '../core/kitchen';
 import type { Grocery, Gear, Supply } from '../core/shop';
-import type { Building, SpotId } from '../core/world';
+import type { Building, Place, ShelfId, SpotId } from '../core/world';
 
 const SPOT_ACTIONS: Record<SpotId, string> = {
   exit: '↑ oder Enter: nach draußen gehen 🌳',
@@ -17,6 +17,14 @@ const SPOT_ACTIONS: Record<SpotId, string> = {
   bathCabinet: 'Enter: Badschrank durchsuchen',
   wardrobe: 'Enter: Anziehschrank öffnen 👗',
   bed: 'Das Bett — gemütlich! 💤',
+};
+
+const SHELF_ACTIONS: Record<ShelfId, string> = {
+  clothes: 'Enter: Kleidung und Haarschmuck anschauen 👗',
+  cats: 'Enter: Futter, Spielzeug und neue Katzen anschauen 🐱',
+  kitchen: 'Enter: Lebensmittel und Küchensachen anschauen 🍅',
+  deco: 'Enter: Deko fürs Haus anschauen 🏠',
+  exit: '↑ oder Enter: nach draußen gehen 🌳',
 };
 
 const DOOR_ACTIONS: Record<Building['id'], string> = {
@@ -54,6 +62,17 @@ export const TEXT = {
   catsCount: (n: number) => (n === 1 ? '1 Katze' : `${n} Katzen`),
   garden: 'Im Garten',
   inHouse: (room: string) => `Im Haus · ${room}`,
+  inShop: 'Im Katzenladen',
+  /** Signs on the buildings and on the shelves in the shop. */
+  signs: {
+    shop: '🐱 Katzenladen',
+    school: '✏️ Schule',
+    board: '2 + 3 = 5',
+    clothes: '👗 Kleidung',
+    cats: '🐱 Für Katzen',
+    kitchen: '🍅 Küche',
+    deco: '🏠 Deko',
+  },
   controls: [
     ['← → ↑ ↓', 'laufen'],
     ['Leertaste', 'springen · halten = fliegen'],
@@ -78,6 +97,7 @@ export const TEXT = {
         : `Enter: ${f.cat.name} streicheln 💕${carrying ? '' : ' · N: hochnehmen'}`;
     if (f.kind === 'door') return DOOR_ACTIONS[f.building.id];
     if (f.kind === 'toy') return `Enter: ${TEXT.toyNames[f.toy.kind] ?? 'Spielzeug'} aufheben`;
+    if (f.kind === 'shelf') return SHELF_ACTIONS[f.shelf.id];
     if (f.spot.id === 'table' && meal) {
       const r = recipe(meal);
       if (r) return `Enter: ${r.name} ${r.drink ? 'trinken' : 'essen'} ${r.icon}`;
@@ -138,7 +158,6 @@ export const TEXT = {
   supplies: {
     food: 'Futter',
     treat: 'Leckerli',
-    yarn: 'Wollknäuel',
     milk: 'Milch',
     toys: 'Spielzeug',
     feather: 'Federwedel',
@@ -214,6 +233,6 @@ export const TEXT = {
     kitten: (percent: number) => `Katzenbaby · ${percent} % gewachsen`,
     grown: (percent: number) => `vom Streicheln und Füttern ${percent} % größer geworden 🌱`,
     love: (n: number) => `${n} Herzen bekommen`,
-    where: (house: boolean) => (house ? 'im Haus 🏠' : 'im Garten 🌳'),
+    where: (place: Place) => ({ garden: 'im Garten 🌳', house: 'im Haus 🏠', shop: 'im Katzenladen 🛍️' })[place],
   },
 };

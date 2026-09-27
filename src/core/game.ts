@@ -19,6 +19,9 @@ import {
   maxZAt,
   outsideDoor,
   type Place,
+  type Shelf,
+  SHELVES,
+  SHOP_ENTRY,
   type Spot,
   type SpotId,
   SPOTS,
@@ -268,7 +271,16 @@ export interface Input {
 }
 
 /** What Enter (or ↑) would do right now; the HUD shows it as a hint. */
-export type Focus = { kind: 'cat'; cat: Cat } | { kind: 'toy'; toy: GroundToy } | { kind: 'spot'; spot: Spot } | { kind: 'door'; building: Building } | null;
+export type Focus =
+  | { kind: 'cat'; cat: Cat }
+  | { kind: 'toy'; toy: GroundToy }
+  | { kind: 'spot'; spot: Spot }
+  | { kind: 'shelf'; shelf: Shelf }
+  | { kind: 'door'; building: Building }
+  | null;
+
+/** The pages of the shop menu; each shelf in the shop opens one. */
+export type ShopTab = 'clothes' | 'cats' | 'kitchen' | 'deco';
 
 export type GameEvent =
   | { type: 'jump' }
@@ -289,7 +301,7 @@ export type GameEvent =
   | { type: 'coinFaster'; perCoin: number }
   | { type: 'coin'; coin: number }
   | { type: 'place'; place: Place }
-  | { type: 'openShop' }
+  | { type: 'openShop'; tab?: ShopTab }
   | { type: 'openSchool' }
   | { type: 'openWardrobe' }
   | { type: 'openKitchen' }
@@ -369,7 +381,7 @@ export class Game {
     for (const kind of ['milk', 'food'] as const)
       this.bowls.push({ id: this.nextId++, kind, ...BOWLS[kind], place: 'house', portions: 0, fixed: true, eater: null });
     // A few coins are already lying around, so there is something to find straight away.
-    for (const x of [HOUSE_X - 4, HOUSE_X + 9, 20, 100, 250, 505]) this.addGardenCoin(x, -1 + this.rng() * 2);
+    for (const x of [HOUSE_X - 4, HOUSE_X + 9, 20, 100, 250, 505]) this.addFloorCoin('garden', x, -1 + this.rng() * 2);
   }
 
   get money(): number {
@@ -533,20 +545,27 @@ export class Game {
 
   private placeFocus(): Focus {
     const g = this.girl;
-    if (g.place === 'house') {
-      let best: Spot | null = null;
-      let bestD = SPOT_RANGE;
-      for (const s of SPOTS) {
-        const d = Math.hypot(s.x - g.x, (s.z - g.z) * 0.6);
-        if (d <= bestD) {
-          best = s;
-          bestD = d;
-        }
-      }
-      return best ? { kind: 'spot', spot: best } : null;
+    if (g.place !== 'garden') {
+      const best = this.nearestSpot<Spot | Shelf>(g.place === 'house' ? SPOTS : SHELVES);
+      if (!best) return null;
+      return g.place === 'house' ? { kind: 'spot', spot: best as Spot } : { kind: 'shelf', shelf: best as Shelf };
     }
     const door = g.onGround ? doorAt(g.x, g.z) : null;
     return door ? { kind: 'door', building: door } : null;
+  }
+
+  private nearestSpot<T extends { x: number; z: number }>(spots: readonly T[]): T | null {
+    const g = this.girl;
+    let best: T | null = null;
+    let bestD = SPOT_RANGE;
+    for (const s of spots) {
+      const d = Math.hypot(s.x - g.x, (s.z - g.z) * 0.6);
+      if (d <= bestD) {
+        best = s;
+        bestD = d;
+      }
+    }
+    return best;
   }
 
   step(dt: number, input: Input): void {
@@ -609,7 +628,7 @@ export class Game {
     const floor = groundY(g.x);
     if (g.onGround) g.y = floor;
     else {
-      const ceiling = g.place === 'house' ? HOUSE_FLY_CEILING : FLY_CEILING * (g.boost > 0 ? 2 : 1);
+      const ceiling = g.place !== 'garden' ? HOUSE_FLY_CEILING : FLY_CEILING * (g.boost > 0 ? 2 : 1);
       if (input.fly && g.y < floor + ceiling) {
         // The jump's own push fades normally; after that the magic carries her up at a steady pace.
         g.vy = g.vy > FLY_MAX_RISE ? g.vy - GRAVITY * dt : Math.min(FLY_MAX_RISE, g.vy + (FLY_LIFT - GRAVITY) * dt);
@@ -640,7 +659,10 @@ export class Game {
     if (f.kind === 'cat') this.makeHappy(f.cat);
     else if (f.kind === 'toy') this.pickUpToy(f.toy);
     else if (f.kind === 'door') this.useDoor();
-    else this.useSpot(f.spot);
+    else if (f.kind === 'shelf') {
+      if (f.shelf.id === 'exit') this.useDoor();
+      else this.events.push({ type: 'openShop', tab: f.shelf.id });
+    } else this.useSpot(f.spot);
   }
 
   private useDoor(): void {
@@ -649,15 +671,17 @@ export class Game {
     if (g.place === 'garden') {
       const door = doorAt(g.x, g.z);
       if (!door) return;
-      if (door.id !== 'house') {
-        // Shop and school are menus: she steps back out of the doorway while one is open.
+      if (door.id === 'school') {
+        // School is a menu: she steps back out of the doorway while class is on.
         g.z = door.front - 1.2;
-        this.events.push({ type: door.id === 'shop' ? 'openShop' : 'openSchool' });
-      } else this.moveGirl('house', HOUSE_ENTRY.x, HOUSE_ENTRY.z - 0.6);
+        this.events.push({ type: 'openSchool' });
+      } else if (door.id === 'shop') this.moveGirl('shop', SHOP_ENTRY.x, SHOP_ENTRY.z - 0.6);
+      else this.moveGirl('house', HOUSE_ENTRY.x, HOUSE_ENTRY.z - 0.6);
     } else {
-      const exit = SPOTS.find((s) => s.id === 'exit');
+      const exits: readonly { id: string; x: number }[] = g.place === 'house' ? SPOTS : SHELVES;
+      const exit = exits.find((s) => s.id === 'exit');
       if (!exit || Math.abs(g.x - exit.x) > SPOT_RANGE) return;
-      const out = outsideDoor(BUILDINGS[0]);
+      const out = outsideDoor(BUILDINGS.find((b) => b.id === g.place) ?? BUILDINGS[0]);
       this.moveGirl('garden', out.x, out.z);
     }
   }
@@ -964,10 +988,11 @@ export class Game {
     this.heartsSinceCoin += count;
     while (this.heartsSinceCoin >= heartsPerCoin(this.hearts)) {
       this.heartsSinceCoin -= heartsPerCoin(this.hearts);
-      if (cat.place === 'garden') {
+      if (cat.place === 'house') this.addHouseCoin();
+      else {
         const side = this.rng() < 0.5 ? -1 : 1;
-        this.addGardenCoin(cat.x + side * (1.2 + this.rng() * 1.5), cat.z);
-      } else this.addHouseCoin();
+        this.addFloorCoin(cat.place, cat.x + side * (1.2 + this.rng() * 1.5), cat.z);
+      }
     }
     this.heartsSinceKitten += count;
     if (this.heartsSinceKitten >= KITTEN_HEARTS) {
@@ -987,9 +1012,10 @@ export class Game {
     this.events.push({ type: 'kitten', cat: kitten.id });
   }
 
-  private addGardenCoin(x: number, z: number): void {
-    const cx = this.clampX('garden', x);
-    this.pushCoin({ x: cx, y: groundY(cx) + 0.8, z: this.clampZ('garden', cx, z), place: 'garden' });
+  /** A coin on the ground next to a happy cat, in the garden or in the shop. */
+  private addFloorCoin(place: Place, x: number, z: number): void {
+    const cx = this.clampX(place, x);
+    this.pushCoin({ x: cx, y: groundY(cx) + 0.8, z: this.clampZ(place, cx, z), place });
   }
 
   /** Happy cats indoors put a coin on the table, into a bowl or on the tub — or into a cupboard. */
