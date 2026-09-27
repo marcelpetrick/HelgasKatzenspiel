@@ -257,6 +257,17 @@ describe('petting, feeding and magic', () => {
     expect(g.hearts).toBe(3);
   });
 
+  it('milk is a drink bought in the shop: two hearts', () => {
+    const g = new Game();
+    quiet(g);
+    g.wardrobe.supplies.milk = 1;
+    const cat = beside(g, g.cats[0]);
+    tap(g, { milk: true });
+    expect(g.hearts).toBe(2);
+    expect(g.wardrobe.supplies.milk).toBe(0);
+    expect(cat.plump).toBeCloseTo(0.05);
+  });
+
   it('plumpness is capped at 1', () => {
     const g = new Game();
     quiet(g);

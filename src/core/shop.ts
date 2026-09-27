@@ -7,7 +7,7 @@ import { cleanLook, DEFAULT_LOOK, type Look } from './look';
 
 /** `headband` holds all hair jewellery: cat ears, bows and clips. */
 export type Slot = 'top' | 'skirt' | 'headband' | 'shoes' | 'earrings' | 'nails';
-export type Supply = 'food' | 'treat';
+export type Supply = 'food' | 'treat' | 'milk';
 /** The shape of an accessory; plain clothes have none. */
 export type Accessory = 'ears' | 'bow' | 'clip-star' | 'clip-heart' | 'pearl' | 'heart' | 'star' | 'none';
 
@@ -109,6 +109,7 @@ export const CATALOG: readonly ShopItem[] = [
   wear('nails', 'nails-gold', 'Glitzer-Goldlack', '#ffc83d', 4),
   { kind: 'supply', id: 'food', name: 'Katzenfutter', icon: '🥫', description: 'Eine volle Schüssel: 3 Herzen', price: 2 },
   { kind: 'supply', id: 'treat', name: 'Leckerli', icon: '🐟', description: 'Ein Fischleckerli: 2 Herzen', price: 1 },
+  { kind: 'supply', id: 'milk', name: 'Katzenmilch', icon: '🥛', description: 'Ein Schälchen zum Trinken: 2 Herzen', price: 1 },
   { kind: 'toy', id: 'yarn', name: 'Wollknäuel', icon: '🧶', description: 'Werfen, und die Katzen rennen hinterher', price: 5 },
   deco('deco-kratzbaum', 'Kratzbaum', '🌳', 'Zum Klettern und Kratzen, im Flur', 12),
   deco('deco-kissen', 'Kuschelkissen', '🛋️', 'Weiche Kissen im Flur', 4),
@@ -152,7 +153,7 @@ export function newWardrobe(): Wardrobe {
     money: 0,
     owned: CATALOG.filter((i) => i.price === 0).map((i) => i.id),
     outfit: { ...DEFAULT_OUTFIT },
-    supplies: { food: 0, treat: 0 },
+    supplies: { food: 0, treat: 0, milk: 0 },
     hasYarn: false,
     deco: [],
     look: { ...DEFAULT_LOOK },
@@ -208,7 +209,7 @@ export function loadWardrobe(raw: unknown): Wardrobe {
   if (Array.isArray(r.owned)) for (const id of r.owned) if (typeof id === 'string' && findItem(id)?.kind === 'wear' && !w.owned.includes(id)) w.owned.push(id);
   if (r.outfit && typeof r.outfit === 'object') for (const id of Object.values(r.outfit)) if (typeof id === 'string') wearItem(w, id);
   if (r.supplies && typeof r.supplies === 'object') {
-    for (const k of ['food', 'treat'] as const) {
+    for (const k of ['food', 'treat', 'milk'] as const) {
       const n = r.supplies[k];
       if (typeof n === 'number' && n >= 0) w.supplies[k] = Math.floor(n);
     }

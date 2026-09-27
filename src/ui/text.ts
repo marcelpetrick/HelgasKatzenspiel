@@ -87,6 +87,7 @@ export const TEXT = {
     food: 'Futter',
     treat: 'Leckerli',
     yarn: 'Wollknäuel',
+    milk: 'Milch',
   },
   shop: {
     title: '🛍️ Katzenladen',
@@ -105,7 +106,7 @@ export const TEXT = {
     bought: (name: string) => `${name} gekauft! 🎉`,
     tooPoor: 'Dafür reichen deine Münzen noch nicht. Streichle mehr Katzen! 💕',
     useHint:
-      'Tipp: Stell dich zu einer Katze und drück 1 für Futter, 2 für ein Leckerli, 3 wirft das Wollknäuel. Futter kannst du auch in der Küche in die Schüssel tun.',
+      'Tipp: Stell dich zu einer Katze und drück 1 für Futter, 2 für ein Leckerli, 4 für Milch. 3 wirft das Wollknäuel. Futter kannst du auch in der Küche in die Schüssel tun.',
     newCat: 'Neue Katze',
     newCatDesc: 'Eine neue Katze zieht bei dir ein',
     tooManyCats: 'Mehr Katzen passen gerade nicht ins Haus.',

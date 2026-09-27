@@ -78,13 +78,14 @@ export class Hud {
     this.sub.textContent = `${where} · ${TEXT.catsCount(this.game.cats.length)}`;
 
     const w = this.game.wardrobe;
-    const key = `${w.supplies.food}/${w.supplies.treat}/${w.hasYarn}`;
+    const key = `${w.supplies.food}/${w.supplies.treat}/${w.supplies.milk}/${w.hasYarn}`;
     if (key !== this.lastSupplies) {
       this.lastSupplies = key;
       const items: [string, string, string, number | null][] = [
         ['1', '🥫', TEXT.supplies.food, w.supplies.food],
         ['2', '🐟', TEXT.supplies.treat, w.supplies.treat],
         ['3', '🧶', TEXT.supplies.yarn, w.hasYarn ? null : 0],
+        ['4', '🥛', TEXT.supplies.milk, w.supplies.milk],
       ];
       this.supplies.replaceChildren(
         ...items.map(([k, icon, name, n]) => {

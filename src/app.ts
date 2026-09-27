@@ -35,9 +35,11 @@ const KEYS = new Set([
   'Digit1',
   'Digit2',
   'Digit3',
+  'Digit4',
   'Numpad1',
   'Numpad2',
   'Numpad3',
+  'Numpad4',
 ]);
 
 /** Keys that keep acting while held down. */
@@ -309,6 +311,7 @@ export class App {
           feed: was('Digit1', 'Numpad1'),
           treat: was('Digit2', 'Numpad2'),
           yarn: was('Digit3', 'Numpad3'),
+          milk: was('Digit4', 'Numpad4'),
           carry: was('KeyN'),
         }
       : { left: false, right: false, jump: false, fly: false, pet: false, magic: false };

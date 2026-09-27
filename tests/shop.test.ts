@@ -51,7 +51,7 @@ describe('shop', () => {
     expect(buy(w, 'food')).toBe('ok');
     expect(buy(w, 'food')).toBe('ok');
     expect(buy(w, 'treat')).toBe('ok');
-    expect(w.supplies).toEqual({ food: 2, treat: 1 });
+    expect(w.supplies).toEqual({ food: 2, treat: 1, milk: 0 });
     expect(buy(w, 'yarn')).toBe('ok');
     expect(buy(w, 'yarn')).toBe('owned');
     expect(w.money).toBe(20 - 2 - 2 - 1 - 5);
@@ -78,7 +78,7 @@ describe('shop', () => {
     expect(broken.owned).toContain('top-lila');
     expect(broken.owned).not.toContain('food');
     expect(broken.outfit.top).toBe('top-rosa');
-    expect(broken.supplies).toEqual({ food: 0, treat: 2 });
+    expect(broken.supplies).toEqual({ food: 0, treat: 2, milk: 0 });
     expect(broken.hasYarn).toBe(false);
   });
 });

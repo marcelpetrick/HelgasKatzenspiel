@@ -59,7 +59,7 @@ export const FLOAT_HEIGHT = 2.5;
 export const MAGIC_RANGE = 6;
 export const MAGIC_COOLDOWN = 1.2;
 /** Hearts a cat gives for a bowl of food or a treat. */
-export const SUPPLY_HEARTS: Record<Supply, number> = { food: 3, treat: 2 };
+export const SUPPLY_HEARTS: Record<Supply, number> = { food: 3, treat: 2, milk: 2 };
 export const MILK_HEARTS = 2;
 export const EAT_TIME = 2.5;
 export const YARN_THROW_SPEED = 10;
@@ -87,7 +87,7 @@ export const KITTEN_GROWTH = 0.5;
 /** How much a kitten grows per heart. */
 export const GROWTH_PER_HEART = 0.02;
 /** Well-fed cats get rounder: food adds this much plumpness (0 slim … 1 very round). */
-export const PLUMP_PER_FOOD: Record<Supply | 'milk', number> = { food: 0.15, treat: 0.07, milk: 0.05 };
+export const PLUMP_PER_FOOD: Record<Supply, number> = { food: 0.15, treat: 0.07, milk: 0.05 };
 /** Chasing the yarn ball is exercise and slims a cat down again. */
 export const PLUMP_PER_POUNCE = 0.04;
 
@@ -172,9 +172,10 @@ export interface Input {
   pet: boolean;
   /** Edge-triggered: cast a spell. */
   magic: boolean;
-  /** Edge-triggered: give the nearest cat food, a treat, or throw the yarn ball. */
+  /** Edge-triggered: give the nearest cat food, a treat or milk, or throw the yarn ball. */
   feed?: boolean;
   treat?: boolean;
+  milk?: boolean;
   yarn?: boolean;
   /** Edge-triggered: pick up the nearest cat, or put it down. */
   carry?: boolean;
@@ -190,7 +191,7 @@ export type GameEvent =
   | { type: 'land' }
   | { type: 'magic'; x: number; y: number }
   | { type: 'hearts'; cat: number; count: number }
-  | { type: 'feed'; cat: number; supply: Supply | 'milk'; fromBowl: boolean }
+  | { type: 'feed'; cat: number; supply: Supply; fromBowl: boolean }
   | { type: 'yarn' }
   | { type: 'coinSpawn'; coin: number }
   | { type: 'coin'; coin: number }
@@ -377,6 +378,7 @@ export class Game {
     if (input.magic) this.castMagic();
     if (input.feed) this.give('food');
     if (input.treat) this.give('treat');
+    if (input.milk) this.give('milk');
     if (input.yarn) this.throwYarn();
     if (input.carry) this.toggleCarry();
     this.stepYarn(dt);
@@ -564,7 +566,7 @@ export class Game {
     this.makeHappy(cat, SUPPLY_HEARTS[supply], HAPPY_TIME * 1.6);
   }
 
-  private fatten(cat: Cat, food: Supply | 'milk'): void {
+  private fatten(cat: Cat, food: Supply): void {
     cat.plump = Math.min(1, cat.plump + PLUMP_PER_FOOD[food]);
   }
 
