@@ -67,6 +67,7 @@ export class App {
   private pressed = new Set<string>();
   private started = false;
   private twinkleIn = 0;
+  private lastClick = 0;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -81,7 +82,10 @@ export class App {
     });
     this.catsMenu = new CatsMenu(ui, this.game, () => {
       this.world.syncCats();
-      this.sound.play('click');
+      // Dragging the size slider changes the cat many times a second; one click is enough.
+      const now = performance.now();
+      if (now - this.lastClick > 250) this.sound.play('click');
+      this.lastClick = now;
     });
     this.figure = new FigureMenu(ui, this.game.wardrobe, () => {
       this.world.refreshOutfit();
@@ -426,7 +430,8 @@ export class App {
       }
     }
     this.world.update(dt, flying);
-    this.hud.update(this.world);
     this.world.render();
+    // After rendering, so name tags use this frame's camera and do not trail behind.
+    this.hud.update(this.world);
   }
 }

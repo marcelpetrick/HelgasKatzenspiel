@@ -332,7 +332,7 @@ function buildDeco(scene: Scene, root: TransformNode, put: Put, box: (w: number,
     p(box(1.6, 1.3, 0.08), material(scene, 'catFrame', '#ffc83d', 0.6, 0.2), x, 4.2, BACK - 0.22, false);
     const canvas = p(
       MeshBuilder.CreatePlane('catPic', { width: 1.35, height: 1.05 }, scene),
-      signMaterial(scene, 'catPicture', '🐱', '#ff7eb6', '#fff4fa'),
+      signMaterial(scene, 'catPicture', '🐱', '#ff7eb6', '#fff4fa', 1.35 / 1.05),
       x,
       4.2,
       BACK - 0.28,

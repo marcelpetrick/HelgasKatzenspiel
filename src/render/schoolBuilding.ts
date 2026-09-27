@@ -67,7 +67,7 @@ export function buildSchool(scene: Scene, addCaster: (m: Mesh) => void): Transfo
   put(box(2.2, 1.4, 0.15), material(scene, 'chalkFrame', '#a0633b', 0.1, 0.03), -3.3, 1.2, front - 0.6);
   put(
     MeshBuilder.CreatePlane('chalk', { width: 2, height: 1.2 }, scene),
-    signMaterial(scene, 'chalkText', '2 + 3 = 5', '#ffffff', '#2f5d3a'),
+    signMaterial(scene, 'chalkText', '2 + 3 = 5', '#ffffff', '#2f5d3a', 2 / 1.2),
     -3.3,
     1.2,
     front - 0.69,

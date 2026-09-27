@@ -68,18 +68,37 @@ export function starOutline(): [number, number][] {
   return out;
 }
 
-/** A sign drawn onto a texture, for building names. */
-export function signMaterial(scene: Scene, name: string, text: string, ink: string, paper: string): StandardMaterial {
-  const tex = new DynamicTexture(name, { width: 1024, height: 256 }, scene, true);
-  const ctx = tex.getContext() as CanvasRenderingContext2D;
-  ctx.fillStyle = paper;
-  ctx.fillRect(0, 0, 1024, 256);
-  ctx.fillStyle = ink;
-  ctx.font = 'bold 130px Fredoka, "Nunito", sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, 512, 136);
-  tex.update();
+/** Every sign, so it can be drawn again once the rounded Fredoka font has finished loading. */
+const signs: (() => void)[] = [];
+let fontWatch = false;
+
+/**
+ * A sign drawn onto a texture, for building names and pictures. `aspect` is the width/height of the
+ * plane it goes on, so the lettering is not stretched.
+ */
+export function signMaterial(scene: Scene, name: string, text: string, ink: string, paper: string, aspect = 4): StandardMaterial {
+  const height = 256;
+  const tex = new DynamicTexture(name, { width: Math.round(height * aspect), height }, scene, true);
+  const draw = () => {
+    const ctx = tex.getContext() as CanvasRenderingContext2D;
+    const { width } = tex.getSize();
+    ctx.fillStyle = paper;
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = ink;
+    ctx.font = `bold ${Math.min(130, (width / Math.max(1, text.length)) * 1.6)}px Fredoka, "Nunito", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, width / 2, 136);
+    tex.update();
+  };
+  draw();
+  signs.push(draw);
+  if (!fontWatch && typeof document !== 'undefined' && 'fonts' in document) {
+    fontWatch = true;
+    void document.fonts.load('bold 130px Fredoka').then(() => {
+      for (const redraw of signs) redraw();
+    });
+  }
   const m = new StandardMaterial(`${name}Mat`, scene);
   m.diffuseTexture = tex;
   m.emissiveColor = new Color3(0.45, 0.45, 0.45);

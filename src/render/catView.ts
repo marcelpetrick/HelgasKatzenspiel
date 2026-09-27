@@ -43,10 +43,11 @@ export class CatView {
     this.root.scaling.setAll(cat.size * cat.growth * 1.05);
     this.body = new TransformNode('catBody', scene);
     this.body.parent = this.root;
+    // Only the body and the head cast shadows: plenty for the look, and far fewer shadow draws.
     const add = (m: Mesh, mat: StandardMaterial, parent: TransformNode = this.body) => {
       m.material = mat;
       m.parent = parent;
-      addCaster(m);
+      if (m.name === 'catTorso' || m.name === 'catSkull') addCaster(m);
       return m;
     };
 

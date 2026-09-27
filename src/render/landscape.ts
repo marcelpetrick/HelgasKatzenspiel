@@ -89,13 +89,13 @@ export function buildLandscape(scene: Scene, addCaster: (m: Mesh) => void): (t: 
   soil.material = soilMat;
 
   // Background hills, getting bluer and hazier with distance.
-  const hill = (name: string, z: number, depth: number, base: number, amp: number, freq: number, hex: string) => {
+  const hill = (name: string, z: number, depth: number, base: number, amp: number, freq: number, hex: string, sinks = true) => {
     const hp: Vector3[][] = [];
     for (const dz of [0, depth * 0.5, depth]) {
       const p: Vector3[] = [];
       for (let x = X0 - 100; x <= X1 + 100; x += 2) {
         // Near the beach the hills sink below the sea, so the view opens up to the water.
-        const sink = 1 - sandiness(x - 30);
+        const sink = sinks ? 1 - sandiness(x - 30) : 1;
         const h = (base + amp * (0.6 + 0.4 * Math.sin(x * freq + z) * Math.cos(x * freq * 0.37 + 1.7 * z)) * (dz === depth ? 0.55 : 1)) * sink - 4 * (1 - sink);
         p.push(new Vector3(x, h, z + dz));
       }
@@ -111,7 +111,8 @@ export function buildLandscape(scene: Scene, addCaster: (m: Mesh) => void): (t: 
   const near = hill('hillNear', 20, 12, -1.5, 4, 0.06, '#3f8f38');
   const lakeZ = 40;
   const far = hill('hillFar', 70, 20, -2, 9, 0.035, '#2f6b3c');
-  hill('mountains', 140, 40, -4, 34, 0.02, '#6d82a0');
+  // The far mountains stay: they are the horizon behind the sea too.
+  hill('mountains', 140, 40, -4, 34, 0.02, '#6d82a0', false);
 
   const lake = MeshBuilder.CreateGround('lake', { width: 1200, height: 60 }, scene);
   lake.position.set(200, -0.6, lakeZ + 5);
