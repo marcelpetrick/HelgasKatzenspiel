@@ -80,10 +80,12 @@ deps_match_lock() {
   node -e '
     const lock = require("./package-lock.json").packages;
     const installed = require("./node_modules/.package-lock.json").packages;
+    const fs = require("fs");
     // Optional packages for other platforms (e.g. rolldown for macOS) are never installed here.
+    const skipped = (p) => p.optional === true || p.devOptional === true;
     const ok =
-      Object.entries(lock).every(([k, p]) => k === "" || (installed[k] ? installed[k].version === p.version : p.optional === true)) &&
-      Object.keys(installed).every((k) => k in lock);
+      Object.entries(lock).every(([k, p]) => k === "" || (installed[k] ? installed[k].version === p.version : skipped(p))) &&
+      Object.keys(installed).every((k) => k in lock && (installed[k].link === true || fs.existsSync(k + "/package.json")));
     process.exit(ok ? 0 : 1);
   '
 }
