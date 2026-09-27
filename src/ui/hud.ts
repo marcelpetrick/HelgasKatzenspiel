@@ -17,6 +17,8 @@ export class Hud {
   private readonly hearts: HTMLElement;
   private readonly money: HTMLElement;
   private readonly prompt: HTMLElement;
+  private readonly supplies: HTMLElement;
+  private lastSupplies = '';
   private readonly tags = new Map<number, HTMLElement>();
   private lastHearts = -1;
   private lastMoney = -1;
@@ -45,7 +47,8 @@ export class Hud {
       help.append(row);
     }
     this.prompt = el('div', 'prompt');
-    root.append(top, help, this.prompt);
+    this.supplies = el('div', 'panel supplies');
+    root.append(top, help, this.prompt, this.supplies);
     for (const c of game.cats) {
       const tag = el('div', 'cat-tag', c.name);
       root.append(tag);
@@ -63,6 +66,23 @@ export class Hud {
       this.lastMoney = this.game.money;
       this.money.textContent = String(this.game.money);
       this.bump(this.money);
+    }
+    const w = this.game.wardrobe;
+    const key = `${w.supplies.food}/${w.supplies.treat}/${w.hasYarn}`;
+    if (key !== this.lastSupplies) {
+      this.lastSupplies = key;
+      const items: [string, string, string, number | null][] = [
+        ['1', '🥫', TEXT.supplies.food, w.supplies.food],
+        ['2', '🐟', TEXT.supplies.treat, w.supplies.treat],
+        ['3', '🧶', TEXT.supplies.yarn, w.hasYarn ? null : 0],
+      ];
+      this.supplies.replaceChildren(
+        ...items.map(([k, icon, name, n]) => {
+          const s = el('div', 'supply' + (n === 0 ? ' empty' : ''));
+          s.append(el('kbd', '', k), el('span', 'icon', icon), el('span', '', n === null ? name : `${name} ×${n}`));
+          return s;
+        }),
+      );
     }
     const near = this.game.nearestCat();
     for (const c of this.game.cats) {

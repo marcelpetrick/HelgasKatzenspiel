@@ -13,13 +13,16 @@ import { ImageProcessingConfiguration } from '@babylonjs/core/Materials/imagePro
 import { Color3, Color4 } from '@babylonjs/core/Maths/math.color';
 import { Matrix, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import type { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { DefaultRenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline';
 import { type Game, type GameEvent, WORLD_MAX_X, WORLD_MIN_X } from '../core/game';
+import { outfitColor } from '../core/shop';
 import { CatView } from './catView';
 import { Effects } from './effects';
 import { DEFAULT_STYLE, GirlView } from './girlView';
 import { buildHouse } from './house';
 import { buildLandscape } from './landscape';
+import { material } from './shapes';
 
 const CAMERA_DISTANCE = 20;
 
@@ -33,6 +36,7 @@ export class World {
   private readonly tickLandscape: (dt: number) => void;
   private readonly focus: Vector3;
   private trailIn = 0;
+  private readonly yarn: Mesh;
 
   constructor(
     private readonly engine: AbstractEngine,
@@ -76,6 +80,20 @@ export class World {
     this.tickLandscape = buildLandscape(scene, addCaster);
     buildHouse(scene, addCaster);
     this.girl = new GirlView(scene, DEFAULT_STYLE, addCaster);
+    this.refreshOutfit();
+
+    // The yarn ball: a pink sphere wrapped in a few darker strands.
+    this.yarn = MeshBuilder.CreateSphere('yarn', { diameter: 0.5, segments: 14 }, scene);
+    this.yarn.material = material(scene, 'yarnMat', '#ff6fa8', 0.15, 0.1);
+    const strandMat = material(scene, 'strandMat', '#d94a86', 0.15, 0.05);
+    for (let i = 0; i < 3; i++) {
+      const strand = MeshBuilder.CreateTorus('strand', { diameter: 0.5, thickness: 0.045, tessellation: 20 }, scene);
+      strand.material = strandMat;
+      strand.parent = this.yarn;
+      strand.rotation.set(i * 1.1, i * 0.7, i * 0.5);
+    }
+    this.yarn.setEnabled(false);
+    addCaster(this.yarn);
     for (const c of game.cats) this.cats.set(c.id, new CatView(scene, c, addCaster));
     this.effects = new Effects(scene, glow);
     for (const coin of game.coins) this.effects.addCoin(coin.id, coin.x, coin.y);
@@ -105,15 +123,22 @@ export class World {
       switch (e.type) {
         case 'hearts': {
           const view = this.cats.get(e.cat);
-          if (view) this.effects.hearts(view.top());
+          if (view) this.effects.hearts(view.top(), e.count);
           break;
         }
         case 'magic':
           this.girl.cast();
           this.effects.magic(this.girl.wandTip());
           break;
+        case 'feed': {
+          const view = this.cats.get(e.cat);
+          const cat = this.game.cats.find((c) => c.id === e.cat);
+          if (view && cat) this.effects.feed(e.x + cat.dir * 0.9 * cat.size, e.y, view.root.position.z, e.supply === 'treat');
+          break;
+        }
+        case 'yarn':
         case 'coinSpawn':
-          this.effects.addCoin(e.coin, e.x, e.y);
+          if (e.type === 'coinSpawn') this.effects.addCoin(e.coin, e.x, e.y);
           break;
         case 'coin':
           this.effects.collectCoin(e.coin);
@@ -136,6 +161,12 @@ export class World {
         this.effects.trail(new Vector3(g.x, g.y + 0.6, 0));
       }
     }
+    const y = this.game.yarn;
+    this.yarn.setEnabled(y !== null);
+    if (y) {
+      this.yarn.position.set(y.x, y.y, -0.4);
+      this.yarn.rotation.z = -y.spin;
+    }
     this.effects.update(dt);
     this.tickLandscape(dt);
 
@@ -148,6 +179,17 @@ export class World {
     this.focus.y += (ty - this.focus.y) * k;
     this.camera.position.set(this.focus.x, this.focus.y + 2.2, -CAMERA_DISTANCE);
     this.camera.setTarget(new Vector3(this.focus.x, this.focus.y, 0));
+  }
+
+  /** Dress the girl in whatever the wardrobe says she wears. */
+  refreshOutfit(): void {
+    const w = this.game.wardrobe;
+    this.girl.applyStyle({
+      top: outfitColor(w, 'top'),
+      skirt: outfitColor(w, 'skirt'),
+      headband: outfitColor(w, 'headband'),
+      shoes: outfitColor(w, 'shoes'),
+    });
   }
 
   /** World position → CSS pixels on the canvas, for labels drawn in the DOM. */

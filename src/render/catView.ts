@@ -136,9 +136,10 @@ export class CatView {
     this.yaw += (targetYaw - this.yaw) * Math.min(1, dt * 6);
     this.root.rotation.y = this.yaw;
 
-    const walking = cat.mood === 'walk';
+    const playing = cat.mood === 'play';
+    const walking = cat.mood === 'walk' || playing;
     const happy = cat.mood === 'happy';
-    this.walk += walking ? dt * cat.speed * 7 : 0;
+    this.walk += walking ? dt * (playing ? 4 : cat.speed) * 7 : 0;
     const legPairs = [0, Math.PI, Math.PI, 0];
     this.legs.forEach((leg, i) => (leg.rotation.z = walking ? Math.sin(this.walk + legPairs[i]) * 0.5 : 0));
 

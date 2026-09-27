@@ -3,6 +3,8 @@
 
 import type { Scene } from '@babylonjs/core/scene';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import type { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
+import { Color3 } from '@babylonjs/core/Maths/math.color';
 import type { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
@@ -41,6 +43,7 @@ export class GirlView {
   private blinkIn = 2;
   private castTime = 0;
   private time = 0;
+  private readonly styled: Partial<Record<keyof GirlStyle, StandardMaterial>> = {};
 
   constructor(scene: Scene, style: GirlStyle, addCaster: (m: Mesh) => void) {
     this.root = new TransformNode('girl', scene);
@@ -53,6 +56,7 @@ export class GirlView {
     const skirt = material(scene, 'girlSkirt', style.skirt, 0.2, 0.1);
     const shoes = material(scene, 'girlShoes', style.shoes, 0.5, 0.05);
     const band = material(scene, 'girlBand', style.headband, 0.3, 0.15);
+    Object.assign(this.styled, { skin, hair, top, skirt, shoes, headband: band });
     const inner = material(scene, 'girlEarInner', '#ffc7dc', 0.1, 0.2);
     const dark = material(scene, 'girlEye', '#2a1a2e', 0.9, 0);
     const white = material(scene, 'girlEyeShine', '#ffffff', 0, 1);
@@ -146,6 +150,16 @@ export class GirlView {
       const earIn = add(MeshBuilder.CreateCylinder('catEarIn', { height: 0.22, diameterTop: 0, diameterBottom: 0.18, tessellation: 4 }, scene), inner, head);
       earIn.position.set(side * 0.255, 0.45, -0.09);
       earIn.rotation.set(0, Math.PI / 4, -side * 0.35);
+    }
+  }
+
+  /** Change colours in place, e.g. after buying new clothes. */
+  applyStyle(style: Partial<GirlStyle>): void {
+    for (const [key, hex] of Object.entries(style) as [keyof GirlStyle, string][]) {
+      const m = this.styled[key];
+      if (!m) continue;
+      m.diffuseColor = Color3.FromHexString(hex);
+      m.emissiveColor = m.diffuseColor.scale(key === 'headband' ? 0.15 : 0.1);
     }
   }
 

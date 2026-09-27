@@ -5,7 +5,7 @@ import type { Scene } from '@babylonjs/core/scene';
 import type { GlowLayer } from '@babylonjs/core/Layers/glowLayer';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import type { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
-import type { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import '@babylonjs/core/Meshes/instancedMesh';
@@ -32,6 +32,9 @@ export class Effects {
   private readonly coinTemplate: Mesh;
   private readonly coins = new Map<number, { node: TransformNode; age: number }>();
   private readonly collecting: { node: TransformNode; age: number }[] = [];
+  private readonly bowls: { node: TransformNode; age: number }[] = [];
+  private readonly bowl: Mesh;
+  private readonly fish: Mesh;
 
   constructor(
     private readonly scene: Scene,
@@ -54,6 +57,28 @@ export class Effects {
     this.coinTemplate.material = gold;
     this.coinTemplate.isVisible = false;
     glow.addIncludedOnlyMesh(this.coinTemplate);
+
+    // Food bowl: a pink dish filled with brown kibble.
+    const dish = MeshBuilder.CreateCylinder('dish', { height: 0.2, diameterTop: 0.7, diameterBottom: 0.5, tessellation: 24 }, scene);
+    dish.material = material(scene, 'dishMat', '#ff7eb6', 0.4, 0.1);
+    const kibble = MeshBuilder.CreateSphere('kibble', { diameter: 0.6, segments: 10 }, scene);
+    kibble.material = material(scene, 'kibbleMat', '#a0632f', 0.1, 0.05);
+    kibble.scaling.y = 0.25;
+    kibble.position.y = 0.1;
+    this.bowl = Mesh.MergeMeshes([dish, kibble], true, true, undefined, false, true) ?? dish;
+    this.bowl.position.y = 0.1;
+    this.bowl.isVisible = false;
+    // Treat: a little blue fish.
+    const fishBody = MeshBuilder.CreateSphere('fishBody', { diameter: 0.4, segments: 10 }, scene);
+    fishBody.scaling.set(1, 0.55, 0.35);
+    const fishTail = MeshBuilder.CreateCylinder('fishTail', { height: 0.1, diameterTop: 0.3, diameterBottom: 0.3, tessellation: 3 }, scene);
+    fishTail.rotation.x = Math.PI / 2;
+    fishTail.position.x = -0.25;
+    const fishMat = material(scene, 'fishMat', '#5ab4ff', 0.6, 0.2);
+    fishBody.material = fishMat;
+    fishTail.material = fishMat;
+    this.fish = Mesh.MergeMeshes([fishBody, fishTail], true, true) ?? fishBody;
+    this.fish.isVisible = false;
   }
 
   private spawn(template: Mesh, pos: Vector3, vel: Vector3, life: number, size: number, wobble = 0): void {
@@ -65,8 +90,8 @@ export class Effects {
   }
 
   /** A little burst of hearts rising from a happy cat. */
-  hearts(at: Vector3): void {
-    for (let i = 0; i < 5; i++) {
+  hearts(at: Vector3, count = 1): void {
+    for (let i = 0; i < 3 + count * 2; i++) {
       const pos = at.add(new Vector3((Math.random() - 0.5) * 0.8, Math.random() * 0.3, -0.8));
       const vel = new Vector3((Math.random() - 0.5) * 0.8, 1.6 + Math.random() * 1.2, 0);
       this.spawn(this.heart, pos, vel, 1.3 + Math.random() * 0.5, 0.45 + Math.random() * 0.25, 1);
@@ -89,6 +114,16 @@ export class Effects {
     const star = this.stars[Math.floor(Math.random() * this.stars.length)];
     const pos = at.add(new Vector3((Math.random() - 0.5) * 0.6, (Math.random() - 0.5) * 0.4, -0.3));
     this.spawn(star, pos, new Vector3(0, -0.6, 0), 0.7, 0.2 + Math.random() * 0.15);
+  }
+
+  /** A bowl of food or a little fish, shown at a cat's feet while it eats. */
+  feed(x: number, y: number, z: number, treat: boolean): void {
+    const node = new TransformNode('bowlNode', this.scene);
+    node.position.set(x, y, z - 0.7);
+    const m = (treat ? this.fish : this.bowl).createInstance('bowl');
+    m.parent = node;
+    if (treat) m.rotation.z = 0.2;
+    this.bowls.push({ node, age: 0 });
   }
 
   addCoin(id: number, x: number, y: number): void {
@@ -138,6 +173,16 @@ export class Effects {
       c.node.scaling.setAll(pop * (1 + Math.max(0, 1 - c.age * 3) * 0.6));
       c.node.rotation.y += dt * 2.8;
       c.node.position.y += Math.sin(c.age * 3) * dt * 0.25;
+    }
+    for (let i = this.bowls.length - 1; i >= 0; i--) {
+      const b = this.bowls[i];
+      b.age += dt;
+      const s = b.age < 0.2 ? b.age / 0.2 : b.age > 2.6 ? Math.max(0.01, (3 - b.age) / 0.4) : 1;
+      b.node.scaling.setAll(s);
+      if (b.age > 3) {
+        b.node.dispose();
+        this.bowls.splice(i, 1);
+      }
     }
     for (let i = this.collecting.length - 1; i >= 0; i--) {
       const c = this.collecting[i];

@@ -5,16 +5,20 @@ import { Engine } from '@babylonjs/core/Engines/engine';
 import { Game, type Input } from './core/game';
 import { World } from './render/world';
 import { Hud } from './ui/hud';
+import { loadSaved, save } from './ui/save';
+import { ShopMenu } from './ui/shop';
 import { TEXT } from './ui/text';
 
-const KEYS = new Set(['ArrowLeft', 'ArrowRight', 'Space', 'Enter', 'NumpadEnter', 'KeyZ', 'KeyY']);
+const KEYS = new Set(['ArrowLeft', 'ArrowRight', 'Space', 'Enter', 'NumpadEnter', 'KeyZ', 'KeyY', 'KeyK', 'Escape', 'Digit1', 'Digit2', 'Digit3', 'Numpad1', 'Numpad2', 'Numpad3']);
 
 /** Wires keyboard, game rules, scene and HUD together and runs the frame loop. */
 export class App {
   readonly engine: Engine;
-  readonly game = new Game();
+  readonly game = new Game(7, 6, loadSaved());
   readonly world: World;
   private readonly hud: Hud;
+  readonly shop: ShopMenu;
+  private saveIn = 0;
   private readonly held = new Set<string>();
   private pressed = new Set<string>();
   private started = false;
@@ -23,6 +27,10 @@ export class App {
     this.engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, antialias: true }, true);
     this.world = new World(this.engine, this.game);
     this.hud = new Hud(ui, this.game);
+    this.shop = new ShopMenu(ui, this.game.wardrobe, () => {
+      this.world.refreshOutfit();
+      save(this.game.wardrobe);
+    });
     this.showTitle(ui);
 
     window.addEventListener('keydown', (e) => {
@@ -32,6 +40,11 @@ export class App {
         if (e.code === 'Enter' || e.code === 'Space') this.start(ui);
         return;
       }
+      if (e.code === 'KeyK' || (e.code === 'Escape' && this.shop.isOpen)) {
+        if (!e.repeat) this.shop.toggle();
+        return;
+      }
+      if (this.shop.isOpen) return;
       if (!e.repeat) this.pressed.add(e.code);
       this.held.add(e.code);
     });
@@ -74,7 +87,7 @@ export class App {
   frame(dt: number): void {
     const has = (...codes: string[]) => codes.some((c) => this.held.has(c));
     const was = (...codes: string[]) => codes.some((c) => this.pressed.has(c));
-    const input: Input = this.started
+    const input: Input = this.started && !this.shop.isOpen
       ? {
           left: has('ArrowLeft'),
           right: has('ArrowRight'),
@@ -83,10 +96,20 @@ export class App {
           pet: was('Enter', 'NumpadEnter'),
           // Z sits where Y is on an English keyboard; accept both so it works either way.
           magic: was('KeyZ', 'KeyY'),
+          feed: was('Digit1', 'Numpad1'),
+          treat: was('Digit2', 'Numpad2'),
+          yarn: was('Digit3', 'Numpad3'),
         }
       : { left: false, right: false, jump: false, fly: false, pet: false, magic: false };
     this.pressed = new Set();
-    this.game.step(dt, input);
+    if (this.shop.isOpen) this.held.clear();
+    // The world keeps breathing behind the shop window, but nobody moves.
+    this.game.step(this.shop.isOpen ? 0 : dt, input);
+    this.saveIn -= dt;
+    if (this.saveIn <= 0) {
+      this.saveIn = 1;
+      save(this.game.wardrobe);
+    }
     this.world.handleEvents(this.game.drainEvents());
     const flying = !this.game.girl.onGround && input.fly;
     this.world.update(dt, flying);

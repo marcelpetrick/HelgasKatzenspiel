@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Marcel Petrick <mail@marcelpetrick.it>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import { newWardrobe, type Supply, type Wardrobe } from './shop';
+
 /**
  * The rules of the game, free of Babylon and the DOM so they can be unit tested headless.
  * The world is a 2D side view: x runs left to right, y is up.
@@ -34,6 +36,17 @@ export const FLOAT_HEIGHT = 2.5;
 /** Magic makes every cat within this range happy, once per cooldown. */
 export const MAGIC_RANGE = 6;
 export const MAGIC_COOLDOWN = 1.2;
+/** Hearts a cat gives for a bowl of food or a treat. */
+export const SUPPLY_HEARTS: Record<Supply, number> = { food: 3, treat: 2 };
+export const YARN_THROW_SPEED = 10;
+export const YARN_FRICTION = 4;
+/** Cats notice a yarn ball this far away and run after it. */
+export const YARN_ATTENTION = 14;
+export const PLAY_SPEED = 4;
+/** A ball lying still for this long is picked up again. */
+export const YARN_REST_TIME = 6;
+/** After this long the cats lose interest in a throw and the ball comes to rest. */
+export const YARN_PLAY_TIME = 10;
 
 export const CAT_NAMES = ['Mimi', 'Minka', 'Felix', 'Luna', 'Tiger', 'Schnurri', 'Moritz', 'Kitty'] as const;
 export const CAT_COATS = ['orange', 'grau', 'schwarz', 'weiß', 'creme', 'dreifarbig'] as const;
@@ -78,7 +91,7 @@ export interface Girl {
   facing: 1 | -1;
 }
 
-export type CatMood = 'walk' | 'sit' | 'happy';
+export type CatMood = 'walk' | 'sit' | 'happy' | 'play';
 
 export interface Cat {
   id: number;
@@ -104,6 +117,17 @@ export interface Coin {
   y: number;
 }
 
+export interface Yarn {
+  x: number;
+  y: number;
+  vx: number;
+  /** Seconds the ball has been lying still. */
+  rest: number;
+  spin: number;
+  /** Seconds since the throw. */
+  age: number;
+}
+
 export interface Input {
   left: boolean;
   right: boolean;
@@ -114,13 +138,19 @@ export interface Input {
   pet: boolean;
   /** Edge-triggered: cast a spell. */
   magic: boolean;
+  /** Edge-triggered: give the nearest cat food, a treat, or throw the yarn ball. */
+  feed?: boolean;
+  treat?: boolean;
+  yarn?: boolean;
 }
 
 export type GameEvent =
   | { type: 'jump' }
   | { type: 'land' }
   | { type: 'magic'; x: number; y: number }
-  | { type: 'hearts'; cat: number; x: number; y: number }
+  | { type: 'hearts'; cat: number; x: number; y: number; count: number }
+  | { type: 'feed'; cat: number; supply: Supply; x: number; y: number }
+  | { type: 'yarn'; x: number; y: number }
   | { type: 'coinSpawn'; coin: number; x: number; y: number }
   | { type: 'coin'; coin: number; x: number; y: number };
 
@@ -129,7 +159,9 @@ export class Game {
   readonly cats: Cat[] = [];
   readonly coins: Coin[] = [];
   hearts = 0;
-  money = 0;
+  yarn: Yarn | null = null;
+  /** Cats that already made hearts for the current throw. */
+  private yarnFans = new Set<number>();
   /** Seconds until the next spell is ready. */
   magicCooldown = 0;
   private heartsSinceCoin = 0;
@@ -137,7 +169,11 @@ export class Game {
   private events: GameEvent[] = [];
   private readonly rng: () => number;
 
-  constructor(seed = 7, catCount = 6) {
+  constructor(
+    seed = 7,
+    catCount = 6,
+    readonly wardrobe: Wardrobe = newWardrobe(),
+  ) {
     this.rng = createRng(seed);
     const startX = HOUSE_X - 14;
     this.girl = { x: startX, y: groundY(startX), vx: 0, vy: 0, onGround: true, facing: 1 };
@@ -160,6 +196,10 @@ export class Game {
     }
     // A few coins are already lying around, so there is something to find straight away.
     for (const x of [HOUSE_X - 4, HOUSE_X + 5, 20, 100]) this.addCoin(x);
+  }
+
+  get money(): number {
+    return this.wardrobe.money;
   }
 
   /** Events since the last call, for the renderer and the HUD. */
@@ -188,6 +228,10 @@ export class Game {
     if (input.pet) this.pet();
     this.magicCooldown = Math.max(0, this.magicCooldown - dt);
     if (input.magic) this.castMagic();
+    if (input.feed) this.give('food');
+    if (input.treat) this.give('treat');
+    if (input.yarn) this.throwYarn();
+    this.stepYarn(dt);
     for (const c of this.cats) this.stepCat(c, dt);
     this.collectCoins();
   }
@@ -238,18 +282,55 @@ export class Game {
     for (const c of this.cats) if (Math.abs(c.x - this.girl.x) <= MAGIC_RANGE) this.makeHappy(c);
   }
 
-  private makeHappy(cat: Cat): void {
+  /** Food or a treat for the nearest cat, if there is one and the pantry is not empty. */
+  private give(supply: Supply): void {
+    const cat = this.nearestCat();
+    if (!cat || this.wardrobe.supplies[supply] <= 0) return;
+    this.wardrobe.supplies[supply]--;
+    this.events.push({ type: 'feed', cat: cat.id, supply, x: cat.x, y: cat.y });
+    cat.cooldown = 0;
+    this.makeHappy(cat, SUPPLY_HEARTS[supply], HAPPY_TIME * 1.6);
+  }
+
+  private throwYarn(): void {
+    if (!this.wardrobe.hasYarn) return;
+    const g = this.girl;
+    const x = Math.min(WORLD_MAX_X, Math.max(WORLD_MIN_X, g.x + g.facing * 0.8));
+    this.yarn = { x, y: groundY(x) + 0.25, vx: g.facing * YARN_THROW_SPEED, rest: 0, spin: 0, age: 0 };
+    this.yarnFans.clear();
+    this.events.push({ type: 'yarn', x, y: this.yarn.y });
+  }
+
+  private stepYarn(dt: number): void {
+    const y = this.yarn;
+    if (!y) return;
+    y.age += dt;
+    const speed = Math.max(0, Math.abs(y.vx) - YARN_FRICTION * dt);
+    y.vx = Math.sign(y.vx) * speed;
+    y.x += y.vx * dt;
+    if (y.x < WORLD_MIN_X || y.x > WORLD_MAX_X) {
+      y.x = Math.min(WORLD_MAX_X, Math.max(WORLD_MIN_X, y.x));
+      y.vx = -y.vx * 0.5;
+    }
+    y.y = groundY(y.x) + 0.25;
+    y.spin += (y.vx / 0.25) * dt;
+    y.rest = speed === 0 ? y.rest + dt : 0;
+    if (y.rest > YARN_REST_TIME) this.yarn = null;
+  }
+
+  private makeHappy(cat: Cat, count = 1, time = HAPPY_TIME): void {
     if (cat.cooldown > 0) return;
     cat.mood = 'happy';
-    cat.timer = HAPPY_TIME;
+    cat.timer = time;
     cat.cooldown = PET_COOLDOWN;
-    cat.love++;
-    this.hearts++;
-    this.events.push({ type: 'hearts', cat: cat.id, x: cat.x, y: cat.y });
+    cat.love += count;
+    this.hearts += count;
+    this.events.push({ type: 'hearts', cat: cat.id, x: cat.x, y: cat.y, count });
     // Cats turn to look at whoever pets them.
     cat.dir = this.girl.x < cat.x ? -1 : 1;
-    if (++this.heartsSinceCoin >= HEARTS_PER_COIN) {
-      this.heartsSinceCoin = 0;
+    this.heartsSinceCoin += count;
+    while (this.heartsSinceCoin >= HEARTS_PER_COIN) {
+      this.heartsSinceCoin -= HEARTS_PER_COIN;
       const side = this.rng() < 0.5 ? -1 : 1;
       this.addCoin(cat.x + side * (1.2 + this.rng() * 1.5));
     }
@@ -268,7 +349,7 @@ export class Game {
       const c = this.coins[i];
       if (Math.abs(c.x - g.x) < COIN_PICKUP_RANGE && c.y - g.y > -0.5 && c.y - g.y < 2.2) {
         this.coins.splice(i, 1);
-        this.money++;
+        this.wardrobe.money++;
         this.events.push({ type: 'coin', coin: c.id, x: c.x, y: c.y });
       }
     }
@@ -276,6 +357,7 @@ export class Game {
 
   private stepCat(c: Cat, dt: number): void {
     c.cooldown = Math.max(0, c.cooldown - dt);
+    if (this.chaseYarn(c, dt)) return;
     c.timer -= dt;
     if (c.timer <= 0) {
       if (c.mood === 'walk' || c.mood === 'happy') {
@@ -298,5 +380,33 @@ export class Game {
       }
     }
     c.y = groundY(c.x);
+  }
+
+  /** A rolling or freshly thrown yarn ball is irresistible. Returns true while the cat is playing. */
+  private chaseYarn(c: Cat, dt: number): boolean {
+    const y = this.yarn;
+    if (!y || y.age > YARN_PLAY_TIME || c.mood === 'happy' || Math.abs(y.x - c.x) > YARN_ATTENTION) {
+      if (c.mood === 'play') {
+        c.mood = 'sit';
+        c.timer = 1;
+      }
+      return false;
+    }
+    c.mood = 'play';
+    const d = y.x - c.x;
+    c.dir = d < 0 ? -1 : 1;
+    if (Math.abs(d) > 0.6) {
+      c.x += c.dir * Math.min(Math.abs(d), PLAY_SPEED * dt);
+    } else {
+      // Pounce: the ball gets a little bat, and the first catch of each throw makes the cat happy.
+      y.vx = c.dir * (2 + this.rng() * 2);
+      y.rest = 0;
+      if (!this.yarnFans.has(c.id)) {
+        this.yarnFans.add(c.id);
+        this.makeHappy(c, 1);
+      }
+    }
+    c.y = groundY(c.x);
+    return true;
   }
 }

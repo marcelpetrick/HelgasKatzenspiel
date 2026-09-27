@@ -254,3 +254,225 @@ kbd {
   font-size: 14px;
   color: var(--muted);
 }
+
+/* Supplies bar */
+
+.supplies {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  display: flex;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.supply {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.supply .icon {
+  font-size: 22px;
+}
+
+.supply.empty {
+  opacity: 0.45;
+}
+
+/* Shop */
+
+.shop {
+  position: absolute;
+  inset: 0;
+  display: none;
+  place-items: center;
+  background: rgb(40 20 60 / 35%);
+  pointer-events: auto;
+}
+
+.shop.open {
+  display: grid;
+}
+
+.shop-card {
+  position: relative;
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  background: var(--glass-strong);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 60px rgb(0 0 0 / 30%);
+  padding: 20px 24px;
+}
+
+.shop-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.shop-head h2 {
+  margin: 0;
+  font-size: 30px;
+  flex: 1;
+}
+
+.shop-money {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.shop button {
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  background: rgb(255 255 255 / 10%);
+}
+
+.shop button:hover:not(:disabled) {
+  background: rgb(255 255 255 / 22%);
+}
+
+.shop button:disabled {
+  cursor: default;
+  opacity: 0.8;
+}
+
+.shop-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 14px 0 6px;
+}
+
+.shop .shop-tab {
+  font-size: 17px;
+}
+
+.shop .shop-tab.active {
+  background: linear-gradient(135deg, #ff7eb6, #b388ff);
+  border-color: transparent;
+}
+
+.shop-body {
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.shop-body h3 {
+  margin: 14px 0 8px;
+  font-size: 16px;
+  color: var(--muted);
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.shop-item {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  grid-template-areas:
+    'icon info price'
+    'icon button button';
+  gap: 6px 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgb(255 255 255 / 8%);
+  border: 1px solid var(--line);
+}
+
+.shop-item.worn {
+  border-color: var(--pink);
+  background: rgb(255 126 182 / 18%);
+}
+
+.shop-item.poor .shop-price {
+  color: rgb(255 248 240 / 45%);
+}
+
+.shop-icon {
+  grid-area: icon;
+  width: 44px;
+  height: 44px;
+  font-size: 32px;
+  display: grid;
+  place-items: center;
+}
+
+.shop-icon.swatch {
+  border-radius: 50%;
+  border: 3px solid rgb(255 255 255 / 70%);
+}
+
+.shop-info {
+  grid-area: info;
+}
+
+.shop-name {
+  font-weight: 600;
+}
+
+.shop-desc {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.shop-price {
+  grid-area: price;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.shop .shop-buy {
+  grid-area: button;
+  padding: 5px 12px;
+}
+
+.shop-hint {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.shop-toast {
+  position: absolute;
+  left: 50%;
+  bottom: -22px;
+  transform: translate(-50%, 10px);
+  opacity: 0;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+  background: #5ec27a;
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 25%);
+}
+
+.shop-toast.bad {
+  background: #ff7a8a;
+}
+
+.shop-toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.on-title .supplies {
+  display: none;
+}

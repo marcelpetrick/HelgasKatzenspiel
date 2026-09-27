@@ -107,3 +107,59 @@ describe('Game', () => {
     }
   });
 });
+
+describe('Game with supplies and toys', () => {
+  it('feeding uses up food and gives several hearts', () => {
+    const g = new Game();
+    g.wardrobe.supplies.food = 1;
+    const cat = g.cats[0];
+    g.girl.x = cat.x - 1;
+    g.step(1 / 60, { ...idle, feed: true });
+    expect(g.wardrobe.supplies.food).toBe(0);
+    expect(g.hearts).toBe(3);
+    expect(g.drainEvents().some((e) => e.type === 'feed')).toBe(true);
+    g.step(1 / 60, { ...idle, feed: true });
+    expect(g.hearts).toBe(3);
+  });
+
+  it('treats give two hearts even right after petting', () => {
+    const g = new Game();
+    g.wardrobe.supplies.treat = 1;
+    const cat = g.cats[0];
+    g.girl.x = cat.x - 1;
+    g.step(1 / 60, { ...idle, pet: true });
+    g.step(1 / 60, { ...idle, treat: true });
+    expect(g.hearts).toBe(3);
+  });
+
+  it('the yarn ball needs to be owned, rolls, gets chased and is picked up again', () => {
+    const g = new Game();
+    g.step(1 / 60, { ...idle, yarn: true });
+    expect(g.yarn).toBeNull();
+    g.wardrobe.hasYarn = true;
+    const cat = g.cats[0];
+    cat.x = g.girl.x + 6;
+    g.step(1 / 60, { ...idle, yarn: true });
+    expect(g.yarn).not.toBeNull();
+    const x0 = g.yarn!.x;
+    run(g, 0.5);
+    expect(g.yarn!.x).toBeGreaterThan(x0);
+    expect(g.cats.some((c) => c.mood === 'play' || c.mood === 'happy')).toBe(true);
+    run(g, 20);
+    expect(g.hearts).toBeGreaterThan(0);
+    run(g, 40);
+    expect(g.yarn).toBeNull();
+    expect(g.cats.every((c) => c.mood !== 'play')).toBe(true);
+  });
+
+  it('the yarn ball bounces off the edge of the world', () => {
+    const g = new Game();
+    g.wardrobe.hasYarn = true;
+    for (const c of g.cats) c.x = 500;
+    g.girl.x = WORLD_MAX_X - 1;
+    g.step(1 / 60, { ...idle, yarn: true });
+    run(g, 1);
+    expect(g.yarn!.x).toBeLessThanOrEqual(WORLD_MAX_X);
+    expect(g.yarn!.vx).toBeLessThanOrEqual(0);
+  });
+});
