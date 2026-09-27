@@ -29,7 +29,10 @@ describe('world layout', () => {
     expect(placeOf(10)).toBe('garden');
     expect(placeOf(INTERIOR_X + 1)).toBe('house');
     expect(placeOf(SHOP_INTERIOR_X + 1)).toBe('shop');
-    expect(maxZAt('shop', SHOP_INTERIOR_X + 3)).toBe(bounds('shop').maxZ);
+    // Shelves and the till are solid; at the door and between them she can walk right to the back.
+    expect(maxZAt('shop', SHOP_INTERIOR_X + 3.5)).toBeLessThan(1.2);
+    expect(maxZAt('shop', SHOP_INTERIOR_X + 10)).toBeLessThan(1.2);
+    expect(maxZAt('shop', SHOP_INTERIOR_X + 12)).toBe(bounds('shop').maxZ);
     for (const s of SHELVES) expect(s.x > bounds('shop').minX && s.x < bounds('shop').maxX).toBe(true);
     const house = BUILDINGS[0];
     expect(maxZAt('garden', house.x)).toBeLessThan(house.front);

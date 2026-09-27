@@ -117,6 +117,8 @@ Kampf, kein Krieg.
 - [x] HUD: „H: Hilfe“ bleibt sichtbar, Esc steht in der Liste; Klick-Geräusch für H, T und Esc.
 - [x] Katzenladen zum Hineingehen: vier Regale (Kleidung, Für Katzen, Küche, Deko), eine Tür und eine
       Verkäuferkatze an der Kasse; Enter am Regal öffnet die passende Seite. K geht weiterhin überall.
+- [x] Laden nachgebessert: Regale und Kasse sind fest, ↑ gedrückt halten führt nicht gleich wieder
+      hinein, gekaufte Katzen warten draußen vor der Tür.
 - [x] Namensschilder der Katzen liegen unter den Tafeln (Tastenliste, Vorräte), nicht darüber.
 - [x] Eigene Ports (Spiel 5273, Test 4273); die Pipeline installiert nur neu, wenn sich die
       Abhängigkeiten wirklich ändern, damit das laufende Spiel nicht kaputtgeht.

@@ -123,7 +123,8 @@ export function hideSpot(b: Bush): { x: number; z: number } {
 /** The furthest back you may stand at x, so nobody walks into a building's wall. */
 export function maxZAt(place: Place, x: number): number {
   const b = bounds(place);
-  if (place !== 'garden') return b.maxZ;
+  if (place === 'shop') return SHOP_FURNITURE.some((f) => Math.abs(x - f.x) < f.halfWidth + 0.3) ? SHOP_FURNITURE_FRONT : b.maxZ;
+  if (place === 'house') return b.maxZ;
   for (const building of BUILDINGS) if (Math.abs(x - building.x) < building.halfWidth + 0.4) return building.front - 0.35;
   return b.maxZ;
 }
@@ -208,6 +209,14 @@ export const SHELVES: readonly Shelf[] = [
   { id: 'kitchen', x: SHOP_INTERIOR_X + 16.5, z: 1.9 },
   { id: 'deco', x: SHOP_INTERIOR_X + 20.5, z: 1.9 },
 ];
+
+/** The shelves and the till in the shop are solid: nobody walks further back than their front. */
+export const SHOP_TILL_X = SHOP_INTERIOR_X + 10;
+const SHOP_FURNITURE: readonly { x: number; halfWidth: number }[] = [
+  ...SHELVES.filter((s) => s.id !== 'exit').map((s) => ({ x: s.x, halfWidth: 1.5 })),
+  { x: SHOP_TILL_X, halfWidth: 0.65 },
+];
+const SHOP_FURNITURE_FRONT = 0.95;
 
 /** Where you come out when walking into the shop. */
 export const SHOP_ENTRY = { x: SHOP_INTERIOR_X + 12, z: 1.0 };

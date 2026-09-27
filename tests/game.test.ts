@@ -198,6 +198,46 @@ describe('doors and the house', () => {
     expect(g.girl.place).toBe('garden');
   });
 
+  it('holding ↑ after coming out of the shop does not walk straight back in', () => {
+    const g = new Game();
+    quiet(g);
+    g.girl.x = SHOP_X;
+    g.girl.z = 1;
+    tap(g, { enter: true, up: true });
+    expect(g.girl.place).toBe('shop');
+    tap(g, { enter: true, up: true });
+    expect(g.girl.place).toBe('garden');
+    run(g, 1, { up: true });
+    expect(g.girl.place).toBe('garden');
+    // Let go and push on into the door again: now she goes in.
+    tap(g, {});
+    run(g, 0.5, { up: true });
+    expect(g.girl.place).toBe('shop');
+  });
+
+  it('a cat bought in the shop waits outside the shop door, and no kittens are born in the shop', () => {
+    const g = new Game();
+    quiet(g);
+    g.girl.x = SHOP_X;
+    g.girl.z = 1;
+    tap(g, { enter: true });
+    g.wardrobe.money = CAT_PRICE;
+    const cat = g.buyCat();
+    expect(cat?.place).toBe('garden');
+    expect(Math.abs((cat?.x ?? 0) - SHOP_X)).toBeLessThan(1);
+    for (const c of g.cats) c.love = 50;
+    const [a, b] = g.cats;
+    beside(g, a);
+    beside(g, b, -1);
+    const before = g.cats.length;
+    for (let i = 0; i < KITTEN_HEARTS; i++) {
+      tap(g, { pet: true });
+      run(g, PET_COOLDOWN + 0.02);
+      a.x = g.girl.x + 1;
+    }
+    expect(g.cats.length).toBe(before);
+  });
+
   it('in the shop she flies no higher than indoors, and happy cats drop coins on the floor', () => {
     const g = new Game();
     quiet(g);

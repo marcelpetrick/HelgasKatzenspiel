@@ -8,7 +8,7 @@ import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import type { Cat } from '../core/game';
 import { CATALOG } from '../core/shop';
-import { INTERIOR_MAX_Z, SHELVES, SHOP_INTERIOR_WIDTH, SHOP_INTERIOR_X, type ShelfId } from '../core/world';
+import { INTERIOR_MAX_Z, SHELVES, SHOP_INTERIOR_WIDTH, SHOP_INTERIOR_X, SHOP_TILL_X, type ShelfId } from '../core/world';
 import { TEXT } from '../ui/text';
 import { CatView } from './catView';
 import { fanMesh, glowMaterial, heartOutline, material, signMaterial } from './shapes';
@@ -141,7 +141,7 @@ export function buildShopInterior(scene: Scene, addCaster: (m: Mesh) => void): S
   }
 
   // The till: a small counter between the cat shelf and the door, with a friendly shopkeeper cat on it.
-  const tillX = SHOP_INTERIOR_X + 10;
+  const tillX = SHOP_TILL_X;
   put(box(1.3, 1.2, 1.0), material(scene, 'shopInTill', '#ff9fc6', 0.2, 0.1), tillX, 0.6, BACK - 0.75);
   put(box(1.4, 0.1, 1.1), wood, tillX, 1.25, BACK - 0.75);
   const keeper: Cat = {

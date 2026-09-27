@@ -343,6 +343,8 @@ export class Game {
   heartsSinceCoin = 0;
   heartsSinceKitten = 0;
   private refillIn = SPOT_REFILL_TIME;
+  /** Set when she has just come through a door; ↑ has to be let go before it walks through one again. */
+  private doorLock = false;
   private nextId = 1;
   private nextToy = 0;
   private events: GameEvent[] = [];
@@ -446,7 +448,13 @@ export class Game {
     this.wardrobe.money -= CAT_PRICE;
     const g = this.girl;
     const coat = COATS[Math.floor(this.rng() * COATS.length)].id;
-    const cat = this.addCat({ coat, size: 1, growth: 1, x: this.clampX(g.place, g.x + g.facing * 1.5), z: g.z, place: g.place });
+    // A cat bought in the shop waits outside the shop door; anywhere else it appears next to her.
+    const shop = BUILDINGS.find((b) => b.id === 'shop');
+    const at =
+      g.place === 'shop' && shop
+        ? { ...outsideDoor(shop), place: 'garden' as const }
+        : { x: this.clampX(g.place, g.x + g.facing * 1.5), z: g.z, place: g.place };
+    const cat = this.addCat({ coat, size: 1, growth: 1, ...at });
     this.events.push({ type: 'newCat', cat: cat.id });
     return cat;
   }
@@ -646,7 +654,8 @@ export class Game {
       }
     }
     // Pushing on into a door while standing in front of it walks through.
-    if (input.up && !input.enter && g.onGround && g.place === 'garden') {
+    if (!input.up) this.doorLock = false;
+    if (input.up && !input.enter && !this.doorLock && g.onGround && g.place === 'garden') {
       const door = doorAt(g.x, g.z);
       if (door && g.z >= door.front - 0.4) this.useDoor();
     }
@@ -688,6 +697,7 @@ export class Game {
 
   private moveGirl(place: Place, x: number, z: number): void {
     const g = this.girl;
+    this.doorLock = true;
     g.place = place;
     g.x = x;
     g.z = z;
@@ -1003,7 +1013,8 @@ export class Game {
 
   /** With enough happy cats around, two grown-ups that love the girl get a kitten. */
   private maybeKitten(near: Cat): void {
-    if (this.cats.length < KITTEN_MIN_CATS || this.cats.length >= MAX_CATS) return;
+    // Kittens are born at home or in the garden, not in the shop.
+    if (this.cats.length < KITTEN_MIN_CATS || this.cats.length >= MAX_CATS || near.place === 'shop') return;
     const parents = this.cats.filter((c) => c.growth >= 1 && c.love >= PARENT_LOVE && c.place === near.place);
     if (parents.length < 2) return;
     const coat = parents[Math.floor(this.rng() * parents.length)].coat;

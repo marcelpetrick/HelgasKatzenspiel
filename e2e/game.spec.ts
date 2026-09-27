@@ -93,7 +93,7 @@ test('walk into the cat shop, open a shelf and walk out again', async ({ page })
   await page.keyboard.press('Enter');
   await page.evaluate(() => {
     const { game } = window.__katzen.app;
-    for (const c of game.cats) c.x = 130;
+    for (const c of game.cats) if (c.place === 'garden') c.x = 130;
     game.girl.x = 96;
     game.girl.z = 0;
   });
@@ -106,7 +106,7 @@ test('walk into the cat shop, open a shelf and walk out again', async ({ page })
   await page.evaluate(() => {
     const { game } = window.__katzen.app;
     game.girl.x = 3007.5;
-    game.girl.z = 1.9;
+    game.girl.z = 0.9;
   });
   await expect(page.locator('.prompt.show')).toContainText('Futter');
   await page.keyboard.press('Enter');
