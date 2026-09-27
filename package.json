@@ -1,0 +1,24 @@
+{
+  "name": "helgas-katzenspiel",
+  "version": "0.0.2",
+  "description": "Ein niedliches Katzenspiel für den Browser: Ein Mädchen streichelt und versorgt ganz viele Katzen.",
+  "private": true,
+  "type": "module",
+  "author": "Marcel Petrick <mail@marcelpetrick.it>",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4173 --strictPort",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@babylonjs/core": "9.28.0"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3",
+    "vite": "8.3.1",
+    "vitest": "5.0.2"
+  }
+}
