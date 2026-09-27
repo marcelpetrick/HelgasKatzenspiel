@@ -5,7 +5,7 @@ import type { Scene } from '@babylonjs/core/scene';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { Color3, Color4 } from '@babylonjs/core/Maths/math.color';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
-import type { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { createRng, groundY, HOUSE_X } from '../core/game';
@@ -152,13 +152,51 @@ export function buildLandscape(scene: Scene, addCaster: (m: Mesh) => void): (t: 
     m.isVisible = false;
     return m;
   });
-  for (let i = 0; i < 260; i++) {
+  for (let i = 0; i < 900; i++) {
     const x = X0 + rng() * (X1 - X0);
     const z = -3.5 + rng() * 9;
     if (z > -1 && z < 1) continue;
     const lift = z > 3 ? (z - 3) * 0.25 : 0;
     const f = petals[Math.floor(rng() * petals.length)].createInstance('f');
     f.position.set(x, groundY(x) + lift + 0.08, z);
+  }
+
+  // Bigger blossoms: five petals round a yellow heart, on a little green stem.
+  const stemMat = material(scene, 'stemMat', '#3c9a36', 0.05, 0.05);
+  const heartMat = material(scene, 'blossomHeart', '#ffd23f', 0.2, 0.3);
+  const blossoms = ['#ff7eb6', '#ffffff', '#b388ff', '#ff6b6b', '#6ec6ff', '#ffb347'].map((c, i) => {
+    const parts: Mesh[] = [];
+    const stem = MeshBuilder.CreateCylinder('stem', { height: 0.5, diameter: 0.05, tessellation: 5 }, scene);
+    stem.position.y = 0.25;
+    stem.material = stemMat;
+    parts.push(stem);
+    const mid = MeshBuilder.CreateSphere('mid', { diameter: 0.14, segments: 6 }, scene);
+    mid.position.set(0, 0.52, -0.03);
+    mid.material = heartMat;
+    parts.push(mid);
+    const petalMat = material(scene, 'petal' + i, c, 0.1, 0.2);
+    for (let p = 0; p < 5; p++) {
+      const a = (p / 5) * Math.PI * 2;
+      const petal = MeshBuilder.CreateSphere('petal', { diameter: 0.16, segments: 6 }, scene);
+      petal.scaling.set(1, 1, 0.4);
+      petal.position.set(Math.cos(a) * 0.12, 0.52 + Math.sin(a) * 0.12, 0);
+      petal.material = petalMat;
+      parts.push(petal);
+    }
+    const merged = Mesh.MergeMeshes(parts, true, true, undefined, false, true) ?? stem;
+    merged.isVisible = false;
+    return merged;
+  });
+  for (let i = 0; i < 320; i++) {
+    const x = X0 + rng() * (X1 - X0);
+    const z = -3.6 + rng() * 10;
+    if (z > -1.2 && z < 1.2) continue;
+    if (Math.abs(x - HOUSE_X) < 7 && z > 1) continue;
+    const lift = z > 3 ? (z - 3) * 0.25 : 0;
+    const b = blossoms[Math.floor(rng() * blossoms.length)].createInstance('b');
+    b.position.set(x, groundY(x) + lift - 0.02, z);
+    b.scaling.setAll(0.8 + rng() * 0.7);
+    b.rotation.y = (rng() - 0.5) * 0.8;
   }
 
   // Fluffy clouds drifting slowly.
