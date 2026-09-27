@@ -6,7 +6,7 @@ import { buy, CATALOG, SLOT_NAMES, type ShopItem, type Slot, type Wardrobe, wear
 import { el } from './dom';
 import { TEXT } from './text';
 
-type Tab = 'clothes' | 'cats';
+type Tab = 'clothes' | 'cats' | 'deco';
 /** The shop sells everything; the wardrobe at home only shows the clothes you already have. */
 export type ShopMode = 'shop' | 'wardrobe';
 /** What just happened, so the app can play a sound or react. */
@@ -49,6 +49,7 @@ export class ShopMenu {
     for (const [id, label] of [
       ['clothes', TEXT.shop.tabClothes],
       ['cats', TEXT.shop.tabCats],
+      ['deco', TEXT.shop.tabDeco],
     ] as const) {
       const b = el('button', 'shop-tab', label);
       b.type = 'button';
@@ -164,7 +165,7 @@ export class ShopMenu {
 
     const b = el('button', 'shop-buy');
     b.type = 'button';
-    const owned = item.kind === 'wear' ? w.owned.includes(item.id) : item.kind === 'toy' && w.hasYarn;
+    const owned = item.kind === 'wear' ? w.owned.includes(item.id) : item.kind === 'toy' ? w.hasYarn : item.kind === 'deco' && w.deco.includes(item.id);
     if (item.kind === 'wear' && w.outfit[item.slot] === item.id) {
       b.textContent = TEXT.shop.wearing;
       b.disabled = true;
@@ -196,9 +197,13 @@ export class ShopMenu {
           if (item.kind === 'wear' && item.slot === slot && (this.mode === 'shop' || this.wardrobe.owned.includes(item.id))) grid.append(this.card(item));
         this.body.append(grid);
       }
+    } else if (this.tab === 'deco') {
+      const grid = el('div', 'shop-grid');
+      for (const item of CATALOG) if (item.kind === 'deco') grid.append(this.card(item));
+      this.body.append(grid, el('p', 'shop-hint', TEXT.shop.decoHint));
     } else {
       const grid = el('div', 'shop-grid');
-      for (const item of CATALOG) if (item.kind !== 'wear') grid.append(this.card(item));
+      for (const item of CATALOG) if (item.kind === 'supply' || item.kind === 'toy') grid.append(this.card(item));
       grid.append(this.catCard());
       this.body.append(grid, el('p', 'shop-hint', TEXT.shop.useHint));
     }

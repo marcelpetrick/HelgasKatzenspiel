@@ -1,10 +1,15 @@
 // SPDX-FileCopyrightText: 2026 Marcel Petrick <mail@marcelpetrick.it>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import { cleanLook, DEFAULT_LOOK, type Look } from './look';
+
 /** What the shop sells. Pure data and rules, no DOM. */
 
-export type Slot = 'top' | 'skirt' | 'headband' | 'shoes';
+/** `headband` holds all hair jewellery: cat ears, bows and clips. */
+export type Slot = 'top' | 'skirt' | 'headband' | 'shoes' | 'earrings' | 'nails';
 export type Supply = 'food' | 'treat';
+/** The shape of an accessory; plain clothes have none. */
+export type Accessory = 'ears' | 'bow' | 'clip-star' | 'clip-heart' | 'pearl' | 'heart' | 'star' | 'none';
 
 export interface WearItem {
   kind: 'wear';
@@ -13,6 +18,7 @@ export interface WearItem {
   slot: Slot;
   color: string;
   price: number;
+  style?: Accessory;
 }
 
 export interface SupplyItem {
@@ -33,16 +39,37 @@ export interface ToyItem {
   price: number;
 }
 
-export type ShopItem = WearItem | SupplyItem | ToyItem;
+/** Decorations for the house; each one makes the cats feel more at home. */
+export interface DecoItem {
+  kind: 'deco';
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  price: number;
+}
+
+export type ShopItem = WearItem | SupplyItem | ToyItem | DecoItem;
 
 export const SLOT_NAMES: Record<Slot, string> = {
   top: 'Oberteile',
   skirt: 'Röcke',
-  headband: 'Katzenohren-Haarreifen',
+  headband: 'Haarschmuck',
   shoes: 'Schuhe',
+  earrings: 'Ohrringe',
+  nails: 'Nagellack',
 };
 
-const wear = (slot: Slot, id: string, name: string, color: string, price: number): WearItem => ({ kind: 'wear', id, name, slot, color, price });
+const wear = (slot: Slot, id: string, name: string, color: string, price: number, style?: Accessory): WearItem => ({
+  kind: 'wear',
+  id,
+  name,
+  slot,
+  color,
+  price,
+  ...(style ? { style } : {}),
+});
+const deco = (id: string, name: string, icon: string, description: string, price: number): DecoItem => ({ kind: 'deco', id, name, icon, description, price });
 
 export const CATALOG: readonly ShopItem[] = [
   wear('top', 'top-rosa', 'Rosa Shirt', '#ff7eb6', 0),
@@ -56,25 +83,51 @@ export const CATALOG: readonly ShopItem[] = [
   wear('skirt', 'skirt-tuerkis', 'Türkiser Rock', '#3fd0d4', 4),
   wear('skirt', 'skirt-rot', 'Roter Rock', '#ff5a6e', 4),
   wear('skirt', 'skirt-jeans', 'Jeansrock', '#4a78c2', 6),
-  wear('headband', 'band-rosa', 'Rosa Katzenohren', '#ff9fc6', 0),
-  wear('headband', 'band-gold', 'Goldene Katzenohren', '#ffc83d', 6),
-  wear('headband', 'band-weiss', 'Weiße Katzenohren', '#ffffff', 4),
-  wear('headband', 'band-schwarz', 'Schwarze Katzenohren', '#2e2833', 4),
-  wear('headband', 'band-lila', 'Lila Katzenohren', '#b388ff', 4),
+  wear('headband', 'band-rosa', 'Rosa Katzenohren', '#ff9fc6', 0, 'ears'),
+  wear('headband', 'band-gold', 'Goldene Katzenohren', '#ffc83d', 6, 'ears'),
+  wear('headband', 'band-weiss', 'Weiße Katzenohren', '#ffffff', 4, 'ears'),
+  wear('headband', 'band-schwarz', 'Schwarze Katzenohren', '#2e2833', 4, 'ears'),
+  wear('headband', 'band-lila', 'Lila Katzenohren', '#b388ff', 4, 'ears'),
+  wear('headband', 'bow-rosa', 'Rosa Schleife', '#ff7eb6', 3, 'bow'),
+  wear('headband', 'bow-rot', 'Rote Schleife', '#ff4d5e', 3, 'bow'),
+  wear('headband', 'bow-blau', 'Blaue Schleife', '#4aa3ff', 3, 'bow'),
+  wear('headband', 'clip-stern', 'Sternchen-Spange', '#ffd23f', 2, 'clip-star'),
+  wear('headband', 'clip-herz', 'Herzchen-Spange', '#ff5c8a', 2, 'clip-heart'),
   wear('shoes', 'shoes-pink', 'Pinke Schuhe', '#e0567a', 0),
   wear('shoes', 'shoes-weiss', 'Weiße Turnschuhe', '#f4f4f4', 3),
   wear('shoes', 'shoes-blau', 'Blaue Schuhe', '#3f7bd9', 3),
   wear('shoes', 'shoes-gold', 'Goldene Schuhe', '#ffc83d', 7),
+  wear('earrings', 'ear-none', 'Keine Ohrringe', '#ffffff', 0, 'none'),
+  wear('earrings', 'ear-perle', 'Perlenohrringe', '#fff8f0', 3, 'pearl'),
+  wear('earrings', 'ear-herz', 'Herzchen-Ohrringe', '#ff5c8a', 4, 'heart'),
+  wear('earrings', 'ear-stern', 'Sternchen-Ohrringe', '#ffd23f', 4, 'star'),
+  wear('nails', 'nails-none', 'Ohne Nagellack', '#ffffff', 0, 'none'),
+  wear('nails', 'nails-rosa', 'Rosa Nagellack', '#ff7eb6', 2),
+  wear('nails', 'nails-rot', 'Roter Nagellack', '#e8283f', 2),
+  wear('nails', 'nails-lila', 'Lila Nagellack', '#9b6bff', 2),
+  wear('nails', 'nails-tuerkis', 'Türkiser Nagellack', '#2fd3cf', 2),
+  wear('nails', 'nails-gold', 'Glitzer-Goldlack', '#ffc83d', 4),
   { kind: 'supply', id: 'food', name: 'Katzenfutter', icon: '🥫', description: 'Eine volle Schüssel: 3 Herzen', price: 2 },
   { kind: 'supply', id: 'treat', name: 'Leckerli', icon: '🐟', description: 'Ein Fischleckerli: 2 Herzen', price: 1 },
   { kind: 'toy', id: 'yarn', name: 'Wollknäuel', icon: '🧶', description: 'Werfen, und die Katzen rennen hinterher', price: 5 },
+  deco('deco-kratzbaum', 'Kratzbaum', '🌳', 'Zum Klettern und Kratzen, im Flur', 12),
+  deco('deco-kissen', 'Kuschelkissen', '🛋️', 'Weiche Kissen im Flur', 4),
+  deco('deco-blumen', 'Blumentöpfe', '🌷', 'Bunte Blumen für die Küche', 6),
+  deco('deco-bild', 'Katzenbild', '🖼️', 'Ein Bild mit Katze fürs Schlafzimmer', 5),
+  deco('deco-teppich', 'Herzteppich', '💗', 'Ein Herzteppich fürs Bad', 6),
+  deco('deco-lichter', 'Lichterkette', '✨', 'Leuchtet im ganzen Haus', 8),
 ];
+
+/** Every decoration makes the cupboards fill up this much faster (the cats are happier at home). */
+export const DECO_REFILL_BONUS = 0.15;
 
 export const DEFAULT_OUTFIT: Record<Slot, string> = {
   top: 'top-rosa',
   skirt: 'skirt-flieder',
   headband: 'band-rosa',
   shoes: 'shoes-pink',
+  earrings: 'ear-none',
+  nails: 'nails-none',
 };
 
 export function findItem(id: string): ShopItem | undefined {
@@ -88,6 +141,10 @@ export interface Wardrobe {
   outfit: Record<Slot, string>;
   supplies: Record<Supply, number>;
   hasYarn: boolean;
+  /** Decorations bought for the house. */
+  deco: string[];
+  /** Skin, hair and face, from the figure editor. */
+  look: Look;
 }
 
 export function newWardrobe(): Wardrobe {
@@ -97,6 +154,8 @@ export function newWardrobe(): Wardrobe {
     outfit: { ...DEFAULT_OUTFIT },
     supplies: { food: 0, treat: 0 },
     hasYarn: false,
+    deco: [],
+    look: { ...DEFAULT_LOOK },
   };
 }
 
@@ -108,12 +167,14 @@ export function buy(w: Wardrobe, id: string): BuyResult {
   if (!item) return 'unknown';
   if (item.kind === 'wear' && w.owned.includes(id)) return 'owned';
   if (item.kind === 'toy' && w.hasYarn) return 'owned';
+  if (item.kind === 'deco' && w.deco.includes(id)) return 'owned';
   if (w.money < item.price) return 'poor';
   w.money -= item.price;
   if (item.kind === 'wear') {
     w.owned.push(id);
     w.outfit[item.slot] = id;
   } else if (item.kind === 'supply') w.supplies[item.id]++;
+  else if (item.kind === 'deco') w.deco.push(id);
   else w.hasYarn = true;
   return 'ok';
 }
@@ -132,6 +193,12 @@ export function outfitColor(w: Wardrobe, slot: Slot): string {
   return item?.kind === 'wear' ? item.color : '#ffffff';
 }
 
+/** The shape of the accessory worn in a slot ('none' for plain clothes or nothing). */
+export function outfitStyle(w: Wardrobe, slot: Slot): Accessory {
+  const item = findItem(w.outfit[slot]);
+  return item?.kind === 'wear' ? (item.style ?? 'none') : 'none';
+}
+
 /** Read a saved wardrobe back, repairing anything missing or broken. */
 export function loadWardrobe(raw: unknown): Wardrobe {
   const w = newWardrobe();
@@ -147,5 +214,7 @@ export function loadWardrobe(raw: unknown): Wardrobe {
     }
   }
   w.hasYarn = r.hasYarn === true;
+  if (Array.isArray(r.deco)) for (const id of r.deco) if (typeof id === 'string' && findItem(id)?.kind === 'deco' && !w.deco.includes(id)) w.deco.push(id);
+  w.look = cleanLook(r.look);
   return w;
 }

@@ -7,6 +7,7 @@ import type { Game, GameEvent, Input } from './core/game';
 import { World } from './render/world';
 import { CatsMenu } from './ui/catsMenu';
 import { el } from './ui/dom';
+import { FigureMenu } from './ui/figureMenu';
 import { Hud } from './ui/hud';
 import { type SchoolEvent, SchoolMenu } from './ui/schoolMenu';
 import { clearSave, hasSave, loadGame, saveGame } from './ui/save';
@@ -26,6 +27,7 @@ const KEYS = new Set([
   'KeyY',
   'KeyK',
   'KeyM',
+  'KeyF',
   'KeyN',
   'KeyS',
   'KeyT',
@@ -51,6 +53,7 @@ export class App {
   readonly shop: ShopMenu;
   readonly catsMenu: CatsMenu;
   readonly school: SchoolMenu;
+  readonly figure: FigureMenu;
   private readonly held = new Set<string>();
   private pressed = new Set<string>();
   private started = false;
@@ -69,6 +72,10 @@ export class App {
     });
     this.catsMenu = new CatsMenu(ui, this.game, () => {
       this.world.syncCats();
+      this.sound.play('click');
+    });
+    this.figure = new FigureMenu(ui, this.game.wardrobe, () => {
+      this.world.refreshOutfit();
       this.sound.play('click');
     });
     this.school = new SchoolMenu(ui, (e) => {
@@ -100,7 +107,7 @@ export class App {
   }
 
   private get menuOpen(): boolean {
-    return this.shop.isOpen || this.catsMenu.isOpen || this.school.isOpen;
+    return this.shop.isOpen || this.catsMenu.isOpen || this.school.isOpen || this.figure.isOpen;
   }
 
   private onKey(e: KeyboardEvent): void {
@@ -116,16 +123,25 @@ export class App {
       this.shop.close();
       this.catsMenu.close();
       this.school.close();
+      this.figure.close();
       return;
     }
     // In class there is only sums: no shopping, no cat menu.
     if (this.school.isOpen) return;
-    if (e.code === 'KeyK' && !this.catsMenu.isOpen) {
+    if (e.code === 'KeyF') {
+      this.shop.close();
+      this.catsMenu.close();
+      this.held.clear();
+      this.figure.toggle();
+      this.sound.play('click');
+      return;
+    }
+    if (e.code === 'KeyK' && !this.catsMenu.isOpen && !this.figure.isOpen) {
       if (this.shop.isOpen) this.shop.close();
       else this.openShop('shop');
       return;
     }
-    if (e.code === 'KeyM' && !this.shop.isOpen) {
+    if (e.code === 'KeyM' && !this.shop.isOpen && !this.figure.isOpen) {
       this.held.clear();
       this.catsMenu.toggle();
       this.sound.play('click');

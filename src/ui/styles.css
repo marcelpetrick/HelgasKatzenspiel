@@ -733,3 +733,30 @@ kbd {
   display: flex;
   gap: 12px;
 }
+
+/* Figure editor: the card sits on the right so the girl stays in view. */
+
+.shop.side {
+  place-items: center end;
+  padding-right: 24px;
+  background: transparent;
+}
+
+.shop.side .shop-card {
+  width: min(460px, calc(100vw - 32px));
+}
+
+.shop-body h3:first-child {
+  margin-top: 4px;
+}
+
+.option-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.shop .option-btn.active {
+  background: linear-gradient(135deg, #ff7eb6, #b388ff);
+  border-color: transparent;
+}

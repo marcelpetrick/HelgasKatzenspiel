@@ -7,7 +7,7 @@ import type { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { BOWLS, INTERIOR_MAX_Z, INTERIOR_WIDTH, INTERIOR_X, ROOMS, spot } from '../core/world';
-import { fanMesh, glowMaterial, heartOutline, material } from './shapes';
+import { fanMesh, glowMaterial, heartOutline, material, signMaterial } from './shapes';
 
 const BACK = INTERIOR_MAX_Z + 0.7;
 const WALL_H = 9;
@@ -17,6 +17,8 @@ export interface Interior {
   root: TransformNode;
   /** Show milk and food in the kitchen bowls. */
   setBowls(milk: boolean, food: boolean): void;
+  /** Show the decorations that were bought. */
+  setDeco(owned: readonly string[]): void;
 }
 
 /** Inside the girl's house: kitchen, hall, bathroom and bedroom, side by side like a doll's house. */
@@ -220,11 +222,107 @@ export function buildInterior(scene: Scene, addCaster: (m: Mesh) => void): Inter
     put(box(1.6, 1.6, 0.1), sky, x, 5.9, BACK - 0.27, false);
   }
 
+  const deco = buildDeco(scene, root, put, box);
   return {
     root,
     setBowls(milk: boolean, food: boolean) {
       fills[0].setEnabled(milk);
       fills[1].setEnabled(food);
     },
+    setDeco(owned: readonly string[]) {
+      for (const [id, node] of deco) node.setEnabled(owned.includes(id));
+    },
   };
+}
+
+type Put = (m: Mesh, mat: StandardMaterial, x: number, y: number, z: number, cast?: boolean) => Mesh;
+
+/** Decorations from the shop, each hidden in its own node until it has been bought. */
+function buildDeco(scene: Scene, root: TransformNode, put: Put, box: (w: number, h: number, d: number) => Mesh): Map<string, TransformNode> {
+  const nodes = new Map<string, TransformNode>();
+  const group = (id: string, build: (p: Put) => void) => {
+    const node = new TransformNode(id, scene);
+    node.parent = root;
+    // Build into the group node instead of the interior root.
+    build((m, mat, x, y, z, cast) => {
+      const mesh = put(m, mat, x, y, z, cast);
+      mesh.parent = node;
+      return mesh;
+    });
+    node.setEnabled(false);
+    nodes.set(id, node);
+  };
+  const sisal = material(scene, 'sisal', '#d9b98a', 0.05, 0.05);
+  const plush = material(scene, 'plush', '#b388ff', 0.1, 0.1);
+
+  group('deco-kratzbaum', (p) => {
+    const x = INTERIOR_X + 25.3;
+    const z = BACK - 1.2;
+    p(MeshBuilder.CreateCylinder('post', { height: 3.4, diameter: 0.35 }, scene), sisal, x, 1.7, z);
+    p(MeshBuilder.CreateCylinder('post2', { height: 2.0, diameter: 0.3 }, scene), sisal, x + 0.9, 1.0, z);
+    for (const [dx, y, d] of [
+      [0.4, 0.1, 1.9],
+      [0.45, 2.0, 1.3],
+      [0.0, 3.45, 1.1],
+    ] as const)
+      p(MeshBuilder.CreateCylinder('platform', { height: 0.15, diameter: d, tessellation: 24 }, scene), plush, x + dx, y, z);
+    p(MeshBuilder.CreateSphere('toyBall', { diameter: 0.25 }, scene), material(scene, 'toyBall', '#ffd23f', 0.3, 0.2), x + 1.1, 1.75, z - 0.3);
+  });
+  group('deco-kissen', (p) => {
+    const colours = ['#ff9fc6', '#8bd4ff', '#ffe066'];
+    colours.forEach((c, i) => {
+      const cushion = p(
+        MeshBuilder.CreateSphere('cushion', { diameter: 0.9, segments: 12 }, scene),
+        material(scene, `cushion${i}`, c, 0.1, 0.12),
+        INTERIOR_X + 18 + i * 0.8,
+        0.3,
+        BACK - 1.0 - (i % 2) * 0.5,
+      );
+      cushion.scaling.set(1, 0.5, 1);
+    });
+  });
+  group('deco-blumen', (p) => {
+    const pot = material(scene, 'pot', '#d9774a', 0.1, 0.05);
+    ['#ff6b9a', '#ffd166', '#b388ff'].forEach((c, i) => {
+      const x = INTERIOR_X + 14.6 + i * 0.8;
+      p(MeshBuilder.CreateCylinder('pot', { height: 0.5, diameterTop: 0.55, diameterBottom: 0.4 }, scene), pot, x, 0.25, BACK - 0.6);
+      p(MeshBuilder.CreateCylinder('stalk', { height: 0.6, diameter: 0.05 }, scene), material(scene, 'stalk', '#3c9a36', 0.05, 0.05), x, 0.8, BACK - 0.6);
+      p(MeshBuilder.CreateSphere('blossom', { diameter: 0.35, segments: 8 }, scene), material(scene, `potBloom${i}`, c, 0.1, 0.3), x, 1.15, BACK - 0.6);
+    });
+  });
+  group('deco-bild', (p) => {
+    const x = INTERIOR_X + 46.5;
+    p(box(1.6, 1.3, 0.08), material(scene, 'catFrame', '#ffc83d', 0.6, 0.2), x, 4.2, BACK - 0.22, false);
+    const canvas = p(
+      MeshBuilder.CreatePlane('catPic', { width: 1.35, height: 1.05 }, scene),
+      signMaterial(scene, 'catPicture', '🐱', '#ff7eb6', '#fff4fa'),
+      x,
+      4.2,
+      BACK - 0.28,
+      false,
+    );
+    canvas.scaling.x = 1;
+  });
+  group('deco-teppich', (p) => {
+    const rug = fanMesh(scene, 'heartRug', heartOutline());
+    rug.material = glowMaterial(scene, 'heartRugMat', '#ff9fc6');
+    p(rug, rug.material as StandardMaterial, INTERIOR_X + 34, 0.03, -0.6, false);
+    rug.rotation.x = Math.PI / 2;
+    rug.scaling.setAll(2.6);
+  });
+  group('deco-lichter', (p) => {
+    const colours = ['#ff6b9a', '#ffd166', '#6fe0b5', '#6ec6ff', '#c3a3ff'].map((c, i) => glowMaterial(scene, `fairy${i}`, c));
+    for (let i = 0; i < 70; i++) {
+      const x = INTERIOR_X + 0.5 + i * (INTERIOR_WIDTH / 70);
+      p(
+        MeshBuilder.CreateSphere('fairy', { diameter: 0.16, segments: 6 }, scene),
+        colours[i % colours.length],
+        x,
+        5.4 + Math.sin(i * 0.9) * 0.18,
+        BACK - 0.25,
+        false,
+      );
+    }
+  });
+  return nodes;
 }

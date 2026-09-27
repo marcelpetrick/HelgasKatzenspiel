@@ -16,11 +16,10 @@ import type { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { DefaultRenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline';
 import type { Game, GameEvent } from '../core/game';
-import { outfitColor } from '../core/shop';
 import { bounds, SPOTS } from '../core/world';
 import { CatView } from './catView';
 import { Effects } from './effects';
-import { DEFAULT_STYLE, GirlView } from './girlView';
+import { GirlView, girlLook } from './girlView';
 import { buildHouse } from './house';
 import { buildInterior, type Interior } from './interior';
 import { buildLandscape } from './landscape';
@@ -39,7 +38,9 @@ const SUN_DIR = new Vector3(-0.45, -0.8, 0.55).normalize();
 export class World {
   readonly scene: Scene;
   readonly camera: FreeCamera;
-  private readonly girl: GirlView;
+  private girl: GirlView;
+  /** The look the girl was last built with, to rebuild her only when something changed. */
+  private girlKey = '';
   private readonly cats = new Map<number, CatView>();
   private readonly effects: Effects;
   private readonly interior: Interior;
@@ -103,8 +104,8 @@ export class World {
     buildShop(scene, this.addCaster);
     buildSchool(scene, this.addCaster);
     this.interior = buildInterior(scene, this.addCaster);
-    this.girl = new GirlView(scene, DEFAULT_STYLE, this.addCaster);
-    this.refreshOutfit();
+    this.girl = new GirlView(scene, girlLook(game.wardrobe), this.addCaster);
+    this.girlKey = JSON.stringify(girlLook(game.wardrobe));
     this.effects = new Effects(scene, glow);
     this.syncCats();
     for (const coin of game.coins) this.effects.addCoin(coin.id, coin.x, coin.y, coin.z);
@@ -229,6 +230,7 @@ export class World {
       this.yarn.rotation.z = -y.spin;
     }
     this.interior.setBowls(this.game.bowls.milk, this.game.bowls.food);
+    this.interior.setDeco(this.game.wardrobe.deco);
     this.effects.update(dt);
     this.tickLandscape(dt);
     this.followGirl(Math.min(1, dt * 3));
@@ -257,15 +259,15 @@ export class World {
     this.followGirl(1);
   }
 
-  /** Dress the girl in whatever the wardrobe says she wears. */
+  /** Dress the girl in whatever the wardrobe says she wears; she is rebuilt when anything changed. */
   refreshOutfit(): void {
-    const w = this.game.wardrobe;
-    this.girl.applyStyle({
-      top: outfitColor(w, 'top'),
-      skirt: outfitColor(w, 'skirt'),
-      headband: outfitColor(w, 'headband'),
-      shoes: outfitColor(w, 'shoes'),
-    });
+    const look = girlLook(this.game.wardrobe);
+    const key = JSON.stringify(look);
+    if (key === this.girlKey) return;
+    this.girlKey = key;
+    this.girl.dispose();
+    this.girl = new GirlView(this.scene, look, this.addCaster);
+    this.girl.update(this.game.girl, 0, false);
   }
 
   /** World position → CSS pixels on the canvas, for labels drawn in the DOM. */

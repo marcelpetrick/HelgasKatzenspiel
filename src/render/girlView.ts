@@ -4,64 +4,77 @@
 import type { Scene } from '@babylonjs/core/scene';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import type { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
-import { Color3 } from '@babylonjs/core/Maths/math.color';
 import type { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import type { Girl } from '../core/game';
-import { fanMesh, glowMaterial, material, starOutline } from './shapes';
+import type { Look } from '../core/look';
+import { type Accessory, outfitColor, outfitStyle, type Wardrobe } from '../core/shop';
+import { fanMesh, glowMaterial, heartOutline, material, starOutline } from './shapes';
 
-/** How the girl looks; the character editor will change these later. */
-export interface GirlStyle {
-  skin: string;
-  hair: string;
+/** Everything that decides how the girl is drawn: her look plus what she wears. */
+export interface GirlLook extends Look {
   top: string;
   skirt: string;
   shoes: string;
-  headband: string;
+  hairAcc: { style: Accessory; color: string };
+  earrings: { style: Accessory; color: string };
+  /** Nail polish colour, or null without polish. */
+  nails: string | null;
 }
 
-export const DEFAULT_STYLE: GirlStyle = {
-  skin: '#ffd9c2',
-  hair: '#8a4b2a',
-  top: '#ff7eb6',
-  skirt: '#b388ff',
-  shoes: '#e0567a',
-  headband: '#ff9fc6',
-};
+export function girlLook(w: Wardrobe): GirlLook {
+  return {
+    ...w.look,
+    top: outfitColor(w, 'top'),
+    skirt: outfitColor(w, 'skirt'),
+    shoes: outfitColor(w, 'shoes'),
+    hairAcc: { style: outfitStyle(w, 'headband'), color: outfitColor(w, 'headband') },
+    earrings: { style: outfitStyle(w, 'earrings'), color: outfitColor(w, 'earrings') },
+    nails: outfitStyle(w, 'nails') === 'none' ? null : outfitColor(w, 'nails'),
+  };
+}
 
-/** The little girl: a chunky, round-headed figure with a cat-ear headband and a magic wand. */
+/** A tube along a little arc, for smiles and closed happy eyes. */
+function arc(scene: Scene, name: string, radius: number, from: number, to: number, thickness: number): Mesh {
+  const path: Vector3[] = [];
+  for (let i = 0; i <= 10; i++) {
+    const a = from + ((to - from) * i) / 10;
+    path.push(new Vector3(Math.cos(a) * radius, Math.sin(a) * radius, 0));
+  }
+  return MeshBuilder.CreateTube(name, { path, radius: thickness, tessellation: 6 }, scene);
+}
+
+/** The little girl: a chunky, round-headed figure with hair jewellery and a magic wand. */
 export class GirlView {
   readonly root: TransformNode;
   private readonly body: TransformNode;
   private readonly legs: TransformNode[] = [];
   private readonly arms: TransformNode[] = [];
-  private readonly eyes: Mesh[] = [];
+  private readonly eyes: TransformNode[] = [];
   private readonly wandStar: Mesh;
+  private readonly blinks: boolean;
   private walk = 0;
   private yaw = -0.6;
   private blinkIn = 2;
   private castTime = 0;
   private time = 0;
-  private readonly styled: Partial<Record<keyof GirlStyle, StandardMaterial>> = {};
 
-  constructor(scene: Scene, style: GirlStyle, addCaster: (m: Mesh) => void) {
+  constructor(scene: Scene, look: GirlLook, addCaster: (m: Mesh) => void) {
     this.root = new TransformNode('girl', scene);
     this.root.scaling.setAll(1.15);
     this.body = new TransformNode('girlBody', scene);
     this.body.parent = this.root;
-    const skin = material(scene, 'girlSkin', style.skin, 0.15, 0.12);
-    const hair = material(scene, 'girlHair', style.hair, 0.35, 0.05);
-    const top = material(scene, 'girlTop', style.top, 0.2, 0.1);
-    const skirt = material(scene, 'girlSkirt', style.skirt, 0.2, 0.1);
-    const shoes = material(scene, 'girlShoes', style.shoes, 0.5, 0.05);
-    const band = material(scene, 'girlBand', style.headband, 0.3, 0.15);
-    Object.assign(this.styled, { skin, hair, top, skirt, shoes, headband: band });
-    const inner = material(scene, 'girlEarInner', '#ffc7dc', 0.1, 0.2);
+    const skin = material(scene, 'girlSkin', look.skin, 0.15, 0.12);
+    const hair = material(scene, 'girlHair', look.hair, 0.35, 0.05);
+    const top = material(scene, 'girlTop', look.top, 0.2, 0.1);
+    const skirt = material(scene, 'girlSkirt', look.skirt, 0.2, 0.1);
+    const shoes = material(scene, 'girlShoes', look.shoes, 0.5, 0.05);
     const dark = material(scene, 'girlEye', '#2a1a2e', 0.9, 0);
     const white = material(scene, 'girlEyeShine', '#ffffff', 0, 1);
     const blush = material(scene, 'girlBlush', '#ff9fb2', 0, 0.3);
-    const add = (m: Mesh, mat: typeof skin, parent: TransformNode = this.body) => {
+    const lips = material(scene, 'mouthMat', '#c2456a', 0.1, 0.1);
+    const add = (m: Mesh, mat: StandardMaterial, parent: TransformNode = this.body) => {
       m.material = mat;
       m.parent = parent;
       addCaster(m);
@@ -86,6 +99,12 @@ export class GirlView {
         -0.12;
       add(MeshBuilder.CreateCylinder('arm', { height: 0.34, diameter: 0.13, tessellation: 10 }, scene), skin, shoulder).position.y = -0.4;
       add(MeshBuilder.CreateSphere('hand', { diameter: 0.17, segments: 8 }, scene), skin, shoulder).position.y = -0.58;
+      // Painted nails: a shiny cap on the tip of each hand.
+      if (look.nails) {
+        const nail = add(MeshBuilder.CreateSphere('nails', { diameter: 0.12, segments: 8 }, scene), material(scene, 'nailMat', look.nails, 0.9, 0.3), shoulder);
+        nail.scaling.set(1, 0.5, 1);
+        nail.position.set(0, -0.65, -0.02);
+      }
       this.arms.push(shoulder);
     }
 
@@ -114,62 +133,160 @@ export class GirlView {
     head.parent = this.body;
     head.position.y = 2.22;
     add(MeshBuilder.CreateSphere('face', { diameter: 0.86, segments: 20 }, scene), skin, head);
-    const hairCap = add(MeshBuilder.CreateSphere('hairCap', { diameter: 0.95, segments: 20, slice: 0.62 }, scene), hair, head);
-    hairCap.position.set(0, 0.04, 0.05);
-    hairCap.rotation.x = -0.5;
-    const back = add(MeshBuilder.CreateSphere('hairBack', { diameter: 0.9, segments: 16 }, scene), hair, head);
-    back.scaling.set(1.05, 1.1, 0.8);
-    back.position.set(0, -0.15, 0.2);
+    this.buildHair(scene, look, head, hair, add);
+
+    // Eyes: round with a shine, big and sparkly with lashes, or happily closed.
+    this.blinks = look.eyes !== 'froh';
     for (const side of [-1, 1]) {
-      const tail = add(MeshBuilder.CreateSphere('pigtail', { diameter: 0.36, segments: 12 }, scene), hair, head);
-      tail.scaling.set(0.8, 1.3, 0.8);
-      tail.position.set(side * 0.5, -0.2, 0.12);
-      const bow = add(MeshBuilder.CreateSphere('bobble', { diameter: 0.14, segments: 8 }, scene), band, head);
-      bow.position.set(side * 0.44, 0.02, 0.1);
-      const eye = add(MeshBuilder.CreateSphere('eye', { diameter: 0.17, segments: 12 }, scene), dark, head);
-      eye.scaling.set(0.85, 1.15, 0.5);
+      const eye = new TransformNode('eye', scene);
+      eye.parent = head;
       eye.position.set(side * 0.16, 0.0, -0.37);
       this.eyes.push(eye);
-      const shine = add(MeshBuilder.CreateSphere('shine', { diameter: 0.06, segments: 6 }, scene), white, eye);
-      shine.position.set(0.12, 0.2, -0.4);
+      if (look.eyes === 'froh') {
+        const closed = add(arc(scene, 'happyEye', 0.07, 0.2, Math.PI - 0.2, 0.018), dark, eye);
+        closed.position.z = -0.01;
+      } else {
+        const big = look.eyes === 'glitzer' ? 1.25 : 1;
+        const ball = add(MeshBuilder.CreateSphere('eyeBall', { diameter: 0.17 * big, segments: 12 }, scene), dark, eye);
+        ball.scaling.set(0.85, 1.15, 0.5);
+        add(MeshBuilder.CreateSphere('shine', { diameter: 0.06 * big, segments: 6 }, scene), white, eye).position.set(0.025, 0.04, -0.05);
+        if (look.eyes === 'glitzer') {
+          add(MeshBuilder.CreateSphere('shine2', { diameter: 0.03, segments: 6 }, scene), white, eye).position.set(-0.03, -0.04, -0.05);
+          const lash = add(MeshBuilder.CreateBox('lash', { width: 0.05, height: 0.015, depth: 0.02 }, scene), dark, eye);
+          lash.position.set(side * 0.1, 0.09, -0.01);
+          lash.rotation.z = side * 0.6;
+        }
+      }
       const cheek = add(MeshBuilder.CreateSphere('cheek', { diameter: 0.14, segments: 8 }, scene), blush, head);
       cheek.scaling.set(1, 0.6, 0.3);
       cheek.position.set(side * 0.25, -0.13, -0.33);
+      if (look.freckles) {
+        const freckle = material(scene, 'freckle', '#a0633b', 0, 0.05);
+        for (const [dx, dy] of [
+          [-0.03, 0.03],
+          [0.03, 0.01],
+          [0, -0.03],
+        ])
+          add(MeshBuilder.CreateSphere('freckle', { diameter: 0.022, segments: 4 }, scene), freckle, head).position.set(side * 0.2 + dx, -0.06 + dy, -0.385);
+      }
+      this.buildEarring(scene, look, head, side, add);
     }
-    const mouth = add(
-      MeshBuilder.CreateTorus('mouth', { diameter: 0.1, thickness: 0.025, tessellation: 12 }, scene),
-      material(scene, 'mouthMat', '#c2456a', 0.1, 0.1),
-      head,
-    );
-    mouth.rotation.x = Math.PI / 2;
-    mouth.scaling.set(1, 1, 0.5);
-    mouth.position.set(0, -0.19, -0.39);
+    if (look.mouth === 'offen') {
+      const mouth = add(MeshBuilder.CreateSphere('mouthO', { diameter: 0.09, segments: 10 }, scene), lips, head);
+      mouth.scaling.set(1, 1.2, 0.4);
+      mouth.position.set(0, -0.19, -0.39);
+    } else if (look.mouth === 'katze') {
+      for (const side of [-1, 1])
+        add(arc(scene, 'catMouth', 0.035, Math.PI + 0.2, 2 * Math.PI - 0.2, 0.012), lips, head).position.set(side * 0.035, -0.17, -0.405);
+    } else {
+      add(arc(scene, 'smile', 0.07, Math.PI + 0.5, 2 * Math.PI - 0.5, 0.016), lips, head).position.set(0, -0.12, -0.405);
+    }
+    this.buildHairAcc(scene, look, head, add);
+  }
 
-    // Cat-ear headband: a thin arc over the head with two pointy ears.
-    const arc: Vector3[] = [];
-    for (let i = 0; i <= 16; i++) {
-      const a = 0.15 * Math.PI + (i / 16) * 0.7 * Math.PI;
-      arc.push(new Vector3(Math.cos(a) * 0.5, Math.sin(a) * 0.5, 0));
-    }
-    add(MeshBuilder.CreateTube('headband', { path: arc, radius: 0.04, tessellation: 8 }, scene), band, head).position.z = -0.02;
-    for (const side of [-1, 1]) {
-      const ear = add(MeshBuilder.CreateCylinder('catEar', { height: 0.34, diameterTop: 0, diameterBottom: 0.3, tessellation: 4 }, scene), band, head);
-      ear.position.set(side * 0.27, 0.48, -0.02);
-      ear.rotation.set(0, Math.PI / 4, -side * 0.35);
-      const earIn = add(MeshBuilder.CreateCylinder('catEarIn', { height: 0.22, diameterTop: 0, diameterBottom: 0.18, tessellation: 4 }, scene), inner, head);
-      earIn.position.set(side * 0.255, 0.45, -0.09);
-      earIn.rotation.set(0, Math.PI / 4, -side * 0.35);
+  private buildHair(
+    scene: Scene,
+    look: GirlLook,
+    head: TransformNode,
+    hair: StandardMaterial,
+    add: (m: Mesh, mat: StandardMaterial, p?: TransformNode) => Mesh,
+  ): void {
+    const cap = add(MeshBuilder.CreateSphere('hairCap', { diameter: 0.95, segments: 20, slice: 0.62 }, scene), hair, head);
+    cap.position.set(0, 0.04, 0.05);
+    cap.rotation.x = -0.5;
+    const back = add(MeshBuilder.CreateSphere('hairBack', { diameter: 0.9, segments: 16 }, scene), hair, head);
+    back.position.set(0, -0.15, 0.2);
+    back.scaling.set(1.05, 1.1, 0.8);
+    const s = look.hairStyle;
+    if (s === 'kurz') {
+      back.scaling.set(1.05, 0.85, 0.75);
+      back.position.y = -0.05;
+    } else if (s === 'lang') {
+      // Long hair falls down the back to below the shoulders.
+      const fall = add(MeshBuilder.CreateSphere('hairLong', { diameter: 0.9, segments: 16 }, scene), hair, head);
+      fall.scaling.set(1.1, 1.6, 0.6);
+      fall.position.set(0, -0.55, 0.28);
+    } else if (s === 'zoepfe') {
+      for (const side of [-1, 1]) {
+        const tail = add(MeshBuilder.CreateSphere('pigtail', { diameter: 0.36, segments: 12 }, scene), hair, head);
+        tail.scaling.set(0.8, 1.3, 0.8);
+        tail.position.set(side * 0.5, -0.2, 0.12);
+      }
+    } else if (s === 'pferdeschwanz') {
+      const tail = add(MeshBuilder.CreateSphere('ponytail', { diameter: 0.34, segments: 12 }, scene), hair, head);
+      tail.scaling.set(0.8, 1.9, 0.8);
+      tail.position.set(0, -0.12, 0.52);
+      tail.rotation.x = 0.4;
+    } else {
+      add(MeshBuilder.CreateSphere('bun', { diameter: 0.38, segments: 12 }, scene), hair, head).position.set(0, 0.5, 0.12);
     }
   }
 
-  /** Change colours in place, e.g. after buying new clothes. */
-  applyStyle(style: Partial<GirlStyle>): void {
-    for (const [key, hex] of Object.entries(style) as [keyof GirlStyle, string][]) {
-      const m = this.styled[key];
-      if (!m) continue;
-      m.diffuseColor = Color3.FromHexString(hex);
-      m.emissiveColor = m.diffuseColor.scale(key === 'headband' ? 0.15 : 0.1);
+  private buildHairAcc(scene: Scene, look: GirlLook, head: TransformNode, add: (m: Mesh, mat: StandardMaterial, p?: TransformNode) => Mesh): void {
+    const { style, color } = look.hairAcc;
+    const mat = material(scene, 'hairAccMat', color, 0.3, 0.15);
+    if (style === 'ears') {
+      // Cat-ear headband: a thin arc over the head with two pointy ears.
+      add(arc(scene, 'headband', 0.5, 0.15 * Math.PI, 0.85 * Math.PI, 0.04), mat, head).position.z = -0.02;
+      const inner = material(scene, 'girlEarInner', '#ffc7dc', 0.1, 0.2);
+      for (const side of [-1, 1]) {
+        const ear = add(MeshBuilder.CreateCylinder('catEar', { height: 0.34, diameterTop: 0, diameterBottom: 0.3, tessellation: 4 }, scene), mat, head);
+        ear.position.set(side * 0.27, 0.48, -0.02);
+        ear.rotation.set(0, Math.PI / 4, -side * 0.35);
+        const earIn = add(MeshBuilder.CreateCylinder('catEarIn', { height: 0.22, diameterTop: 0, diameterBottom: 0.18, tessellation: 4 }, scene), inner, head);
+        earIn.position.set(side * 0.255, 0.45, -0.09);
+        earIn.rotation.set(0, Math.PI / 4, -side * 0.35);
+      }
+    } else if (style === 'bow') {
+      // A big bow on top of the head: two loops and a knot.
+      const bow = new TransformNode('bow', head.getScene());
+      bow.parent = head;
+      bow.position.set(0.18, 0.46, -0.02);
+      bow.rotation.z = -0.3;
+      for (const side of [-1, 1]) {
+        const loop = add(MeshBuilder.CreateCylinder('bowLoop', { height: 0.1, diameterTop: 0.02, diameterBottom: 0.26, tessellation: 12 }, scene), mat, bow);
+        loop.rotation.z = (side * Math.PI) / 2;
+        loop.position.x = side * 0.13;
+      }
+      add(MeshBuilder.CreateSphere('bowKnot', { diameter: 0.1, segments: 8 }, scene), mat, bow);
+    } else if (style === 'clip-star' || style === 'clip-heart') {
+      const clip = fanMesh(scene, 'hairClip', style === 'clip-star' ? starOutline() : heartOutline());
+      clip.material = glowMaterial(scene, 'hairClipMat', color);
+      clip.parent = head;
+      clip.scaling.setAll(style === 'clip-star' ? 0.28 : 0.2);
+      clip.position.set(0.26, 0.24, -0.36);
+      clip.rotation.set(0.35, -0.5, 0);
     }
+  }
+
+  private buildEarring(
+    scene: Scene,
+    look: GirlLook,
+    head: TransformNode,
+    side: number,
+    add: (m: Mesh, mat: StandardMaterial, p?: TransformNode) => Mesh,
+  ): void {
+    const { style, color } = look.earrings;
+    if (style === 'none') return;
+    const x = side * 0.42;
+    if (style === 'pearl') {
+      add(MeshBuilder.CreateSphere('pearl', { diameter: 0.08, segments: 10 }, scene), material(scene, 'pearlMat', color, 1, 0.3), head).position.set(
+        x,
+        -0.12,
+        -0.02,
+      );
+      return;
+    }
+    const charm = fanMesh(scene, 'earring', style === 'star' ? starOutline() : heartOutline());
+    charm.material = glowMaterial(scene, 'earringMat', color);
+    charm.parent = head;
+    charm.scaling.setAll(0.12);
+    charm.position.set(x, -0.16, -0.04);
+    charm.billboardMode = TransformNode.BILLBOARDMODE_ALL;
+  }
+
+  dispose(): void {
+    this.root.dispose(false, true);
   }
 
   /** Flash the wand and raise the arm for a moment. */
@@ -201,16 +318,14 @@ export class GirlView {
       const bob = flying ? Math.sin(this.time * 6) * 0.15 : 0;
       this.legs[0].rotation.x = 0.4 + bob;
       this.legs[1].rotation.x = -0.2 - bob;
-      this.arms[0].rotation.z = -1.2 - bob;
-      this.arms[1].rotation.z = 1.2 + bob;
+      this.arms[0].rotation.set(0, 0, -1.2 - bob);
+      this.arms[1].rotation.set(0, 0, 1.2 + bob);
       this.body.position.y = 0;
     } else {
       this.legs[0].rotation.x = swing;
       this.legs[1].rotation.x = -swing;
-      this.arms[0].rotation.x = -swing * 0.8;
-      this.arms[1].rotation.x = swing * 0.8;
-      this.arms[0].rotation.z = -0.25;
-      this.arms[1].rotation.z = 0.25;
+      this.arms[0].rotation.set(-swing * 0.8, 0, -0.25);
+      this.arms[1].rotation.set(swing * 0.8, 0, 0.25);
       this.body.position.y = Math.abs(Math.sin(this.walk)) * (moving ? 0.08 : 0) + Math.sin(this.time * 2) * 0.012;
     }
     if (carrying) {
@@ -220,15 +335,14 @@ export class GirlView {
     }
     if (this.castTime > 0) {
       this.castTime -= dt;
-      this.arms[1].rotation.z = 2.4;
-      this.arms[1].rotation.x = 0;
+      this.arms[1].rotation.set(0, 0, 2.4);
     }
     this.wandStar.scaling.setAll(0.32 * (1 + Math.max(0, this.castTime) * 2.5 + Math.sin(this.time * 5) * 0.08));
     this.wandStar.rotation.z += dt * 2;
 
     this.blinkIn -= dt;
-    const closed = this.blinkIn < 0.12;
+    const closed = this.blinks && this.blinkIn < 0.12;
     if (this.blinkIn < 0) this.blinkIn = 2 + Math.random() * 3;
-    for (const e of this.eyes) e.scaling.y = closed ? 0.15 : 1.15;
+    for (const e of this.eyes) e.scaling.y = closed ? 0.15 : 1;
   }
 }

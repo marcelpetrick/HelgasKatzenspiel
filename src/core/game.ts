@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { cleanName, COATS, DEFAULT_NAMES } from './cats';
-import { newWardrobe, type Supply, type Wardrobe } from './shop';
+import { DECO_REFILL_BONUS, newWardrobe, type Supply, type Wardrobe } from './shop';
 import {
   BOWLS,
   bounds,
@@ -515,7 +515,8 @@ export class Game {
   }
 
   private stepSpots(dt: number): void {
-    this.refillIn -= dt;
+    // A decorated house makes the cats happier, so coins turn up faster.
+    this.refillIn -= dt * (1 + DECO_REFILL_BONUS * this.wardrobe.deco.length);
     if (this.refillIn <= 0) {
       this.refillIn = SPOT_REFILL_TIME;
       this.refillSpot();

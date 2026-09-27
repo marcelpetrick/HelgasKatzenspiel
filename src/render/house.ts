@@ -18,7 +18,7 @@ const Z = 4.2;
 export function buildHouse(scene: Scene, addCaster: (m: Mesh) => void): TransformNode {
   const root = new TransformNode('house', scene);
   root.position.set(HOUSE_X, groundY(HOUSE_X) - 0.1, Z);
-  const wallMat = material(scene, 'wallMat', '#ffbfd6', 0.1, 0.05);
+  const wallMat = material(scene, 'wallMat', '#ff9cc2', 0.1, 0.03);
   const roofMat = material(scene, 'roofMat', '#e0567a', 0.25, 0.05);
   const woodMat = material(scene, 'doorMat', '#a0633b', 0.15, 0.02);
   const glassMat = material(scene, 'glassMat', '#bfe8ff', 0.9, 0.35);
