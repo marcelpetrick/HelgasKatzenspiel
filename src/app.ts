@@ -153,6 +153,7 @@ export class App {
     }
     if (e.repeat && !HOLD_KEYS.has(e.code)) return;
     if (e.code === 'Escape') {
+      if (this.menuOpen) this.sound.play('click');
       this.closeMenus();
       return;
     }
@@ -160,6 +161,7 @@ export class App {
     if (this.school.isOpen || this.cook.isOpen) return;
     if (e.code === 'KeyH') {
       this.hud.toggleHelp();
+      this.sound.play('click');
       return;
     }
     if (e.code === 'KeyF') {
@@ -183,13 +185,15 @@ export class App {
     }
     if (e.code === 'KeyT') {
       this.hud.say(TEXT.muted(this.sound.toggleMute()));
+      // Only heard when the sound has just been switched back on.
+      this.sound.play('click');
       return;
     }
     if (e.code === 'KeyS') {
       if (saveGame(this.game)) {
         this.hud.say(TEXT.saved);
         this.sound.play('save');
-      } else this.hud.say(TEXT.saveFailed);
+      } else this.say(TEXT.saveFailed, 'nope');
       return;
     }
     if (this.menuOpen) return;

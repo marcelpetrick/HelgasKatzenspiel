@@ -47,6 +47,8 @@ export class Hud {
       row.append(el('kbd', '', key), el('span', '', what));
       help.append(row);
     }
+    // With the list hidden, this is all that is left of it, so she knows how to get it back.
+    help.append(el('div', 'help-show', TEXT.help));
     this.prompt = el('div', 'prompt');
     this.toast = el('div', 'toast');
     this.supplies = el('div', 'panel supplies');

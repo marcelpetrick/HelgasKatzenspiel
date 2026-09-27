@@ -114,4 +114,4 @@ Kampf, kein Krieg.
 - [x] Münzen tauchen auch am Anziehschrank auf.
 - [x] Getränke für das Mädchen: Kakao und Orangensaft in der Küche machen und trinken.
 - [x] Hosen als Unterteil: Jeanshose, rosa Leggings, grüne Latzhose.
-- [ ] HUD: „H: Hilfe“ bleibt sichtbar, Esc steht in der Liste; Klick-Geräusch für H, T und Esc.
+- [x] HUD: „H: Hilfe“ bleibt sichtbar, Esc steht in der Liste; Klick-Geräusch für H, T und Esc.

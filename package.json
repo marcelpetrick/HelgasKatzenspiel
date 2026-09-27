@@ -1,6 +1,6 @@
 {
   "name": "helgas-katzenspiel",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "description": "Ein niedliches Katzenspiel für den Browser: Ein Mädchen streichelt und versorgt ganz viele Katzen.",
   "private": true,
   "type": "module",

@@ -762,8 +762,16 @@ kbd {
   border-color: transparent;
 }
 
-.help.hidden {
+.help .help-show {
   display: none;
+}
+
+.help.hidden .help-row {
+  display: none;
+}
+
+.help.hidden .help-show {
+  display: block;
 }
 
 .seek-badge {

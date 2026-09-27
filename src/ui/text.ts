@@ -66,6 +66,7 @@ export const TEXT = {
     ['V', 'Verstecken spielen 🙈'],
     ['K M F', 'Laden · meine Katzen · meine Figur'],
     ['S T H', 'speichern · Ton · Hilfe aus'],
+    ['Esc', 'Menü schließen'],
   ] as const,
   help: 'H: Hilfe',
   toyNames: { yarn: 'Wollknäuel', ball: 'Glöckchenball', mouse: 'Spielzeugmaus' } as Record<string, string>,
