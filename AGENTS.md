@@ -8,7 +8,8 @@
 - Helgas Katzenspiel ist ein Browserspiel für ein Kind, gebaut zusammen mit ihrem Papa.
 - **Mit den Nutzern wird Deutsch gesprochen**, einfach und kindgerecht. Code, Kommentare und
   Commit-Messages sind Englisch.
-- Die Spieloberfläche ist Deutsch; alle sichtbaren Texte stehen in `src/ui/text.ts`.
+- Die Spieloberfläche ist Deutsch (niedlich, kindgerecht); alle sichtbaren Texte stehen in `src/ui/text.ts`.
+- Jede neue Aktion bekommt ein Geräusch (`src/audio.ts`) und, wenn nötig, einen Hinweis im HUD.
 - Die Anforderungen stehen in [`visions.md`](visions.md). Neue Wünsche dort eintragen, bevor sie
   umgesetzt werden.
 - Freundlich, niedlich, bunt: keine Waffen, kein Blut, kein Kampf, kein Krieg. Erstmal nur Katzen
@@ -30,10 +31,15 @@ node scripts/screenshot.mjs [url]  # README-Screenshots neu aufnehmen
 
 ## Aufbau
 
-- `src/core/` — Spielregeln ohne Babylon und DOM (Laufen, Springen, Fliegen, Streicheln, Zaubern,
-  Münzen, Katzen-Verhalten). Hier gehört jede Regel hin, und hier wird sie unit-getestet.
-- `src/render/` — Babylon-Szene: Landschaft, Haus, Mädchen, Katzen, Effekte, Kamera.
-- `src/ui/` — DOM-Overlay (HUD, Startbildschirm), Texte, CSS.
+- `src/core/` — Spielregeln ohne Babylon und DOM, alle unit-getestet:
+  - `world.ts` Weltaufbau (Garten, Haus-Inneres, Gebäude, Türen, Schränke),
+  - `game.ts` Mädchen, Katzen, Münzen, Füttern, Tragen, Babys,
+  - `shop.ts` Katalog und Kleiderschrank, `look.ts` Aussehen des Mädchens,
+  - `cats.ts` Katzenfarben und -namen, `school.ts` Rechenaufgaben und Noten, `save.ts` Speichern.
+- `src/render/` — Babylon-Szene: Landschaft, Haus, Hausinneres, Laden, Schule, Mädchen, Katzen, Effekte.
+- `src/ui/` — DOM-Overlay (HUD, Startbildschirm, Menüs für Laden, Katzen, Figur, Schule), Texte,
+  CSS, `localStorage`.
+- `src/audio.ts` — niedliche Geräusche, synthetisch mit Web Audio.
 - `src/app.ts` — Tastatur, Spielschleife, verbindet alles.
 - `tests/` — Vitest-Tests für `src/core`.
 - `e2e/` — Playwright-Tests im echten Browser (Hook: `window.__katzen`).

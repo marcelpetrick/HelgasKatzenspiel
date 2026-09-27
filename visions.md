@@ -24,35 +24,37 @@ Kampf, kein Krieg.
 10. Eine Katze hochnehmen und mit ihr zusammen fliegen.
 11. K: Kaufmenü öffnen. S: Spielstand speichern — beim nächsten Öffnen im selben Browser geht es genau
     dort weiter.
+12. Niedliche Geräusche für alle Aktionen: streicheln, Münzen, Herzen, zaubern, springen, fressen …
 
 ## Das Mädchen
 
-12. Genau ein Mädchen, das ganz viele Katzen hat.
-13. Figuren-Editor: Haarfarbe, Haarlänge, Gesicht, Hautfarbe, Oberteil, Unterteil.
-14. Haarschmuck: Katzenohren-Haarreif, Spangen, Schleifen; dazu Ohrringe und Nagellack.
+13. Genau ein Mädchen, das ganz viele Katzen hat.
+14. Figuren-Editor: Haarfarbe, Haarlänge, Gesicht, Hautfarbe, Oberteil, Unterteil.
+15. Haarschmuck: Katzenohren-Haarreif, Spangen, Schleifen; dazu Ohrringe und Nagellack.
 
 ## Welt
 
-15. Eine Landschaft mit Katzen und ein Haus im gleichen Stil. Ganz viele Blumen.
-16. Ins Haus hineingehen. Im Haus: Küche, Bad, Anziehschrank. Die Katzen brauchen viel Platz.
-17. Ein Kaufladen, in den das Mädchen hineingehen kann: Kleidung, Katzenfutter, Leckerlis, Spielzeug.
+16. Eine Landschaft mit Katzen und ein Haus im gleichen Stil. Ganz viele Blumen.
+17. Ins Haus hineingehen. Im Haus: Küche, Bad, Anziehschrank. Die Katzen brauchen viel Platz.
+18. Ein Kaufladen, in den das Mädchen hineingehen kann: Kleidung, Katzenfutter, Leckerlis, Spielzeug.
 
 ## Katzen
 
-18. Beim Streicheln erscheinen kleine Herzchen — die Katzen freuen sich.
-19. In der Küche Milch und Futter hinstellen, darüber freuen sich die Katzen auch.
-20. Aussehen der Katzen ist wählbar: Farbe (auch grün, blau, lila …), Größe (klein bis groß), Namen
+19. Beim Streicheln erscheinen kleine Herzchen — die Katzen freuen sich.
+20. In der Küche Milch und Futter hinstellen, darüber freuen sich die Katzen auch.
+21. Aussehen der Katzen ist wählbar: Farbe (auch grün, blau, lila …), Größe (klein bis groß), Namen
     selbst aussuchen.
-21. Katzen wachsen, wenn man gut auf sie aufpasst und sie füttert.
-22. Mit 100 € kann man eine neue Katze kaufen; viele Katzen bekommen Babys.
-23. Spielzeug für die Katzen, mit den Katzen spielen.
+22. Katzen wachsen, wenn man gut auf sie aufpasst und sie füttert.
+23. Mit 100 € kann man eine neue Katze kaufen; viele Katzen bekommen Babys.
+24. Spielzeug für die Katzen, mit den Katzen spielen.
+25. Wenn die Katzen viel fressen, werden sie runder und größer.
 
 ## Münzen & Schule
 
-24. In der Schule Rechenaufgaben lösen; gut rechnen und gute Noten bringen Münzen.
-25. Je mehr Herzen die Katzen machen, desto schneller findet man Münzen.
-26. Münzen tauchen auf, wenn sich Katzen freuen — auf dem Küchentisch, in Schüsseln, im Bad, im Anziehschrank.
-27. Mit Münzen kauft man Futter, Trinken, Spielzeug, Kleidung und Deko fürs Haus.
+26. In der Schule Rechenaufgaben lösen; gut rechnen und gute Noten bringen Münzen.
+27. Je mehr Herzen die Katzen machen, desto schneller findet man Münzen.
+28. Münzen tauchen auf, wenn sich Katzen freuen — auf dem Küchentisch, in Schüsseln, im Bad, im Anziehschrank.
+29. Mit Münzen kauft man Futter, Trinken, Spielzeug, Kleidung und Deko fürs Haus.
 
 ## Vorerst nicht
 
@@ -69,17 +71,21 @@ Kampf, kein Krieg.
 
 - [x] MVP: Landschaft, Haus, Mädchen, Katzen; laufen, springen, fliegen, streicheln, zaubern; Münzen.
 - [x] Mehr Blumen.
-- [x] Kaufmenü (K): Kleidung, Futter (1), Leckerli (2), Wollknäuel (3).
-- [ ] Pipeline, Linting, README.
-- [ ] Speichern (S) und Laden des ganzen Spielstands.
-- [ ] Nach hinten/vorne laufen.
-- [ ] Katze hochnehmen und mit ihr fliegen.
-- [ ] Katzen-Editor: Name, Farbe, Größe.
-- [ ] Kaufladen-Gebäude zum Hineingehen.
-- [ ] Ins Haus gehen: Küche (Milch und Futter hinstellen), Bad, Anziehschrank; Münzen in Schüsseln, auf
-      dem Tisch, im Schrank.
-- [ ] Figuren-Editor: Haarfarbe, Haarlänge, Gesicht, Hautfarbe, Haarschmuck, Ohrringe, Nagellack.
-- [ ] Schule: Rechenaufgaben, Noten, Münzen.
-- [ ] Katzen kaufen (100 Münzen), Katzen wachsen, Katzenbabys.
-- [ ] Deko fürs Haus.
-- [ ] Später: Docker/ghcr.
+- [x] Kaufmenü (K): Kleidung, Futter (1), Leckerli (2), Wollknäuel (3), Milch zum Trinken (4).
+- [x] Pipeline (`localPipeline.sh`), Linting, Tests ≥ 95 %, E2E, GitHub-Actions-Workflow, README.
+- [x] Speichern (S) und Laden des ganzen Spielstands; beim Verlassen der Seite wird auch gespeichert.
+- [x] Nach hinten/vorne laufen (↑ ↓).
+- [x] Katze hochnehmen (N) und mit ihr fliegen.
+- [x] Katzen-Editor (M): Name, zwölf Farben (auch Grün, Blau, Lila), Größe von winzig bis riesig.
+- [x] Kaufladen-Gebäude zum Hineingehen.
+- [x] Ins Haus gehen: Küche (Milch und Futter in die Schüsseln), Flur, Bad, Schlafzimmer mit
+      Anziehschrank; Münzen in Schüsseln, auf dem Tisch, auf der Badewanne und in den Schränken.
+- [x] Figuren-Editor (F): Hautfarbe, Haarfarbe, Frisur (Haarlänge), Augen, Mund, Sommersprossen.
+- [x] Haarschmuck (Katzenohren, Schleifen, Spangen), Ohrringe und Nagellack im Laden.
+- [x] Schule: Rechenaufgaben in drei Stufen, Zeugnis mit Note 1–6, Münzen für gute Noten; danach
+      nach Hause gehen.
+- [x] Neue Katze für 100 Münzen; Katzenbabys, wenn viele Katzen glücklich sind; Babys wachsen.
+- [x] Katzen werden vom Fressen runder; mit dem Wollknäuel spielen macht sie wieder schlanker.
+- [x] Deko fürs Haus: Kratzbaum, Kissen, Blumentöpfe, Katzenbild, Herzteppich, Lichterkette.
+- [x] Niedliche Geräusche für alle Aktionen (T schaltet den Ton aus).
+- [ ] Später: Docker-Image und Veröffentlichung auf ghcr; Pushen nach GitHub.

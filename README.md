@@ -13,12 +13,12 @@
 [![Playwright](https://img.shields.io/github/package-json/dependency-version/marcelpetrick/HelgasKatzenspiel/dev/@playwright/test?label=Playwright&logo=playwright&color=2ead33)](https://playwright.dev/)
 [![Node.js 24](https://img.shields.io/badge/Node.js-24-5fa04e.svg?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 
-A cute, colourful 3D browser game about a little girl and her many cats — pet them, feed them, throw
-them a yarn ball, fly and cast sparkly spells, collect coins and go shopping. No weapons, no
-fighting: just hearts. The game speaks German.
+A cute, colourful 3D browser game about a little girl and her many cats. Pet them, feed them,
+carry them around and fly with them, go to school for coins, go shopping, dress up and decorate the
+house. No weapons, no fighting: just hearts. The game speaks German.
 
 _Ein niedliches, buntes Browserspiel: Ein Mädchen streichelt und versorgt ganz viele Katzen, zaubert,
-fliegt, sammelt Münzen und kauft im Katzenladen ein._
+fliegt, geht zur Schule, verdient Münzen, kauft im Katzenladen ein und schmückt ihr Haus._
 
 It is designed together with Helga, who decides what goes in; her wishes are collected in
 [`visions.md`](visions.md). The look follows [Allium Assault](https://github.com/marcelpetrick/AlliumAssault).
@@ -27,31 +27,53 @@ It is designed together with Helga, who decides what goes in; her wishes are col
 **Note: this project is generated with AI.**
 
 <p align="center">
-  <img src="docs/screenshots/play.jpg" alt="The girl petting the cat Mimi on a flowery meadow; pink hearts rise above them" width="100%">
+  <img src="docs/screenshots/play.jpg" alt="The girl petting the cat Mimi on a flowery meadow next to the school; pink hearts rise" width="100%">
 </p>
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/title.jpg" alt="Title screen: Helgas Katzenspiel, Los geht’s!"></td>
+    <td width="50%"><img src="docs/screenshots/house.jpg" alt="The kitchen: cats walking to the milk and food bowls"></td>
+    <td width="50%"><img src="docs/screenshots/school.jpg" alt="School: a sum with four answers to choose from"></td>
+  </tr>
+  <tr>
     <td width="50%"><img src="docs/screenshots/shop.jpg" alt="The cat shop with clothes in many colours"></td>
+    <td width="50%"><img src="docs/screenshots/title.jpg" alt="Title screen: Helgas Katzenspiel, Los geht’s!"></td>
   </tr>
 </table>
 
 ## How to play
 
-| Key      | Action                                                    |
-| -------- | --------------------------------------------------------- |
-| ← →      | walk                                                      |
-| Space    | jump — **hold** to fly, let go to float down              |
-| Enter    | pet the cat you are standing next to (hearts!)            |
-| Z (or Y) | cast a spell: sparkles, and every cat nearby is delighted |
-| K        | open / close the cat shop (clothes, food, treats, toys)   |
-| 1 / 2    | give the nearest cat food / a treat (bought in the shop)  |
-| 3        | throw the yarn ball — the cats chase it                   |
+| Key       | Action                                                                          |
+| --------- | ------------------------------------------------------------------------------- |
+| ← →       | walk                                                                            |
+| ↑ ↓       | walk further back / to the front; ↑ at a door goes in                           |
+| Space     | jump — **hold** to fly, let go to float down                                    |
+| Enter     | pet the cat next to you, or use what is in front of you (door, cupboard, bowls) |
+| N         | pick up the nearest cat, or put it down — you can fly with it                   |
+| Z (or Y)  | cast a spell: sparkles, and every cat nearby is delighted                       |
+| 1 / 2 / 4 | give the nearest cat food / a treat / milk (bought in the shop)                 |
+| 3         | throw the yarn ball — the cats chase it                                         |
+| K         | the cat shop: clothes, jewellery, nail polish, cat supplies, decorations, cats  |
+| M         | "Meine Katzen": name, colour (twelve, including green) and size of every cat    |
+| F         | "Meine Figur": skin, hair colour, hairstyle, eyes, mouth, freckles              |
+| S         | save the whole game in this browser (leaving the page saves too)                |
+| T         | sound on/off                                                                    |
+| Esc       | close a menu                                                                    |
 
-Every three hearts a happy cat drops a coin; walk over coins to collect them. Coins buy clothes for
-the girl and food, treats and a yarn ball for the cats. Clothes, supplies and coins are remembered
-in the browser (`localStorage`).
+**The world.** The garden has the school on the left, the girl's house in the middle and the cat
+shop on the right. Walk up into a door to go in. The house has a kitchen, a hall, a bathroom and a
+bedroom.
+
+**Coins.** Every three hearts a happy cat drops a coin; walk over coins to collect them. At school,
+five sums earn a German grade (1–6) and up to 30 coins. In the house, the fridge, the kitchen
+cupboard, the bath cabinet and the wardrobe hide coins that refill over time — faster the more the
+house is decorated. Cats that eat from the kitchen bowls leave a coin in the empty bowl.
+
+**Cats.** Fed cats grow rounder; chasing the yarn ball slims them down again. A new cat costs 100
+coins. With four or more cats, happy grown-ups have kittens, which grow up with every heart.
+
+**Sound.** Every action has a small synthesized sound — meows, purrs, coin plings, sparkles, a
+doorbell, a shop bell — made with the Web Audio API, no sound files.
 
 ## Setup
 
@@ -98,9 +120,11 @@ Single steps: `npm test`, `npm run coverage`, `npm run lint`, `npm run typecheck
 ## Project layout
 
 ```text
-src/core/    game rules without Babylon or the DOM (unit tested)
-src/render/  Babylon.js scene: landscape, house, girl, cats, effects
-src/ui/      HUD, title screen, shop, German texts, saving
+src/core/    game rules without Babylon or the DOM (unit tested): world layout, cats, shop,
+             school, the girl's look, saving
+src/render/  Babylon.js scene: garden, house interior, shop, school, girl, cats, effects
+src/ui/      HUD, title screen, menus (shop, cats, figure, school), German texts, storage
+src/audio.ts synthesized sound effects
 e2e/         Playwright browser tests
 tests/       Vitest unit tests
 ```
