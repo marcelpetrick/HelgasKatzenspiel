@@ -21,7 +21,7 @@
 
 ```sh
 npm install          # Abhängigkeiten (exakt gepinnte Versionen)
-npm run dev          # Dev-Server, http://localhost:5173
+npm run dev          # Dev-Server, http://localhost:5273 (eigener Port, strictPort)
 ./localPipeline.sh   # komplette Prüfung: Lint, Format, Typen, Tests+Coverage, Build, E2E
 npm test             # nur Unit-Tests (Vitest)
 npm run e2e          # nur Browser-Tests (Playwright)

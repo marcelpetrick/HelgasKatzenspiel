@@ -6,7 +6,7 @@
  *
  * Usage: start the game (`npm run dev` or `npm run preview`), then
  *   node scripts/screenshot.mjs [url] [outDir]
- * Defaults: url http://localhost:5173/, outDir docs/screenshots.
+ * Defaults: url http://localhost:5273/, outDir docs/screenshots.
  *
  * Writes title.jpg (title screen), play.jpg (feeding the cats in the garden, with a backpack),
  * house.jpg (cats eating in the kitchen), shop.jpg (the cat shop), school.jpg (a sum at school) and
@@ -15,7 +15,7 @@
  */
 import { chromium } from '@playwright/test';
 
-const url = process.argv[2] ?? 'http://localhost:5173/';
+const url = process.argv[2] ?? 'http://localhost:5273/';
 const outDir = process.argv[3] ?? 'docs/screenshots';
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });

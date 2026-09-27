@@ -94,7 +94,7 @@ Requires Node.js 24.
 
 ```sh
 npm install
-npm run dev        # http://localhost:5173
+npm run dev        # http://localhost:5273
 ```
 
 `npm run build` writes a static site to `dist/`; `npm run preview` serves it on port 4273.

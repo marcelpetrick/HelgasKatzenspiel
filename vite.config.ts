@@ -5,8 +5,15 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   base: './',
-  // Reports written by the pipeline must not make the dev server reload the game.
-  server: { watch: { ignored: ['**/coverage/**', '**/test-results/**', '**/playwright-report/**', '**/docs/**'] } },
+  // Our own ports, not Vite's defaults (5173/4173), so other Vite projects on this machine never
+  // get mixed up with this game. strictPort: fail loudly instead of quietly moving to another port.
+  server: {
+    port: 5273,
+    strictPort: true,
+    // Reports written by the pipeline must not make the dev server reload the game.
+    watch: { ignored: ['**/coverage/**', '**/test-results/**', '**/playwright-report/**', '**/docs/**'] },
+  },
+  preview: { port: 4273, strictPort: true },
   build: {
     target: 'es2022',
     // Babylon is imported by deep path; a bundle far above this means the package root slipped in.
