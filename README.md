@@ -45,23 +45,23 @@ It is designed together with Helga, who decides what goes in; her wishes are col
 
 ## How to play
 
-| Key       | Action                                                                                                         |
-| --------- | -------------------------------------------------------------------------------------------------------------- |
-| ← →       | walk                                                                                                           |
-| ↑ ↓       | walk further back / to the front; ↑ at a door goes through it                                                  |
-| Space     | jump; **hold** to fly, let go to float down                                                                    |
-| Enter     | pet the cat next to you, pick up a toy, or use the door, shelf, cupboard, bowl, stove or table in front of you |
-| N         | pick up the nearest cat or put it down; you can fly with it                                                    |
-| R         | put the cat in your arms into the backpack (up to three), or take one out                                      |
-| 1 / 4     | put down a bowl of food / milk: the cats come running, eat in turn, and squabble                               |
-| 2         | give the cat next to you a treat                                                                               |
-| 3 / 5     | throw a toy (yarn ball, bell ball, toy mouse) / wave the feather wand                                          |
-| Z (or Y)  | cast a spell: sparkles, and every cat nearby is delighted                                                      |
-| V         | hide-and-seek: the cats hide behind bushes; walk past a bush to find them                                      |
-| K         | open the shop menu from anywhere                                                                               |
-| M / F     | "Meine Katzen" (name, colour, size) / "Meine Figur" (skin, hair, hairstyle, face)                              |
-| S / T / H | save the game / sound on or off / hide or show the list of keys                                                |
-| Esc       | close a menu                                                                                                   |
+| Key       | Action                                                                                                  |
+| --------- | ------------------------------------------------------------------------------------------------------- |
+| ← →       | walk                                                                                                    |
+| ↑ ↓       | walk further back / to the front; ↑ at a door goes through it                                           |
+| Space     | jump; **hold** to fly, let go to float down                                                             |
+| Enter     | pet the cat next to you, pick up a toy, or use what is in front of you (door, shelf, cupboard, stove …) |
+| N         | pick up the nearest cat or put it down; you can fly with it                                             |
+| R         | put the cat in your arms into the backpack (up to three), or take one out                               |
+| 1 / 4     | put down a bowl of food / milk: the cats come running, eat in turn, and squabble                        |
+| 2         | give the cat next to you a treat                                                                        |
+| 3 / 5     | throw a toy (yarn ball, bell ball, toy mouse) / wave the feather wand                                   |
+| Z (or Y)  | cast a spell: sparkles, and every cat nearby is delighted                                               |
+| V         | hide-and-seek: the cats hide behind bushes; walk past a bush to find them                               |
+| K         | open the shop menu from anywhere                                                                        |
+| M / F     | "Meine Katzen" (name, colour, size) / "Meine Figur" (skin, hair, hairstyle, face)                       |
+| S / T / H | save the game / sound on or off / hide or show the list of keys                                         |
+| Esc       | close a menu                                                                                            |
 
 The number keys and Enter on the number pad work too. The game also saves when the page is closed.
 
@@ -72,14 +72,13 @@ a sunshade. Walk up into a door to go in.
 - **House:** kitchen (bowls, stove, table, cupboards), hall, bathroom and bedroom with the wardrobe.
   Everything bought in the shop is kept in the wardrobe.
 - **Cat shop:** four shelves (clothes, cat things, kitchen things, decoration); Enter at a shelf opens
-  that page of the shop. A cat keeps the till.
+  that page of the shop. A cat keeps the till; a new cat bought here waits outside the door.
 - **School:** five sums at one of three levels; the grade (1–6) earns up to 30 coins.
 
 **Coins.** A happy cat drops a coin every three hearts; after 60 hearts every two, after 250 every
-heart. Walk over a coin to collect it. Indoors coins turn up on the table, in the bowls, on the tub and
-at the wardrobe; cupboards fill up over time, faster the more the house is decorated. A cat that
-empties a kitchen bowl leaves a coin in it, and finding every cat at hide-and-seek pays two coins per
-cat.
+heart. Walk over a coin to collect it. In the house, coins also appear on the table, in the bowls, on
+the tub, at the wardrobe and in the cupboards (faster the more the house is decorated). Emptying a
+kitchen bowl leaves a coin in it; finding every cat at hide-and-seek pays two coins per cat.
 
 **Cats.** Petting makes hearts. Food makes cats rounder, chasing toys slims them down again. Thrown
 toys stay on the floor, and the cats play with them by themselves. A new cat costs 100 coins (at most
@@ -107,8 +106,7 @@ npm run dev        # http://localhost:5273
 ```
 
 `npm run build` writes a static site to `dist/`; `npm run preview` serves it on port 4273. Both ports
-are fixed in [`vite.config.ts`](vite.config.ts) (not Vite's defaults, so other Vite projects never get
-in the way); if one is taken, Vite stops with an error instead of picking another.
+are fixed in [`vite.config.ts`](vite.config.ts); if one is taken, Vite stops instead of picking another.
 
 ## Docker
 
@@ -120,10 +118,8 @@ docker run --rm -p 8080:80 helgas-katzenspiel      # open http://localhost:8080
 ```
 
 Every push to `main` publishes `ghcr.io/marcelpetrick/helgas-katzenspiel:latest` (plus `main` and
-`sha-<commit>`); every release tag publishes the version, e.g. `:0.10.0`. The repository is private, so the
-package is too: `docker login ghcr.io` with a token that has `read:packages` before pulling.
-[`scripts/docker-check.sh`](scripts/docker-check.sh) builds the image and proves it serves the page
-and its bundle.
+`sha-<commit>`); every release tag publishes its version, e.g. `:0.15.2`. The package is private like
+the repository: `docker login ghcr.io` with a token that has `read:packages` before pulling.
 
 ## Releases
 
@@ -160,11 +156,11 @@ Single steps: `npm test`, `npm run coverage`, `npm run lint`, `npm run typecheck
 
 ## Scripts
 
-| Script                                               | Purpose                                                                                                            |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| [`localPipeline.sh`](localPipeline.sh)               | The full quality gate described above; `--help` lists the stages.                                                  |
-| [`scripts/docker-check.sh`](scripts/docker-check.sh) | Builds the Docker image, starts it on a free port and checks the page and bundle: `scripts/docker-check.sh [tag]`. |
-| [`scripts/screenshot.mjs`](scripts/screenshot.mjs)   | Takes the README screenshots from a running game: `node scripts/screenshot.mjs [url] [outDir]`.                    |
+| Script                                                              | Purpose                                                            |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [`localPipeline.sh`](localPipeline.sh)                              | the quality gate above; `--help` lists the stages                  |
+| [`scripts/docker-check.sh`](scripts/docker-check.sh) `[tag]`        | builds the image, starts it on a free port, checks page and bundle |
+| [`scripts/screenshot.mjs`](scripts/screenshot.mjs) `[url] [outDir]` | retakes the README screenshots from a running game                 |
 
 ## Project layout
 
