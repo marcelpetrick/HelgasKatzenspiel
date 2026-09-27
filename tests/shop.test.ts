@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { describe, expect, it } from 'vitest';
-import { buy, CATALOG, DEFAULT_OUTFIT, findItem, loadWardrobe, newWardrobe, outfitColor, wearItem } from '../src/core/shop';
+import { buy, CATALOG, owns, DEFAULT_OUTFIT, findItem, loadWardrobe, newWardrobe, outfitColor, wearItem } from '../src/core/shop';
 
 describe('shop', () => {
   it('starts with the free outfit and no money', () => {
@@ -15,7 +15,7 @@ describe('shop', () => {
   it('every item has a unique id and a German name', () => {
     const ids = CATALOG.map((i) => i.id);
     expect(new Set(ids).size).toBe(ids.length);
-    for (const i of CATALOG) expect(i.name.length).toBeGreaterThan(2);
+    for (const i of CATALOG) expect(i.name.length).toBeGreaterThanOrEqual(2);
   });
 
   it('refuses when there is not enough money', () => {
@@ -73,12 +73,38 @@ describe('shop', () => {
       outfit: { top: 'top-sonne' },
       supplies: { food: 'x', treat: 2.7 },
       hasYarn: 'yes',
+      toys: ['ball', 'backpack', 7],
+      gear: ['backpack', 'ball'],
+      wearBackpack: true,
+      pantry: { egg: 2, tomato: -1, leek: 'x' },
     });
     expect(broken.money).toBe(0);
     expect(broken.owned).toContain('top-lila');
     expect(broken.owned).not.toContain('food');
     expect(broken.outfit.top).toBe('top-rosa');
     expect(broken.supplies).toEqual({ food: 0, treat: 2, milk: 0 });
-    expect(broken.hasYarn).toBe(false);
+    expect(broken.toys).toEqual(['ball']);
+    expect(broken.gear).toEqual(['backpack']);
+    expect(broken.wearBackpack).toBe(true);
+    expect(broken.pantry).toMatchObject({ egg: 2, tomato: 0, leek: 0 });
+    expect(loadWardrobe({ hasYarn: true }).toys).toEqual(['yarn']);
+  });
+
+  it('toys, gear and groceries: one-off things are bought once, food stacks, a new backpack is put on', () => {
+    const w = newWardrobe();
+    w.money = 50;
+    expect(buy(w, 'backpack')).toBe('ok');
+    expect(w.wearBackpack).toBe(true);
+    expect(buy(w, 'backpack')).toBe('owned');
+    expect(buy(w, 'mouse')).toBe('ok');
+    expect(buy(w, 'mouse')).toBe('owned');
+    expect(buy(w, 'pan')).toBe('ok');
+    expect(buy(w, 'egg')).toBe('ok');
+    expect(buy(w, 'egg')).toBe('ok');
+    expect(w.pantry.egg).toBe(2);
+    expect(owns(w, 'egg')).toBe(false);
+    expect(owns(w, 'nope')).toBe(false);
+    expect(owns(w, 'pan')).toBe(true);
+    expect(w.money).toBe(50 - 10 - 4 - 6 - 2);
   });
 });

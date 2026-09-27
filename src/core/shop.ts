@@ -9,7 +9,7 @@ import { cleanLook, DEFAULT_LOOK, type Look } from './look';
 export type Slot = 'top' | 'skirt' | 'headband' | 'shoes' | 'earrings' | 'nails';
 export type Supply = 'food' | 'treat' | 'milk';
 /** The shape of an accessory; plain clothes have none. */
-export type Accessory = 'ears' | 'bow' | 'clip-star' | 'clip-heart' | 'pearl' | 'heart' | 'star' | 'none';
+export type Accessory = 'ears' | 'band' | 'flowers' | 'bow' | 'clip-star' | 'clip-heart' | 'pearl' | 'heart' | 'star' | 'none';
 
 export interface WearItem {
   kind: 'wear';
@@ -30,9 +30,36 @@ export interface SupplyItem {
   price: number;
 }
 
+/** Toys for the cats: three to throw (key 3) and a feather wand to wave (key 5). */
+export type Toy = 'yarn' | 'ball' | 'mouse' | 'feather';
+/** Things the girl owns once: a backpack for cats and kitchen tools. */
+export type Gear = 'backpack' | 'pan' | 'pot' | 'cutlery';
+/** Food for the girl, cooked at the stove. */
+export type Grocery = 'tomato' | 'leek' | 'egg' | 'bread' | 'cheese' | 'apple';
+
+export const GROCERIES: readonly Grocery[] = ['tomato', 'leek', 'egg', 'bread', 'cheese', 'apple'];
+
 export interface ToyItem {
   kind: 'toy';
-  id: 'yarn';
+  id: Toy;
+  name: string;
+  icon: string;
+  description: string;
+  price: number;
+}
+
+export interface GearItem {
+  kind: 'gear';
+  id: Gear;
+  name: string;
+  icon: string;
+  description: string;
+  price: number;
+}
+
+export interface GroceryItem {
+  kind: 'grocery';
+  id: Grocery;
   name: string;
   icon: string;
   description: string;
@@ -49,7 +76,7 @@ export interface DecoItem {
   price: number;
 }
 
-export type ShopItem = WearItem | SupplyItem | ToyItem | DecoItem;
+export type ShopItem = WearItem | SupplyItem | ToyItem | GearItem | GroceryItem | DecoItem;
 
 export const SLOT_NAMES: Record<Slot, string> = {
   top: 'Oberteile',
@@ -88,6 +115,9 @@ export const CATALOG: readonly ShopItem[] = [
   wear('headband', 'band-weiss', 'Weiße Katzenohren', '#ffffff', 4, 'ears'),
   wear('headband', 'band-schwarz', 'Schwarze Katzenohren', '#2e2833', 4, 'ears'),
   wear('headband', 'band-lila', 'Lila Katzenohren', '#b388ff', 4, 'ears'),
+  wear('headband', 'reif-rot', 'Roter Haarreif', '#ff4d5e', 2, 'band'),
+  wear('headband', 'reif-tuerkis', 'Türkiser Haarreif', '#2fd3cf', 2, 'band'),
+  wear('headband', 'reif-blumen', 'Blumen-Haarreif', '#ff9fc6', 5, 'flowers'),
   wear('headband', 'bow-rosa', 'Rosa Schleife', '#ff7eb6', 3, 'bow'),
   wear('headband', 'bow-rot', 'Rote Schleife', '#ff4d5e', 3, 'bow'),
   wear('headband', 'bow-blau', 'Blaue Schleife', '#4aa3ff', 3, 'bow'),
@@ -111,6 +141,19 @@ export const CATALOG: readonly ShopItem[] = [
   { kind: 'supply', id: 'treat', name: 'Leckerli', icon: '🐟', description: 'Ein Fischleckerli: 2 Herzen', price: 1 },
   { kind: 'supply', id: 'milk', name: 'Katzenmilch', icon: '🥛', description: 'Ein Schälchen zum Trinken: 2 Herzen', price: 1 },
   { kind: 'toy', id: 'yarn', name: 'Wollknäuel', icon: '🧶', description: 'Werfen, und die Katzen rennen hinterher', price: 5 },
+  { kind: 'toy', id: 'ball', name: 'Glöckchenball', icon: '⚽', description: 'Hüpft weit und klingelt', price: 3 },
+  { kind: 'toy', id: 'mouse', name: 'Spielzeugmaus', icon: '🐭', description: 'Flitzt vor den Katzen davon', price: 4 },
+  { kind: 'toy', id: 'feather', name: 'Federwedel', icon: '🪶', description: 'Taste 5: wedeln, die Katzen springen danach', price: 4 },
+  { kind: 'gear', id: 'backpack', name: 'Rucksack', icon: '🎒', description: 'Taste R: bis zu 3 Katzen einpacken', price: 10 },
+  { kind: 'gear', id: 'pan', name: 'Bratpfanne', icon: '🍳', description: 'Für Spiegelei und Omelett', price: 6 },
+  { kind: 'gear', id: 'pot', name: 'Kochtopf', icon: '🍲', description: 'Für Suppe', price: 6 },
+  { kind: 'gear', id: 'cutlery', name: 'Besteck', icon: '🍴', description: 'Messer, Gabel, Löffel zum Essen', price: 4 },
+  { kind: 'grocery', id: 'tomato', name: 'Tomate', icon: '🍅', description: 'Rot und saftig', price: 1 },
+  { kind: 'grocery', id: 'leek', name: 'Lauch', icon: '🥬', description: 'Für Suppe und Omelett', price: 1 },
+  { kind: 'grocery', id: 'egg', name: 'Ei', icon: '🥚', description: 'Für Spiegelei und Omelett', price: 1 },
+  { kind: 'grocery', id: 'bread', name: 'Brot', icon: '🍞', description: 'Frisch vom Bäcker', price: 1 },
+  { kind: 'grocery', id: 'cheese', name: 'Käse', icon: '🧀', description: 'Mit Löchern', price: 2 },
+  { kind: 'grocery', id: 'apple', name: 'Apfel', icon: '🍎', description: 'Knackig', price: 1 },
   deco('deco-kratzbaum', 'Kratzbaum', '🌳', 'Zum Klettern und Kratzen, im Flur', 12),
   deco('deco-kissen', 'Kuschelkissen', '🛋️', 'Weiche Kissen im Flur', 4),
   deco('deco-blumen', 'Blumentöpfe', '🌷', 'Bunte Blumen für die Küche', 6),
@@ -141,7 +184,13 @@ export interface Wardrobe {
   owned: string[];
   outfit: Record<Slot, string>;
   supplies: Record<Supply, number>;
-  hasYarn: boolean;
+  /** Toys and gear are bought once. */
+  toys: Toy[];
+  gear: Gear[];
+  /** The backpack is worn (it has to be bought first). */
+  wearBackpack: boolean;
+  /** Groceries in the kitchen. */
+  pantry: Record<Grocery, number>;
   /** Decorations bought for the house. */
   deco: string[];
   /** Skin, hair and face, from the figure editor. */
@@ -154,7 +203,10 @@ export function newWardrobe(): Wardrobe {
     owned: CATALOG.filter((i) => i.price === 0).map((i) => i.id),
     outfit: { ...DEFAULT_OUTFIT },
     supplies: { food: 0, treat: 0, milk: 0 },
-    hasYarn: false,
+    toys: [],
+    gear: [],
+    wearBackpack: false,
+    pantry: { tomato: 0, leek: 0, egg: 0, bread: 0, cheese: 0, apple: 0 },
     deco: [],
     look: { ...DEFAULT_LOOK },
   };
@@ -167,17 +219,33 @@ export function buy(w: Wardrobe, id: string): BuyResult {
   const item = findItem(id);
   if (!item) return 'unknown';
   if (item.kind === 'wear' && w.owned.includes(id)) return 'owned';
-  if (item.kind === 'toy' && w.hasYarn) return 'owned';
-  if (item.kind === 'deco' && w.deco.includes(id)) return 'owned';
+  if (owns(w, id)) return 'owned';
   if (w.money < item.price) return 'poor';
   w.money -= item.price;
   if (item.kind === 'wear') {
     w.owned.push(id);
     w.outfit[item.slot] = id;
   } else if (item.kind === 'supply') w.supplies[item.id]++;
+  else if (item.kind === 'grocery') w.pantry[item.id]++;
   else if (item.kind === 'deco') w.deco.push(id);
-  else w.hasYarn = true;
+  else if (item.kind === 'toy') w.toys.push(item.id);
+  else {
+    w.gear.push(item.id);
+    // A new backpack is put on straight away, like new clothes.
+    if (item.id === 'backpack') w.wearBackpack = true;
+  }
   return 'ok';
+}
+
+/** Is this one-off thing (clothes, toy, gear, decoration) already owned? Food never is. */
+export function owns(w: Wardrobe, id: string): boolean {
+  const item = findItem(id);
+  if (!item) return false;
+  if (item.kind === 'wear') return w.owned.includes(id);
+  if (item.kind === 'toy') return w.toys.includes(item.id);
+  if (item.kind === 'gear') return w.gear.includes(item.id);
+  if (item.kind === 'deco') return w.deco.includes(id);
+  return false;
 }
 
 /** Put on something already owned. */
@@ -214,7 +282,20 @@ export function loadWardrobe(raw: unknown): Wardrobe {
       if (typeof n === 'number' && n >= 0) w.supplies[k] = Math.floor(n);
     }
   }
-  w.hasYarn = r.hasYarn === true;
+  const old = raw as { hasYarn?: unknown };
+  // Saves from before there were several toys only knew about the yarn ball.
+  if (old.hasYarn === true) w.toys.push('yarn');
+  const ofKind = (list: unknown, kind: 'toy' | 'gear'): string[] =>
+    Array.isArray(list) ? list.filter((id): id is string => typeof id === 'string' && findItem(id)?.kind === kind) : [];
+  for (const id of ofKind(r.toys, 'toy')) if (!w.toys.includes(id as Toy)) w.toys.push(id as Toy);
+  for (const id of ofKind(r.gear, 'gear')) if (!w.gear.includes(id as Gear)) w.gear.push(id as Gear);
+  w.wearBackpack = r.wearBackpack === true && w.gear.includes('backpack');
+  if (r.pantry && typeof r.pantry === 'object') {
+    for (const k of GROCERIES) {
+      const n = (r.pantry as Record<string, unknown>)[k];
+      if (typeof n === 'number' && n >= 0) w.pantry[k] = Math.floor(n);
+    }
+  }
   if (Array.isArray(r.deco)) for (const id of r.deco) if (typeof id === 'string' && findItem(id)?.kind === 'deco' && !w.deco.includes(id)) w.deco.push(id);
   w.look = cleanLook(r.look);
   return w;

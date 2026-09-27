@@ -31,6 +31,7 @@ export type SoundName =
   | 'empty'
   | 'throw'
   | 'save'
+  | 'hiss'
   | 'click';
 
 export class Sound {
@@ -52,7 +53,11 @@ export class Sound {
     }
     this.master = this.ctx.createGain();
     this.master.gain.value = 0.5;
-    this.master.connect(this.ctx.destination);
+    // A compressor keeps many sounds at once (a spell over lots of cats) from clipping.
+    const limiter = this.ctx.createDynamicsCompressor();
+    limiter.threshold.value = -12;
+    limiter.ratio.value = 8;
+    this.master.connect(limiter).connect(this.ctx.destination);
     const len = this.ctx.sampleRate;
     this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
     const data = this.noise.getChannelData(0);
@@ -250,6 +255,11 @@ export class Sound {
         break;
       case 'save':
         this.notes([523, 659, 784, 1047], 0.1, 'triangle', 0.4, 0.15);
+        break;
+      case 'hiss':
+        // Two cats squabbling: a short "chhh" and a cross little meow.
+        this.hiss(0, 0.35, 0.18, 3000, 5000, 'highpass');
+        this.meow(0.25, 380, 0.3);
         break;
       case 'click':
         this.tone('sine', 1200, 900, 0, 0.05, 0.08);

@@ -13,7 +13,11 @@
 export type Place = 'garden' | 'house';
 
 export const WORLD_MIN_X = 2;
-export const WORLD_MAX_X = 118;
+/** The garden runs from the school past the house and the shop, through a wood, down to the beach. */
+export const WORLD_MAX_X = 552;
+/** Where the meadow turns into sand, and where the sea begins. */
+export const BEACH_X = 470;
+export const SEA_X = 556;
 export const GARDEN_MIN_Z = -3.2;
 export const GARDEN_MAX_Z = 2.6;
 
@@ -22,7 +26,7 @@ export const HOUSE_HALF_WIDTH = 8;
 export const SHOP_X = 96;
 export const SCHOOL_X = 22;
 
-export const INTERIOR_X = 400;
+export const INTERIOR_X = 2000;
 export const INTERIOR_WIDTH = 52;
 export const INTERIOR_MIN_Z = -2.6;
 export const INTERIOR_MAX_Z = 1.9;
@@ -67,19 +71,48 @@ function hills(x: number): number {
   return 1.2 * Math.sin(x * 0.08) + 0.6 * Math.sin(x * 0.21 + 1.3) + 0.25 * Math.sin(x * 0.5 + 0.4);
 }
 
-/** Height of the garden ground: gentle hills, flattened where a building stands. */
+/** The beach slopes gently down towards the water. */
+function beachY(x: number): number {
+  return 0.3 - (x - BEACH_X) * 0.008;
+}
+
+/** Height of the garden ground: gentle hills, flattened where a building stands, sand at the end. */
 export function groundY(x: number): number {
-  if (x >= INTERIOR_X - 50) return 0;
+  if (x >= INTERIOR_X - 500) return 0;
   let y = hills(x);
   for (const b of BUILDINGS) {
     const flat = 1 - smoothstep(b.halfWidth + 2, b.halfWidth + 8, Math.abs(x - b.x));
     y = y * (1 - flat) + hills(b.x) * flat;
   }
-  return y;
+  const sand = smoothstep(BEACH_X - 25, BEACH_X, x);
+  return y * (1 - sand) + beachY(x) * sand;
+}
+
+/** How sandy the ground is at x: 0 meadow … 1 beach. */
+export function sandiness(x: number): number {
+  return smoothstep(BEACH_X - 20, BEACH_X + 5, x);
 }
 
 export function placeOf(x: number): Place {
-  return x >= INTERIOR_X - 50 ? 'house' : 'garden';
+  return x >= INTERIOR_X - 500 ? 'house' : 'garden';
+}
+
+/** Big round bushes along the front of the path; cats hide behind them when playing hide-and-seek. */
+export interface Bush {
+  x: number;
+  z: number;
+  size: number;
+}
+
+export const BUSHES: readonly Bush[] = [8, 36, 44, 78, 84, 118, 134, 152, 171, 196, 214, 238, 262, 281, 305, 330, 352, 371, 393, 414, 436, 452].map((x, i) => ({
+  x,
+  z: -2.35 + (i % 3) * 0.15,
+  size: 0.75 + ((i * 7) % 5) * 0.07,
+}));
+
+/** Where a hiding cat sits: just behind the bush, seen from the camera. */
+export function hideSpot(b: Bush): { x: number; z: number } {
+  return { x: b.x, z: b.z + b.size * 0.75 };
 }
 
 /** The furthest back you may stand at x, so nobody walks into a building's wall. */
@@ -97,7 +130,7 @@ export function doorAt(x: number, z: number): Building | null {
 }
 
 /** Something in the house you can use with Enter (or ↑ for the exit door). */
-export type SpotId = 'exit' | 'bowls' | 'cupboard' | 'fridge' | 'table' | 'bathCabinet' | 'bathtub' | 'wardrobe' | 'bed';
+export type SpotId = 'exit' | 'bowls' | 'cupboard' | 'fridge' | 'stove' | 'table' | 'bathCabinet' | 'bathtub' | 'wardrobe' | 'bed';
 
 export interface Spot {
   id: SpotId;
@@ -119,6 +152,7 @@ export const SPOTS: readonly Spot[] = [
   { id: 'fridge', x: INTERIOR_X + 2.2, z: 1.9, searchable: true },
   { id: 'cupboard', x: INTERIOR_X + 5.5, z: 1.9, searchable: true },
   { id: 'bowls', x: INTERIOR_X + 9, z: -0.6, searchable: false },
+  { id: 'stove', x: INTERIOR_X + 10.4, z: 1.9, searchable: false },
   { id: 'table', x: INTERIOR_X + 13, z: 0.6, searchable: false },
   { id: 'exit', x: INTERIOR_X + 22, z: 1.9, searchable: false },
   { id: 'bathtub', x: INTERIOR_X + 30.5, z: 1.2, searchable: false },

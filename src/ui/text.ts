@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { Focus } from '../core/game';
+import { recipe } from '../core/kitchen';
+import type { Grocery, Gear, Supply } from '../core/shop';
 import type { Building, SpotId } from '../core/world';
 
 const SPOT_ACTIONS: Record<SpotId, string> = {
@@ -9,6 +11,7 @@ const SPOT_ACTIONS: Record<SpotId, string> = {
   bowls: 'Enter: Milch und Futter hinstellen 🥛',
   fridge: 'Enter: Kühlschrank durchsuchen',
   cupboard: 'Enter: Küchenschrank durchsuchen',
+  stove: 'Enter: am Herd kochen 🍳',
   table: 'Hier auf dem Tisch liegen manchmal Münzen',
   bathtub: 'Auf der Badewanne liegen manchmal Münzen 🛁',
   bathCabinet: 'Enter: Badschrank durchsuchen',
@@ -27,6 +30,7 @@ const SPOT_NAMES: Record<SpotId, string> = {
   bowls: 'Schüsseln',
   fridge: 'Kühlschrank',
   cupboard: 'Küchenschrank',
+  stove: 'Herd',
   table: 'Tisch',
   bathtub: 'Badewanne',
   bathCabinet: 'Badschrank',
@@ -53,24 +57,56 @@ export const TEXT = {
   controls: [
     ['← → ↑ ↓', 'laufen'],
     ['Leertaste', 'springen · halten = fliegen'],
-    ['Enter', 'streicheln · benutzen'],
+    ['Enter', 'streicheln · benutzen · aufheben'],
     ['N', 'Katze hochnehmen / absetzen'],
+    ['R', 'Katze in den Rucksack 🎒'],
+    ['1 4', 'Napf mit Futter / Milch hinstellen'],
+    ['2 3 5', 'Leckerli · Spielzeug werfen · Federwedel'],
     ['Z', 'zaubern ✨'],
-    ['K', 'Katzenladen 🛍️'],
-    ['M', 'meine Katzen ✏️'],
-    ['F', 'meine Figur 👧'],
-    ['S', 'speichern 💾'],
-    ['T', 'Ton an/aus 🔊'],
+    ['V', 'Verstecken spielen 🙈'],
+    ['K M F', 'Laden · meine Katzen · meine Figur'],
+    ['S T H', 'speichern · Ton · Hilfe aus'],
   ] as const,
-  prompt(f: Focus, carrying: boolean): string {
+  help: 'H: Hilfe',
+  toyNames: { yarn: 'Wollknäuel', ball: 'Glöckchenball', mouse: 'Spielzeugmaus' } as Record<string, string>,
+  prompt(f: Focus, carrying: boolean, meal: string | null = null): string {
     if (!f) return '';
     if (f.kind === 'cat')
       return f.cat.mood === 'carried'
         ? `Enter: ${f.cat.name} kuscheln 💕 · N: absetzen`
         : `Enter: ${f.cat.name} streicheln 💕${carrying ? '' : ' · N: hochnehmen'}`;
     if (f.kind === 'door') return DOOR_ACTIONS[f.building.id];
+    if (f.kind === 'toy') return `Enter: ${TEXT.toyNames[f.toy.kind] ?? 'Spielzeug'} aufheben`;
+    if (f.spot.id === 'table' && meal) {
+      const r = recipe(meal);
+      if (r) return `Enter: ${r.name} essen ${r.icon}`;
+    }
     return SPOT_ACTIONS[f.spot.id];
   },
+  noSupply: (s: Supply) =>
+    ({ food: 'Kein Katzenfutter mehr', treat: 'Keine Leckerli mehr', milk: 'Keine Milch mehr' })[s] + ' — im Katzenladen (K) gibt es neues!',
+  noToy: (reason: 'none' | 'lying') =>
+    reason === 'none'
+      ? 'Du hast noch kein Spielzeug. Im Katzenladen (K) gibt es welches!'
+      : 'Deine Spielzeuge liegen alle auf dem Boden — geh hin und heb sie mit Enter auf.',
+  noBackpack: 'Du hast keinen Rucksack an. Kauf einen im Katzenladen (K) und zieh ihn an!',
+  backpackFull: 'Der Rucksack ist voll — drei Katzen passen hinein.',
+  backpackIn: (name: string) => `${name} sitzt jetzt im Rucksack! 🎒`,
+  squabble: (a: string, b: string) => `${a} und ${b} streiten sich ums Futter! 😾`,
+  seekStart: 'Augen zu! Die Katzen verstecken sich … 1, 2, 3 …',
+  seekGo: 'Ich komme! Such die Katzen hinter den Büschen! 🙈',
+  seekFound: (name: string, left: number) => (left === 0 ? `${name} gefunden!` : `${name} gefunden! Noch ${left} versteckt.`),
+  seekDone: (coins: number) => `Alle gefunden! 🎉 Du bekommst ${coins} Münzen.`,
+  seekStop: 'Verstecken beendet.',
+  seekNoCats: 'Zum Verstecken müssen Katzen draußen im Garten sein.',
+  seeking: (found: number, of: number) => `🙈 Verstecken: ${found} von ${of} gefunden`,
+  cooked: (id: string) => `${recipe(id)?.name ?? 'Essen'} steht auf dem Tisch! Guten Appetit! 🍽️`,
+  meal: (id: string, ok: boolean) =>
+    ok
+      ? `Lecker, ${recipe(id)?.name ?? 'das Essen'}! 😋 Jetzt kannst du eine Minute lang doppelt so hoch fliegen!`
+      : 'Ohne Besteck geht das nicht — kauf Besteck im Katzenladen (K)! 🍴',
+  groceries: { tomato: 'Tomate', leek: 'Lauch', egg: 'Ei', bread: 'Brot', cheese: 'Käse', apple: 'Apfel' } satisfies Record<Grocery, string>,
+  gearNames: { backpack: 'Rucksack', pan: 'Bratpfanne', pot: 'Kochtopf', cutlery: 'Besteck' } satisfies Record<Gear, string>,
   searched: (spot: SpotId, found: number) =>
     found === 0
       ? `Im ${SPOT_NAMES[spot]} ist gerade nichts. Später nochmal schauen!`
@@ -88,6 +124,9 @@ export const TEXT = {
     treat: 'Leckerli',
     yarn: 'Wollknäuel',
     milk: 'Milch',
+    toys: 'Spielzeug',
+    feather: 'Federwedel',
+    backpack: 'Rucksack',
   },
   shop: {
     title: '🛍️ Katzenladen',
@@ -96,6 +135,9 @@ export const TEXT = {
     tabClothes: '👗 Kleidung',
     tabCats: '🐱 Für Katzen',
     tabDeco: '🏠 Deko',
+    tabKitchen: '🍅 Küche',
+    takeOff: 'Ausziehen',
+    kitchenHint: 'In der Küche am Herd kannst du kochen: Spiegelei, Omelett, Lauchsuppe, Tomatensalat, Käsebrot und Apfelschnitze. Danach am Tisch essen!',
     decoHint: 'Deko macht das Haus gemütlich. Je schöner das Haus, desto schneller tauchen Münzen in den Schränken auf!',
     free: 'gratis',
     buy: 'Kaufen',
@@ -106,14 +148,14 @@ export const TEXT = {
     bought: (name: string) => `${name} gekauft! 🎉`,
     tooPoor: 'Dafür reichen deine Münzen noch nicht. Streichle mehr Katzen! 💕',
     useHint:
-      'Tipp: Stell dich zu einer Katze und drück 1 für Futter, 2 für ein Leckerli, 4 für Milch. 3 wirft das Wollknäuel. Futter kannst du auch in der Küche in die Schüssel tun.',
+      'Tipp: 1 stellt einen Napf mit Futter hin, 4 einen Napf mit Milch — die Katzen kommen angerannt! 2 gibt der Katze neben dir ein Leckerli. 3 wirft ein Spielzeug, 5 wedelt mit dem Federwedel, R steckt die Katze auf deinem Arm in den Rucksack.',
     newCat: 'Neue Katze',
     newCatDesc: 'Eine neue Katze zieht bei dir ein',
     tooManyCats: 'Mehr Katzen passen gerade nicht ins Haus.',
   },
   school: {
     title: '✏️ Schule',
-    close: 'Nach Hause (Esc)',
+    close: 'Schließen (Esc)',
     intro: 'Guten Morgen! Wie schwer sollen die Rechenaufgaben heute sein?',
     progress: (n: number, of: number) => `Aufgabe ${n} von ${of}`,
     right: 'Richtig! Super gerechnet! ⭐',
@@ -124,6 +166,14 @@ export const TEXT = {
     noCoins: 'Diesmal gibt es noch keine Münzen. Üben macht schlau!',
     again: 'Nochmal rechnen',
     home: 'Nach Hause gehen',
+  },
+  cook: {
+    title: '🍳 Kochen',
+    close: 'Fertig (Esc)',
+    cook: 'Kochen',
+    hint: 'Zutaten und Küchensachen gibt es im Katzenladen (K) unter „Küche“. Das Essen kommt auf den Tisch — dort mit Enter essen.',
+    busy: 'Auf dem Tisch steht schon ein Essen. Iss es zuerst auf!',
+    missing: 'Dafür fehlt noch etwas — schau im Katzenladen (K) unter „Küche“.',
   },
   figure: {
     title: '👧 Meine Figur',

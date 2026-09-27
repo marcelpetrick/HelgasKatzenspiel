@@ -21,6 +21,8 @@ export interface GirlLook extends Look {
   earrings: { style: Accessory; color: string };
   /** Nail polish colour, or null without polish. */
   nails: string | null;
+  /** The backpack is worn. */
+  backpack: boolean;
 }
 
 export function girlLook(w: Wardrobe): GirlLook {
@@ -32,6 +34,7 @@ export function girlLook(w: Wardrobe): GirlLook {
     hairAcc: { style: outfitStyle(w, 'headband'), color: outfitColor(w, 'headband') },
     earrings: { style: outfitStyle(w, 'earrings'), color: outfitColor(w, 'earrings') },
     nails: outfitStyle(w, 'nails') === 'none' ? null : outfitColor(w, 'nails'),
+    backpack: w.wearBackpack,
   };
 }
 
@@ -58,6 +61,7 @@ export class GirlView {
   private yaw = -0.6;
   private blinkIn = 2;
   private castTime = 0;
+  private pourTime = 0;
   private time = 0;
 
   constructor(scene: Scene, look: GirlLook, addCaster: (m: Mesh) => void) {
@@ -182,6 +186,26 @@ export class GirlView {
       add(arc(scene, 'smile', 0.07, Math.PI + 0.5, 2 * Math.PI - 0.5, 0.016), lips, head).position.set(0, -0.12, -0.405);
     }
     this.buildHairAcc(scene, look, head, add);
+    if (look.backpack) this.buildBackpack(scene, add);
+  }
+
+  /** A little rucksack on her back; cats put inside sit on top of it. */
+  private buildBackpack(scene: Scene, add: (m: Mesh, mat: StandardMaterial, p?: TransformNode) => Mesh): void {
+    const bag = material(scene, 'bag', '#ff8a3d', 0.2, 0.1);
+    const flap = material(scene, 'bagFlap', '#ffb36b', 0.2, 0.12);
+    const pack = add(MeshBuilder.CreateBox('backpack', { width: 0.55, height: 0.6, depth: 0.32 }, scene), bag);
+    pack.position.set(0, 1.45, 0.38);
+    add(MeshBuilder.CreateBox('backpackFlap', { width: 0.57, height: 0.2, depth: 0.34 }, scene), flap).position.set(0, 1.72, 0.38);
+    add(MeshBuilder.CreateBox('backpackPocket', { width: 0.36, height: 0.22, depth: 0.08 }, scene), flap).position.set(0, 1.35, 0.57);
+    for (const side of [-1, 1]) {
+      const strap = add(MeshBuilder.CreateBox('strap', { width: 0.07, height: 0.55, depth: 0.05 }, scene), bag);
+      strap.position.set(side * 0.16, 1.52, -0.24);
+    }
+  }
+
+  /** Bend down and pour: putting a bowl on the floor. */
+  pour(): void {
+    this.pourTime = 0.7;
   }
 
   private buildHair(
@@ -201,6 +225,32 @@ export class GirlView {
     if (s === 'kurz') {
       back.scaling.set(1.05, 0.85, 0.75);
       back.position.y = -0.05;
+    } else if (s === 'stoppel') {
+      // Very short: just a close cap, no hair falling down the back.
+      cap.scaling.set(0.97, 0.97, 0.97);
+      back.scaling.set(0.98, 0.9, 0.55);
+      back.position.set(0, 0.02, 0.1);
+    } else if (s === 'pippi') {
+      // Pippi Longstocking: two stiff braids sticking out sideways, with bows at the ends.
+      const bowMat = material(scene, 'pippiBow', '#3fa34d', 0.2, 0.15);
+      for (const side of [-1, 1]) {
+        const braid = add(
+          MeshBuilder.CreateCylinder('pippiBraid', { height: 0.62, diameterTop: 0.1, diameterBottom: 0.16, tessellation: 10 }, scene),
+          hair,
+          head,
+        );
+        braid.rotation.z = side * (Math.PI / 2 - 0.35);
+        braid.position.set(side * 0.62, 0.02, 0.05);
+        const bow = add(MeshBuilder.CreateSphere('pippiBowKnot', { diameter: 0.14, segments: 8 }, scene), bowMat, head);
+        bow.scaling.set(1.6, 0.8, 0.6);
+        bow.position.set(side * 0.9, 0.14, 0.05);
+      }
+    } else if (s === 'zopf') {
+      // One long braid down the back: a chain of beads getting thinner.
+      for (let i = 0; i < 6; i++) {
+        const bead = add(MeshBuilder.CreateSphere('braid', { diameter: 0.22 - i * 0.02, segments: 10 }, scene), hair, head);
+        bead.position.set(0, -0.25 - i * 0.16, 0.42 + i * 0.03);
+      }
     } else if (s === 'lang') {
       // Long hair falls down the back to below the shoulders.
       const fall = add(MeshBuilder.CreateSphere('hairLong', { diameter: 0.9, segments: 16 }, scene), hair, head);
@@ -236,6 +286,21 @@ export class GirlView {
         const earIn = add(MeshBuilder.CreateCylinder('catEarIn', { height: 0.22, diameterTop: 0, diameterBottom: 0.18, tessellation: 4 }, scene), inner, head);
         earIn.position.set(side * 0.255, 0.45, -0.09);
         earIn.rotation.set(0, Math.PI / 4, -side * 0.35);
+      }
+    } else if (style === 'band' || style === 'flowers') {
+      // A plain hairband, or one covered in little flowers.
+      add(arc(scene, 'hairband', 0.49, 0.15 * Math.PI, 0.85 * Math.PI, 0.05), mat, head).position.z = -0.02;
+      if (style === 'flowers') {
+        const petals = ['#ff7eb6', '#ffd23f', '#ffffff', '#b388ff', '#6ec6ff'];
+        for (let i = 0; i < 7; i++) {
+          const a = 0.2 * Math.PI + (i / 6) * 0.6 * Math.PI;
+          const f = add(
+            MeshBuilder.CreateSphere('flower', { diameter: 0.13, segments: 8 }, scene),
+            material(scene, `flower${i}`, petals[i % petals.length], 0.1, 0.3),
+            head,
+          );
+          f.position.set(Math.cos(a) * 0.5, Math.sin(a) * 0.5, -0.05);
+        }
       }
     } else if (style === 'bow') {
       // A big bow on top of the head: two loops and a knot.
@@ -337,6 +402,14 @@ export class GirlView {
       this.castTime -= dt;
       this.arms[1].rotation.set(0, 0, 2.4);
     }
+    if (this.pourTime > 0) {
+      // Lean forward and reach down with both hands.
+      this.pourTime -= dt;
+      const bend = Math.sin(Math.min(1, this.pourTime / 0.7) * Math.PI) * 0.6;
+      this.body.rotation.x = bend;
+      this.arms[0].rotation.set(-1.3, 0, -0.2);
+      this.arms[1].rotation.set(-1.3, 0, 0.2);
+    } else this.body.rotation.x = 0;
     this.wandStar.scaling.setAll(0.32 * (1 + Math.max(0, this.castTime) * 2.5 + Math.sin(this.time * 5) * 0.08));
     this.wandStar.rotation.z += dt * 2;
 

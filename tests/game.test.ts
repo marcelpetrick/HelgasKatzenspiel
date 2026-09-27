@@ -17,8 +17,16 @@ import {
   MAX_CATS,
   PET_COOLDOWN,
   SPOT_REFILL_TIME,
-  YARN_PLAY_TIME,
+  TOY_PLAY_TIME,
+  BOWL_PORTIONS,
+  SUPPLY_HEARTS,
+  MOUSE_DASHES,
+  FEATHER_COOLDOWN,
+  SEEK_COUNT,
+  SEEK_MIN_DISTANCE,
+  SEEK_COINS_PER_CAT,
 } from '../src/core/game';
+import { MEAL_BOOST_TIME } from '../src/core/kitchen';
 import { BUILDINGS, groundY, HOUSE_ENTRY, INTERIOR_X, maxZAt, SHOP_X, spot, WORLD_MAX_X } from '../src/core/world';
 
 const idle: Input = { left: false, right: false, jump: false, fly: false, pet: false, magic: false };
@@ -90,7 +98,8 @@ describe('moving around', () => {
 
   it('never leaves the world', () => {
     const g = new Game();
-    run(g, 30, { right: true });
+    g.girl.x = WORLD_MAX_X - 20;
+    run(g, 10, { right: true });
     expect(g.girl.x).toBe(WORLD_MAX_X);
   });
 
@@ -233,18 +242,48 @@ describe('petting, feeding and magic', () => {
     expect(cat.love).toBe(HEARTS_PER_COIN);
   });
 
-  it('feeding uses up food, gives hearts and makes the cat rounder', () => {
+  it('1 puts a bowl of food down: the cats come running, eat, get rounder, and the empty bowl goes', () => {
     const g = new Game();
     quiet(g);
+    g.girl.x = 200;
+    tap(g, { feed: true });
+    expect(types(g.drainEvents())).toContain('noSupply');
     g.wardrobe.supplies.food = 1;
-    const cat = beside(g, g.cats[0]);
+    const cats = g.cats.slice(0, 4).map((c, i) => beside(g, c, 5 + i * 3));
+    for (const c of cats) c.timer = 0;
     tap(g, { feed: true });
     expect(g.wardrobe.supplies.food).toBe(0);
-    expect(g.hearts).toBe(3);
-    expect(cat.plump).toBeGreaterThan(0);
-    expect(types(g.drainEvents())).toContain('feed');
-    tap(g, { feed: true });
-    expect(g.hearts).toBe(3);
+    const bowl = g.bowls.find((b) => !b.fixed);
+    expect(bowl).toMatchObject({ kind: 'food', portions: BOWL_PORTIONS.food, place: 'garden' });
+    run(g, 0.3);
+    expect(cats.filter((c) => c.mood === 'toBowl').length).toBe(4);
+    run(g, 20);
+    expect(g.bowls.some((b) => !b.fixed)).toBe(false);
+    expect(g.hearts).toBe(3 * SUPPLY_HEARTS.food);
+    expect(cats.filter((c) => c.plump > 0).length).toBe(3);
+    expect(types(g.drainEvents())).toEqual(expect.arrayContaining(['bowlPlaced', 'eatStart', 'feed', 'bowlGone']));
+  });
+
+  it('hungry cats that find the bowl taken wait, and sometimes squabble', () => {
+    let squabbles = 0;
+    for (let seed = 1; seed <= 6; seed++) {
+      const g = new Game(seed);
+      quiet(g);
+      g.girl.x = 200;
+      g.wardrobe.supplies.food = 1;
+      const [a, b] = [beside(g, g.cats[0], 3), beside(g, g.cats[1], 3.2)];
+      a.timer = b.timer = 0;
+      tap(g, { feed: true });
+      run(g, 1.5);
+      expect([a.mood, b.mood]).toContain('eat');
+      expect(['wait', 'squabble']).toContain(a.mood === 'eat' ? b.mood : a.mood);
+      squabbles += g.drainEvents().filter((e) => e.type === 'squabble').length;
+      // Both get their turn; the bowl is licked clean.
+      run(g, 30);
+      expect(g.bowls.some((k) => !k.fixed)).toBe(false);
+      expect(g.hearts).toBe(BOWL_PORTIONS.food * SUPPLY_HEARTS.food);
+    }
+    expect(squabbles).toBeGreaterThan(0);
   });
 
   it('treats give two hearts even right after petting', () => {
@@ -257,24 +296,31 @@ describe('petting, feeding and magic', () => {
     expect(g.hearts).toBe(3);
   });
 
-  it('milk is a drink bought in the shop: two hearts', () => {
+  it('4 puts down a bowl of milk: two portions, two hearts each', () => {
     const g = new Game();
     quiet(g);
+    g.girl.x = 200;
     g.wardrobe.supplies.milk = 1;
-    const cat = beside(g, g.cats[0]);
+    const cat = beside(g, g.cats[0], 2);
+    cat.timer = 0;
     tap(g, { milk: true });
-    expect(g.hearts).toBe(2);
-    expect(g.wardrobe.supplies.milk).toBe(0);
-    expect(cat.plump).toBeCloseTo(0.05);
+    expect(g.bowls.find((b) => !b.fixed)?.portions).toBe(BOWL_PORTIONS.milk);
+    run(g, 8);
+    expect(g.hearts).toBe(2 * SUPPLY_HEARTS.milk);
+    expect(cat.plump).toBeCloseTo(0.1);
   });
 
-  it('plumpness is capped at 1', () => {
+  it('treats from the hand make a cat rounder, up to a point', () => {
     const g = new Game();
     quiet(g);
-    g.wardrobe.supplies.food = 20;
+    g.wardrobe.supplies.treat = 30;
     const cat = beside(g, g.cats[0]);
-    for (let i = 0; i < 20; i++) tap(g, { feed: true });
+    for (let i = 0; i < 30; i++) tap(g, { treat: true });
     expect(cat.plump).toBe(1);
+    tap(g, { treat: true });
+    g.wardrobe.supplies.treat = 0;
+    tap(g, { treat: true });
+    expect(types(g.drainEvents())).toContain('noSupply');
   });
 
   it('magic delights every cat in range and has a cooldown', () => {
@@ -350,14 +396,15 @@ describe('the kitchen and the cupboards', () => {
     g.girl.x = bowls.x;
     g.girl.z = bowls.z;
     g.drainEvents();
+    const portions = () => [g.kitchenBowl('milk').portions, g.kitchenBowl('food').portions];
     tap(g, { pet: true });
-    expect(g.bowls).toEqual({ milk: true, food: false });
+    expect(portions()).toEqual([2, 0]);
     expect(g.drainEvents()).toContainEqual({ type: 'bowls', milk: true, food: false, noFood: true });
     tap(g, { pet: true });
     expect(g.drainEvents()).toContainEqual({ type: 'bowls', milk: false, food: false, noFood: true });
     g.wardrobe.supplies.food = 1;
     tap(g, { pet: true });
-    expect(g.bowls).toEqual({ milk: true, food: true });
+    expect(portions()).toEqual([2, 3]);
     expect(g.wardrobe.supplies.food).toBe(0);
     tap(g, { pet: true });
     expect(g.drainEvents()).toContainEqual({ type: 'bowls', milk: false, food: false, noFood: false });
@@ -373,9 +420,9 @@ describe('the kitchen and the cupboards', () => {
     }
     run(g, 0.5);
     expect([a.mood, b.mood].sort()).toEqual(['toBowl', 'toBowl']);
-    run(g, 12 + EAT_TIME);
-    expect(g.bowls).toEqual({ milk: false, food: false });
-    expect(g.hearts).toBeGreaterThanOrEqual(5);
+    run(g, 30 + 5 * EAT_TIME);
+    expect(portions()).toEqual([0, 0]);
+    expect(g.hearts).toBe(2 * 2 + 3 * 3);
     expect(a.plump + b.plump).toBeGreaterThan(0.15);
     expect(g.coins.filter((c) => c.place === 'house').length).toBeGreaterThanOrEqual(2);
   });
@@ -384,7 +431,7 @@ describe('the kitchen and the cupboards', () => {
     const g = new Game();
     quiet(g);
     goInside(g);
-    g.bowls.milk = true;
+    g.kitchenBowl('milk').portions = 2;
     const cat = g.cats[0];
     cat.place = 'house';
     cat.x = g.girl.x + 1;
@@ -446,40 +493,235 @@ describe('the kitchen and the cupboards', () => {
   });
 });
 
-describe('the yarn ball', () => {
-  it('needs to be owned, rolls, gets chased and is picked up again', () => {
+describe('toys', () => {
+  it('need to be owned; thrown ones roll, get chased, stay on the floor and are picked up with Enter', () => {
     const g = new Game();
     quiet(g);
-    g.girl.x = 20;
-    tap(g, { yarn: true });
-    expect(g.yarn).toBeNull();
-    g.wardrobe.hasYarn = true;
+    g.girl.x = 200;
+    tap(g, { toy: true, feather: true });
+    expect(g.drainEvents()).toEqual(expect.arrayContaining([{ type: 'noToy', reason: 'none' }]));
+    g.wardrobe.toys.push('yarn', 'ball');
     const cat = beside(g, g.cats[0], 6);
     cat.plump = 0.5;
-    tap(g, { yarn: true });
-    expect(g.yarn).not.toBeNull();
-    const x0 = g.yarn?.x ?? 0;
+    tap(g, { toy: true });
+    tap(g, { toy: true });
+    tap(g, { toy: true });
+    expect(g.toys.map((t) => t.kind).sort()).toEqual(['ball', 'yarn']);
+    expect(g.drainEvents()).toContainEqual({ type: 'noToy', reason: 'lying' });
     run(g, 0.5);
-    expect(g.yarn?.x).toBeGreaterThan(x0);
     expect(['play', 'happy']).toContain(cat.mood);
-    run(g, YARN_PLAY_TIME);
+    run(g, TOY_PLAY_TIME);
     expect(g.hearts).toBeGreaterThan(0);
     expect(cat.plump).toBeLessThan(0.5);
-    run(g, 40);
-    expect(g.yarn).toBeNull();
-    expect(g.cats.every((c) => c.mood !== 'play')).toBe(true);
+    run(g, 30);
+    expect(g.toys.length).toBe(2);
+    const toy = g.toys[0];
+    quiet(g);
+    g.girl.x = toy.x;
+    g.girl.z = toy.z;
+    expect(g.focus()).toEqual({ kind: 'toy', toy });
+    tap(g, { pet: true });
+    expect(g.toys.length).toBe(1);
   });
 
-  it('bounces off the edge of the world', () => {
+  it('the ball bounces off the end of the world; the mouse darts away from cats', () => {
     const g = new Game();
     quiet(g);
-    for (const c of g.cats) c.x = 2;
-    g.wardrobe.hasYarn = true;
+    g.wardrobe.toys.push('ball', 'mouse');
     g.girl.x = WORLD_MAX_X - 1;
-    tap(g, { yarn: true });
-    run(g, 1);
-    expect(g.yarn?.x).toBeLessThanOrEqual(WORLD_MAX_X);
-    expect(g.yarn?.vx).toBeLessThanOrEqual(0);
+    tap(g, { toy: true });
+    run(g, 0.5);
+    const ball = g.toys[0];
+    expect(ball.x).toBeLessThanOrEqual(WORLD_MAX_X);
+    expect(ball.vx).toBeLessThanOrEqual(0);
+    g.girl.x = 200;
+    g.girl.facing = 1;
+    const cat = beside(g, g.cats[0], 3);
+    tap(g, { toy: true });
+    const mouse = g.toys[1];
+    run(g, 6);
+    expect(mouse.kind).toBe('mouse');
+    expect(mouse.dashes).toBeLessThan(MOUSE_DASHES);
+    expect(cat.love).toBeGreaterThan(0);
+  });
+
+  it('cats play with toys lying around all by themselves', () => {
+    const g = new Game(11);
+    quiet(g);
+    g.wardrobe.toys.push('yarn');
+    const toy = g.pushToy({ kind: 'yarn', x: 200, z: 0, place: 'garden' });
+    const cat = g.cats[0];
+    cat.x = 202;
+    cat.z = 0;
+    cat.timer = 0;
+    let played = false;
+    for (let i = 0; i < 600 && !played; i++) {
+      tap(g, {});
+      played = cat.mood === 'play' && cat.toy === toy.id;
+      if (cat.mood === 'sit' && cat.timer > 5) cat.timer = 0;
+    }
+    expect(played).toBe(true);
+    run(g, 10);
+    expect(cat.toy).toBeNull();
+  });
+
+  it('the feather wand makes nearby cats leap, with a cooldown', () => {
+    const g = new Game();
+    quiet(g);
+    g.girl.x = 200;
+    g.wardrobe.toys.push('feather');
+    beside(g, g.cats[0], 2);
+    beside(g, g.cats[1], -3);
+    tap(g, { feather: true });
+    expect(g.hearts).toBe(2);
+    tap(g, { feather: true });
+    expect(g.hearts).toBe(2);
+    run(g, FEATHER_COOLDOWN);
+    tap(g, { feather: true });
+    expect(g.hearts).toBe(4);
+  });
+});
+
+describe('the backpack', () => {
+  it('has to be bought and worn; R packs the carried cat, up to three, and unpacks them again', () => {
+    const g = new Game();
+    quiet(g);
+    g.girl.x = 200;
+    const cats = g.cats.slice(0, 4);
+    tap(g, { backpack: true });
+    expect(types(g.drainEvents())).toContain('noBackpack');
+    g.wardrobe.gear.push('backpack');
+    g.setBackpack(true);
+    for (const c of cats) {
+      beside(g, c);
+      tap(g, { carry: true });
+      tap(g, { backpack: true });
+    }
+    expect(g.girl.backpack).toEqual(cats.slice(0, 3).map((c) => c.id));
+    expect(g.girl.carrying).toBe(cats[3].id);
+    expect(types(g.drainEvents())).toContain('backpackFull');
+    run(g, 1, { right: true });
+    for (const c of cats.slice(0, 3)) expect(c).toMatchObject({ mood: 'backpack', x: g.girl.x });
+    goInside(g);
+    expect(cats.every((c) => c.place === 'house')).toBe(true);
+    tap(g, { carry: true });
+    tap(g, { backpack: true });
+    expect(g.girl.carrying).toBe(cats[2].id);
+    g.setBackpack(false);
+    expect(g.girl.backpack).toEqual([]);
+    expect(cats[0].mood).toBe('sit');
+    expect(g.nearestCat()).not.toBeNull();
+  });
+});
+
+describe('hide-and-seek', () => {
+  it('V: the garden cats hide behind bushes; walking past a bush finds them; all found pays coins', () => {
+    const g = new Game();
+    g.girl.x = 200;
+    for (const c of g.cats) {
+      c.place = 'garden';
+      c.x = 190 + c.id;
+      c.z = 0;
+      c.mood = 'sit';
+    }
+    tap(g, { seek: true });
+    expect(g.seek?.phase).toBe('count');
+    run(g, SEEK_COUNT + 0.1);
+    expect(g.seek?.phase).toBe('seek');
+    const hidden = g.cats.filter((c) => c.mood === 'hidden');
+    expect(hidden.length).toBe(6);
+    expect(g.nearestCat()).toBeNull();
+    for (const c of hidden) expect(Math.abs(c.x - g.girl.x)).toBeGreaterThanOrEqual(SEEK_MIN_DISTANCE);
+    for (const c of hidden) {
+      g.girl.x = c.x;
+      g.girl.z = c.z - 1;
+      tap(g, {});
+    }
+    expect(g.seek).toBeNull();
+    expect(g.money).toBe(6 * SEEK_COINS_PER_CAT);
+    expect(types(g.drainEvents())).toEqual(expect.arrayContaining(['seekStart', 'seekGo', 'found', 'seekDone']));
+  });
+
+  it('V again stops the game; it needs cats in the garden', () => {
+    const g = new Game();
+    tap(g, { seek: true });
+    tap(g, { seek: true });
+    expect(g.seek).toBeNull();
+    expect(g.cats.every((c) => c.mood !== 'hidden' && c.mood !== 'toHide')).toBe(true);
+    goInside(g);
+    tap(g, { seek: true });
+    expect(types(g.drainEvents())).toContain('seekNoCats');
+  });
+});
+
+describe('cooking', () => {
+  it('cooks at the stove with groceries and a pan, eats at the table with cutlery, then flies higher', () => {
+    const g = new Game();
+    quiet(g);
+    goInside(g);
+    const stove = spot('stove');
+    g.girl.x = stove.x;
+    g.girl.z = stove.z;
+    g.drainEvents();
+    tap(g, { pet: true });
+    expect(types(g.drainEvents())).toContain('openKitchen');
+    expect(g.cookMeal('spiegelei')).toBe('missing');
+    expect(g.missingFor('spiegelei')).toEqual(['egg', 'pan']);
+    expect(g.cookMeal('nope')).toBe('unknown');
+    expect(g.missingFor('nope')).toEqual(['unknown']);
+    g.wardrobe.pantry.egg = 2;
+    g.wardrobe.gear.push('pan');
+    expect(g.cookMeal('spiegelei')).toBe('ok');
+    expect(g.cookMeal('spiegelei')).toBe('busy');
+    expect(g.wardrobe.pantry.egg).toBe(1);
+    const table = spot('table');
+    g.girl.x = table.x;
+    g.girl.z = table.z;
+    tap(g, { pet: true });
+    expect(g.drainEvents()).toContainEqual({ type: 'meal', recipe: 'spiegelei', ok: false });
+    g.wardrobe.gear.push('cutlery');
+    tap(g, { pet: true });
+    expect(g.meal).toBeNull();
+    expect(g.girl.boost).toBe(MEAL_BOOST_TIME);
+    tap(g, { pet: true });
+    g.meal = 'verschwunden';
+    tap(g, { pet: true });
+    expect(g.meal).toBeNull();
+
+    // A good meal: flying twice as high outdoors.
+    const out = new Game();
+    quiet(out);
+    out.girl.boost = MEAL_BOOST_TIME;
+    tap(out, { jump: true, fly: true });
+    run(out, 8, { fly: true });
+    expect(out.girl.y).toBeGreaterThan(groundY(out.girl.x) + FLY_CEILING + 2);
+  });
+});
+
+describe('walls', () => {
+  it('walking sideways into a building from behind is blocked instead of snapping to the front', () => {
+    const g = new Game();
+    quiet(g);
+    const house = BUILDINGS[0];
+    g.girl.x = house.x - house.halfWidth - 3;
+    g.girl.z = 2.5;
+    run(g, 2, { right: true });
+    expect(g.girl.z).toBe(2.5);
+    expect(g.girl.x).toBeLessThan(house.x - house.halfWidth);
+    run(g, 2, { down: true, right: true });
+    expect(g.girl.x).toBeGreaterThan(house.x - house.halfWidth);
+  });
+
+  it('no walking through doors while flying', () => {
+    const g = new Game();
+    quiet(g);
+    g.girl.x = BUILDINGS[0].x;
+    g.girl.y = groundY(g.girl.x);
+    g.girl.z = BUILDINGS[0].front - 0.5;
+    tap(g, { jump: true });
+    tap(g, { enter: true });
+    expect(g.girl.onGround).toBe(false);
+    expect(g.girl.place).toBe('garden');
   });
 });
 

@@ -34,6 +34,7 @@ export class Effects {
   private readonly collecting: { node: TransformNode; age: number }[] = [];
   private readonly bowls: { node: TransformNode; age: number }[] = [];
   private readonly bowl: Mesh;
+  private readonly cloud: Mesh;
   private readonly fish: Mesh;
 
   constructor(
@@ -79,6 +80,9 @@ export class Effects {
     fishTail.material = fishMat;
     this.fish = Mesh.MergeMeshes([fishBody, fishTail], true, true) ?? fishBody;
     this.fish.isVisible = false;
+    this.cloud = MeshBuilder.CreateSphere('dust', { diameter: 1, segments: 8 }, scene);
+    this.cloud.material = material(scene, 'dustMat', '#e8e4ee', 0, 0.5);
+    this.cloud.isVisible = false;
   }
 
   private spawn(template: Mesh, pos: Vector3, vel: Vector3, life: number, size: number, wobble = 0): void {
@@ -95,6 +99,15 @@ export class Effects {
       const pos = at.add(new Vector3((Math.random() - 0.5) * 0.8, Math.random() * 0.3, -0.8));
       const vel = new Vector3((Math.random() - 0.5) * 0.8, 1.6 + Math.random() * 1.2, 0);
       this.spawn(this.heart, pos, vel, 1.3 + Math.random() * 0.5, 0.45 + Math.random() * 0.25, 1);
+    }
+  }
+
+  /** A little grey dust cloud: two cats squabbling. */
+  puff(at: Vector3): void {
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const vel = new Vector3(Math.cos(a) * 1.8, Math.sin(a) * 1.2 + 0.6, 0);
+      this.spawn(this.cloud, at.add(new Vector3(0, -0.6, -0.6)), vel, 0.8, 0.45 + Math.random() * 0.2);
     }
   }
 

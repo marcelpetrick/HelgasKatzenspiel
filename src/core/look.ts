@@ -12,7 +12,7 @@ export interface ColorChoice extends Choice {
   color: string;
 }
 
-export type HairStyle = 'zoepfe' | 'kurz' | 'lang' | 'pferdeschwanz' | 'dutt';
+export type HairStyle = 'zoepfe' | 'zopf' | 'pippi' | 'kurz' | 'stoppel' | 'lang' | 'pferdeschwanz' | 'dutt';
 export type Eyes = 'rund' | 'glitzer' | 'froh';
 export type Mouth = 'laecheln' | 'offen' | 'katze';
 
@@ -46,8 +46,11 @@ export const HAIR_COLORS: readonly ColorChoice[] = [
 ];
 
 export const HAIR_STYLES: readonly Choice<HairStyle>[] = [
-  { id: 'zoepfe', name: 'Zöpfe' },
+  { id: 'zoepfe', name: 'Zwei Zöpfe' },
+  { id: 'zopf', name: 'Ein Zopf' },
+  { id: 'pippi', name: 'Pippi Langstrumpf' },
   { id: 'kurz', name: 'Kurz' },
+  { id: 'stoppel', name: 'Ganz kurz' },
   { id: 'lang', name: 'Lang' },
   { id: 'pferdeschwanz', name: 'Pferdeschwanz' },
   { id: 'dutt', name: 'Dutt' },

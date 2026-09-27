@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { CAT_PRICE, type Game, MAX_CATS } from '../core/game';
-import { buy, CATALOG, SLOT_NAMES, type ShopItem, type Slot, type Wardrobe, wearItem } from '../core/shop';
+import { buy, CATALOG, owns, SLOT_NAMES, type ShopItem, type Slot, type Wardrobe, wearItem } from '../core/shop';
 import { el } from './dom';
 import { TEXT } from './text';
 
-type Tab = 'clothes' | 'cats' | 'deco';
+type Tab = 'clothes' | 'cats' | 'kitchen' | 'deco';
 /** The shop sells everything; the wardrobe at home only shows the clothes you already have. */
 export type ShopMode = 'shop' | 'wardrobe';
 /** What just happened, so the app can play a sound or react. */
@@ -49,6 +49,7 @@ export class ShopMenu {
     for (const [id, label] of [
       ['clothes', TEXT.shop.tabClothes],
       ['cats', TEXT.shop.tabCats],
+      ['kitchen', TEXT.shop.tabKitchen],
       ['deco', TEXT.shop.tabDeco],
     ] as const) {
       const b = el('button', 'shop-tab', label);
@@ -161,11 +162,24 @@ export class ShopMenu {
     info.append(el('div', 'shop-name', item.name));
     if (item.kind !== 'wear') info.append(el('div', 'shop-desc', item.description));
     if (item.kind === 'supply') info.append(el('div', 'shop-desc', TEXT.shop.have(w.supplies[item.id])));
+    if (item.kind === 'grocery') info.append(el('div', 'shop-desc', TEXT.shop.have(w.pantry[item.id])));
     const price = el('div', 'shop-price', item.price === 0 ? TEXT.shop.free : `🪙 ${item.price}`);
 
     const b = el('button', 'shop-buy');
     b.type = 'button';
-    const owned = item.kind === 'wear' ? w.owned.includes(item.id) : item.kind === 'toy' ? w.hasYarn : item.kind === 'deco' && w.deco.includes(item.id);
+    const owned = owns(w, item.id);
+    if (item.kind === 'gear' && item.id === 'backpack' && owned) {
+      // The backpack is worn like clothes: put it on or take it off.
+      b.textContent = w.wearBackpack ? TEXT.shop.takeOff : TEXT.shop.wear;
+      c.classList.toggle('worn', w.wearBackpack);
+      b.addEventListener('click', () => {
+        this.game.setBackpack(!w.wearBackpack);
+        this.onChange('wear');
+        this.render();
+      });
+      c.append(icon, info, price, b);
+      return c;
+    }
     if (item.kind === 'wear' && w.outfit[item.slot] === item.id) {
       b.textContent = TEXT.shop.wearing;
       b.disabled = true;
@@ -197,6 +211,17 @@ export class ShopMenu {
           if (item.kind === 'wear' && item.slot === slot && (this.mode === 'shop' || this.wardrobe.owned.includes(item.id))) grid.append(this.card(item));
         this.body.append(grid);
       }
+      const backpack = CATALOG.find((i) => i.id === 'backpack');
+      if (backpack && (this.mode === 'shop' || owns(this.wardrobe, 'backpack'))) {
+        this.body.append(el('h3', '', TEXT.gearNames.backpack));
+        const grid = el('div', 'shop-grid');
+        grid.append(this.card(backpack));
+        this.body.append(grid);
+      }
+    } else if (this.tab === 'kitchen') {
+      const grid = el('div', 'shop-grid');
+      for (const item of CATALOG) if (item.kind === 'grocery' || (item.kind === 'gear' && item.id !== 'backpack')) grid.append(this.card(item));
+      this.body.append(grid, el('p', 'shop-hint', TEXT.shop.kitchenHint));
     } else if (this.tab === 'deco') {
       const grid = el('div', 'shop-grid');
       for (const item of CATALOG) if (item.kind === 'deco') grid.append(this.card(item));
@@ -204,6 +229,8 @@ export class ShopMenu {
     } else {
       const grid = el('div', 'shop-grid');
       for (const item of CATALOG) if (item.kind === 'supply' || item.kind === 'toy') grid.append(this.card(item));
+      const backpack = CATALOG.find((i) => i.id === 'backpack');
+      if (backpack) grid.append(this.card(backpack));
       grid.append(this.catCard());
       this.body.append(grid, el('p', 'shop-hint', TEXT.shop.useHint));
     }

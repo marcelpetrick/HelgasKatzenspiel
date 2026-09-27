@@ -134,10 +134,12 @@ export class CatView {
     this.root.dispose(false, true);
   }
 
-  update(cat: Cat, dt: number, girlFacing: number): void {
+  /** `packSlot` is the cat's place in the backpack (0, 1, 2), or -1 when it is not in there. */
+  update(cat: Cat, dt: number, girlFacing: number, packSlot = -1): void {
     this.time += dt;
     const carried = cat.mood === 'carried';
-    this.root.scaling.setAll(cat.size * cat.growth * 1.05 * (carried ? 0.85 : 1) * (1 + cat.plump * 0.12));
+    const packed = cat.mood === 'backpack' && packSlot >= 0;
+    this.root.scaling.setAll(cat.size * cat.growth * 1.05 * (carried ? 0.85 : packed ? 0.5 : 1) * (1 + cat.plump * 0.12));
     // A well-fed cat is rounder round the middle.
     const p = cat.plump;
     this.torso.scaling.set(1.15 + p * 0.3, 0.62 + p * 0.18, 0.6 + p * 0.45);
@@ -145,12 +147,17 @@ export class CatView {
     if (carried) {
       // Snuggled in the girl's arms, in front of her chest.
       this.root.position.set(cat.x + girlFacing * 0.15, cat.y + 1.05, cat.z - 0.45);
+    } else if (packed) {
+      // Peeking out of the backpack on her back, side by side.
+      const back = { x: -girlFacing * 0.56, z: 0.83 };
+      const across = (packSlot - 1) * 0.3;
+      this.root.position.set(cat.x + back.x * 0.75 + back.z * across * girlFacing, cat.y + 2.05, cat.z + back.z * 0.75 - back.x * across * 0.3);
     } else this.root.position.set(cat.x, cat.y, cat.z);
-    const targetYaw = carried ? (girlFacing > 0 ? 0.9 : Math.PI - 0.9) : cat.dir > 0 ? 0.55 : Math.PI - 0.55;
+    const targetYaw = carried || packed ? (girlFacing > 0 ? 0.9 : Math.PI - 0.9) : cat.dir > 0 ? 0.55 : Math.PI - 0.55;
     this.yaw += (targetYaw - this.yaw) * Math.min(1, dt * 6);
     this.root.rotation.y = this.yaw;
 
-    const playing = cat.mood === 'play' || cat.mood === 'toBowl';
+    const playing = cat.mood === 'play' || cat.mood === 'toBowl' || cat.mood === 'toHide';
     const walking = cat.mood === 'walk' || playing;
     const happy = cat.mood === 'happy';
     const eating = cat.mood === 'eat';
@@ -159,7 +166,14 @@ export class CatView {
     this.legs.forEach((leg, i) => (leg.rotation.z = walking ? Math.sin(this.walk + legPairs[i]) * 0.5 : 0));
 
     this.happyBounce = happy ? this.happyBounce + dt * 14 : 0;
-    this.body.position.y = happy ? Math.abs(Math.sin(this.happyBounce)) * 0.12 : walking ? Math.abs(Math.sin(this.walk)) * 0.04 : 0;
+    const squabble = cat.mood === 'squabble';
+    this.body.position.y = happy
+      ? Math.abs(Math.sin(this.happyBounce)) * 0.12
+      : squabble
+        ? Math.abs(Math.sin(this.time * 18)) * 0.2
+        : walking
+          ? Math.abs(Math.sin(this.walk)) * 0.04
+          : 0;
     this.head.rotation.x = happy ? Math.sin(this.happyBounce * 0.5) * 0.25 : Math.sin(this.time * 0.7) * 0.06;
     // Eating: head down into the bowl, bobbing.
     this.head.rotation.z = eating ? -0.7 + Math.sin(this.time * 9) * 0.08 : 0;

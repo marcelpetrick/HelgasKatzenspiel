@@ -81,7 +81,7 @@ test('the shop sells clothes and cat supplies, and remembers them after a reload
   const w = await page.evaluate(() => window.__katzen.app.game.wardrobe);
   expect(w.outfit.top).toBe('top-lila');
   expect(w.supplies.food).toBe(1);
-  expect(w.hasYarn).toBe(true);
+  expect(w.toys).toContain('yarn');
   expect(errors).toEqual([]);
 });
 
@@ -104,7 +104,9 @@ test('walk into the house, fill the bowls, rename a cat, save with S and come ba
 
   await page.evaluate(() => {
     const { game } = window.__katzen.app;
-    game.girl.x = 409;
+    // The bowls in the kitchen; the house cats wait in the bedroom so none is closer than the bowls.
+    for (const c of game.cats) if (c.place === 'house') c.x = 2050;
+    game.girl.x = 2009;
     game.girl.z = -0.6;
   });
   await expect(page.locator('.prompt.show')).toContainText('Milch');
@@ -127,8 +129,50 @@ test('walk into the house, fill the bowls, rename a cat, save with S and come ba
   await page.keyboard.press('Enter');
   const state = await page.evaluate(() => {
     const { game } = window.__katzen.app;
-    return { place: game.girl.place, cat: game.cats[0].name, coat: game.cats[0].coat, milk: game.bowls.milk };
+    return { place: game.girl.place, cat: game.cats[0].name, coat: game.cats[0].coat, milk: game.kitchenBowl('milk').portions > 0 };
   });
   expect(state).toEqual({ place: 'house', cat: 'Wolke', coat: 'gruen', milk: true });
+  expect(errors).toEqual([]);
+});
+
+test('bowl, toys, backpack and hide-and-seek work in the browser', async ({ page }) => {
+  const errors = await open(page);
+  await page.evaluate(() => {
+    localStorage.clear();
+  });
+  await page.keyboard.press('Enter');
+  await page.evaluate(() => {
+    const { app } = window.__katzen;
+    const w = app.game.wardrobe;
+    w.supplies.food = 1;
+    w.toys.push('yarn', 'ball');
+    w.gear.push('backpack');
+    app.game.setBackpack(true);
+    app.world.refreshOutfit();
+  });
+  await page.keyboard.press('Digit1');
+  await expect.poll(() => page.evaluate(() => window.__katzen.app.game.bowls.filter((b) => !b.fixed).length)).toBe(1);
+  await page.keyboard.press('Digit3');
+  await expect.poll(() => page.evaluate(() => window.__katzen.app.game.toys.length)).toBe(1);
+
+  await page.evaluate(() => {
+    const { game } = window.__katzen.app;
+    const cat = game.cats[0];
+    cat.place = 'garden';
+    cat.mood = 'sit';
+    cat.timer = 60;
+    cat.bowl = null;
+    cat.x = game.girl.x + 1;
+    cat.z = game.girl.z;
+  });
+  await page.keyboard.press('KeyN');
+  await expect.poll(() => page.evaluate(() => window.__katzen.app.game.girl.carrying)).not.toBeNull();
+  await page.keyboard.press('KeyR');
+  await expect.poll(() => page.evaluate(() => window.__katzen.app.game.girl.backpack.length)).toBe(1);
+  await expect(page.locator('.supplies')).toContainText('Rucksack 1/3');
+
+  await page.keyboard.press('KeyV');
+  await expect(page.locator('.toast.show')).toContainText('Augen zu');
+  await expect(page.locator('.seek-badge')).toContainText('Verstecken', { timeout: 30_000 });
   expect(errors).toEqual([]);
 });

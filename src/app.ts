@@ -6,6 +6,7 @@ import { Sound, type SoundName } from './audio';
 import type { Game, GameEvent, Input } from './core/game';
 import { World } from './render/world';
 import { CatsMenu } from './ui/catsMenu';
+import { CookMenu } from './ui/cookMenu';
 import { el } from './ui/dom';
 import { FigureMenu } from './ui/figureMenu';
 import { Hud } from './ui/hud';
@@ -29,6 +30,9 @@ const KEYS = new Set([
   'KeyM',
   'KeyF',
   'KeyN',
+  'KeyR',
+  'KeyV',
+  'KeyH',
   'KeyS',
   'KeyT',
   'Escape',
@@ -36,10 +40,12 @@ const KEYS = new Set([
   'Digit2',
   'Digit3',
   'Digit4',
+  'Digit5',
   'Numpad1',
   'Numpad2',
   'Numpad3',
   'Numpad4',
+  'Numpad5',
 ]);
 
 /** Keys that keep acting while held down. */
@@ -56,6 +62,7 @@ export class App {
   readonly catsMenu: CatsMenu;
   readonly school: SchoolMenu;
   readonly figure: FigureMenu;
+  readonly cook: CookMenu;
   private readonly held = new Set<string>();
   private pressed = new Set<string>();
   private started = false;
@@ -83,6 +90,13 @@ export class App {
     this.school = new SchoolMenu(ui, (e) => {
       this.onSchool(e);
     });
+    this.cook = new CookMenu(ui, this.game, (result) => {
+      if (result === 'ok') this.sound.play('pour');
+      else {
+        this.sound.play('nope');
+        this.hud.say(result === 'busy' ? TEXT.cook.busy : TEXT.cook.missing);
+      }
+    });
     this.showTitle();
 
     window.addEventListener('keydown', (e) => {
@@ -109,27 +123,41 @@ export class App {
   }
 
   private get menuOpen(): boolean {
-    return this.shop.isOpen || this.catsMenu.isOpen || this.school.isOpen || this.figure.isOpen;
+    return this.shop.isOpen || this.catsMenu.isOpen || this.school.isOpen || this.figure.isOpen || this.cook.isOpen;
+  }
+
+  private closeMenus(): void {
+    this.shop.close();
+    this.catsMenu.close();
+    this.school.close();
+    this.figure.close();
+    this.cook.close();
   }
 
   private onKey(e: KeyboardEvent): void {
     if (!KEYS.has(e.code)) return;
-    e.preventDefault();
     this.sound.unlock();
+    // While a menu is open, Enter and Space press the focused button as usual, and 1–4 answer sums.
+    if (this.menuOpen && e.code !== 'Escape') {
+      if (this.school.isOpen) this.school.key(e.code);
+      if (['KeyK', 'KeyM', 'KeyF', 'KeyS', 'KeyT'].includes(e.code)) e.preventDefault();
+      else return;
+    } else e.preventDefault();
     if (!this.started) {
       if (e.code === 'Enter' || e.code === 'Space') this.start();
       return;
     }
     if (e.repeat && !HOLD_KEYS.has(e.code)) return;
     if (e.code === 'Escape') {
-      this.shop.close();
-      this.catsMenu.close();
-      this.school.close();
-      this.figure.close();
+      this.closeMenus();
       return;
     }
-    // In class there is only sums: no shopping, no cat menu.
-    if (this.school.isOpen) return;
+    // In class and at the stove there is nothing else to do.
+    if (this.school.isOpen || this.cook.isOpen) return;
+    if (e.code === 'KeyH') {
+      this.hud.toggleHelp();
+      return;
+    }
     if (e.code === 'KeyF') {
       this.shop.close();
       this.catsMenu.close();
@@ -176,6 +204,11 @@ export class App {
     this.world.syncCats();
     const sounds: Record<ShopAction, SoundName> = { bought: 'buy', poor: 'nope', wear: 'click', newCat: 'kitten', full: 'nope' };
     this.sound.play(sounds[action]);
+  }
+
+  private say(text: string, sound?: SoundName): void {
+    this.hud.say(text);
+    if (sound) this.sound.play(sound);
   }
 
   private onSchool(e: SchoolEvent): void {
@@ -226,11 +259,14 @@ export class App {
 
   /** Sounds and messages for what just happened in the game. */
   private react(events: GameEvent[]): void {
+    // Many hearts at once (a spell over lots of cats) should not become a wall of purrs.
+    let purrs = 0;
+    const name = (id: number) => this.game.cat(id)?.name ?? '';
     for (const e of events) {
       switch (e.type) {
         case 'hearts':
           this.sound.play('heart');
-          this.sound.play(e.count > 1 || Math.random() < 0.5 ? 'purr' : 'meow');
+          if (purrs++ < 2) this.sound.play(e.count > 1 || Math.random() < 0.5 ? 'purr' : 'meow');
           break;
         case 'coin':
           this.sound.play('coin');
@@ -245,10 +281,31 @@ export class App {
           this.sound.play('land');
           break;
         case 'feed':
+        case 'eatStart':
           this.sound.play('eat');
           break;
-        case 'yarn':
+        case 'bowlPlaced':
+          this.sound.play('pour');
+          this.sound.play('meow');
+          break;
+        case 'squabble':
+          this.say(TEXT.squabble(name(e.cat), name(e.with)), 'hiss');
+          break;
+        case 'noSupply':
+          this.say(TEXT.noSupply(e.supply), 'nope');
+          break;
+        case 'toyThrow':
           this.sound.play('throw');
+          break;
+        case 'toyPickup':
+          this.sound.play('pickUp');
+          break;
+        case 'noToy':
+          this.say(TEXT.noToy(e.reason), 'nope');
+          break;
+        case 'feather':
+          this.sound.play('twinkle');
+          this.sound.play('meow');
           break;
         case 'place':
           this.sound.play('door');
@@ -256,36 +313,71 @@ export class App {
         case 'openShop':
           this.openShop('shop');
           break;
+        case 'openWardrobe':
+          this.openShop('wardrobe');
+          break;
         case 'openSchool':
           this.held.clear();
           this.school.open();
           this.sound.play('door');
           break;
-        case 'openWardrobe':
-          this.openShop('wardrobe');
+        case 'openKitchen':
+          this.held.clear();
+          this.cook.open();
+          this.sound.play('click');
           break;
         case 'search':
-          this.sound.play(e.found > 0 ? 'found' : 'empty');
-          this.hud.say(TEXT.searched(e.spot, e.found));
+          this.say(TEXT.searched(e.spot, e.found), e.found > 0 ? 'found' : 'empty');
           break;
         case 'bowls':
-          this.sound.play(e.milk || e.food ? 'pour' : 'nope');
-          this.hud.say(TEXT.bowls(e.milk, e.food, e.noFood));
+          this.say(TEXT.bowls(e.milk, e.food, e.noFood), e.milk || e.food ? 'pour' : 'nope');
           break;
         case 'carry':
+        case 'backpackOut':
           this.sound.play('pickUp');
           break;
         case 'drop':
           this.sound.play('putDown');
           break;
-        case 'kitten': {
-          this.sound.play('kitten');
-          const cat = this.game.cat(e.cat);
-          if (cat) this.hud.say(TEXT.kitten(cat.name));
+        case 'backpackIn':
+          this.say(TEXT.backpackIn(name(e.cat)), 'putDown');
           break;
-        }
+        case 'backpackFull':
+          this.say(TEXT.backpackFull, 'nope');
+          break;
+        case 'noBackpack':
+          this.say(TEXT.noBackpack, 'nope');
+          break;
+        case 'seekStart':
+          this.say(TEXT.seekStart, 'click');
+          break;
+        case 'seekGo':
+          this.say(TEXT.seekGo, 'shopBell');
+          break;
+        case 'found':
+          this.say(TEXT.seekFound(name(e.cat), e.left), 'found');
+          break;
+        case 'seekDone':
+          this.say(TEXT.seekDone(e.coins), 'kitten');
+          break;
+        case 'seekStop':
+          this.say(TEXT.seekStop, 'click');
+          break;
+        case 'seekNoCats':
+          this.say(TEXT.seekNoCats, 'nope');
+          break;
+        case 'cooked':
+          this.say(TEXT.cooked(e.recipe), 'found');
+          break;
+        case 'meal':
+          this.say(TEXT.meal(e.recipe, e.ok), e.ok ? 'eat' : 'nope');
+          break;
+        case 'kitten':
+          this.say(TEXT.kitten(name(e.cat)), 'kitten');
+          break;
         case 'newCat':
         case 'coinSpawn':
+        case 'bowlGone':
           break;
       }
     }
@@ -310,9 +402,12 @@ export class App {
           magic: was('KeyZ', 'KeyY'),
           feed: was('Digit1', 'Numpad1'),
           treat: was('Digit2', 'Numpad2'),
-          yarn: was('Digit3', 'Numpad3'),
+          toy: was('Digit3', 'Numpad3'),
           milk: was('Digit4', 'Numpad4'),
+          feather: was('Digit5', 'Numpad5'),
           carry: was('KeyN'),
+          backpack: was('KeyR'),
+          seek: was('KeyV'),
         }
       : { left: false, right: false, jump: false, fly: false, pet: false, magic: false };
     this.pressed = new Set();

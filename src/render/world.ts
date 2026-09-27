@@ -13,7 +13,6 @@ import { ImageProcessingConfiguration } from '@babylonjs/core/Materials/imagePro
 import { Color3, Color4 } from '@babylonjs/core/Maths/math.color';
 import { Matrix, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import type { Mesh } from '@babylonjs/core/Meshes/mesh';
-import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { DefaultRenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline';
 import type { Game, GameEvent } from '../core/game';
 import { bounds, SPOTS } from '../core/world';
@@ -23,8 +22,8 @@ import { GirlView, girlLook } from './girlView';
 import { buildHouse } from './house';
 import { buildInterior, type Interior } from './interior';
 import { buildLandscape } from './landscape';
-import { material } from './shapes';
 import { buildSchool } from './schoolBuilding';
+import { Props } from './props';
 import { buildShop } from './shopBuilding';
 
 /** Camera distance and height above the girl, outdoors and in the house. */
@@ -50,7 +49,7 @@ export class World {
   private readonly hemi: HemisphericLight;
   private readonly pipeline: DefaultRenderingPipeline;
   private readonly addCaster: (m: Mesh) => void;
-  private readonly yarn: Mesh;
+  private readonly props: Props;
   private trailIn = 0;
   private sparkleIn = 0;
 
@@ -112,18 +111,7 @@ export class World {
     // The start-up coins were reported as events too; the scene already shows them.
     game.drainEvents();
 
-    // The yarn ball: a pink sphere wrapped in a few darker strands.
-    this.yarn = MeshBuilder.CreateSphere('yarn', { diameter: 0.5, segments: 14 }, scene);
-    this.yarn.material = material(scene, 'yarnMat', '#ff6fa8', 0.15, 0.1);
-    const strandMat = material(scene, 'strandMat', '#d94a86', 0.15, 0.05);
-    for (let i = 0; i < 3; i++) {
-      const strand = MeshBuilder.CreateTorus('strand', { diameter: 0.5, thickness: 0.045, tessellation: 20 }, scene);
-      strand.material = strandMat;
-      strand.parent = this.yarn;
-      strand.rotation.set(i * 1.1, i * 0.7, i * 0.5);
-    }
-    this.yarn.setEnabled(false);
-    this.addCaster(this.yarn);
+    this.props = new Props(scene, this.addCaster);
 
     // The same look as Allium Assault: ACES tone mapping, a little bloom and a soft vignette.
     const pipeline = (this.pipeline = new DefaultRenderingPipeline('post', true, scene, [this.camera]));
@@ -168,6 +156,21 @@ export class World {
           if (view) this.effects.hearts(view.top(), e.count);
           break;
         }
+        case 'bowlPlaced':
+          this.girl.pour();
+          break;
+        case 'feather':
+          this.girl.cast();
+          this.effects.hearts(new Vector3(this.game.girl.x, this.game.girl.y + 1.6, this.game.girl.z), 2);
+          break;
+        case 'toyThrow':
+          this.girl.cast();
+          break;
+        case 'squabble': {
+          const view = this.cats.get(e.cat);
+          if (view) this.effects.puff(view.top());
+          break;
+        }
         case 'magic':
           this.girl.cast();
           this.effects.magic(this.girl.wandTip());
@@ -208,7 +211,7 @@ export class World {
   update(dt: number, flying: boolean): void {
     const g = this.game.girl;
     this.girl.update(g, dt, flying);
-    for (const c of this.game.cats) this.cats.get(c.id)?.update(c, dt, g.facing);
+    for (const c of this.game.cats) this.cats.get(c.id)?.update(c, dt, g.facing, g.backpack.indexOf(c.id));
     if (flying) {
       this.trailIn -= dt;
       if (this.trailIn <= 0) {
@@ -220,16 +223,11 @@ export class World {
     this.sparkleIn -= dt;
     if (this.sparkleIn <= 0 && g.place === 'house') {
       this.sparkleIn = 0.9;
-      for (const s of SPOTS)
-        if ((this.game.spotCoins[s.id] ?? 0) > 0) this.effects.trail(new Vector3(s.x + (Math.random() - 0.5), 2 + Math.random() * 1.5, s.z - 1));
+      for (const s of SPOTS) if (this.game.spotCoins[s.id] > 0) this.effects.trail(new Vector3(s.x + (Math.random() - 0.5), 2 + Math.random() * 1.5, s.z - 1));
     }
-    const y = this.game.yarn;
-    this.yarn.setEnabled(y !== null);
-    if (y) {
-      this.yarn.position.set(y.x, y.y, y.z - 0.3);
-      this.yarn.rotation.z = -y.spin;
-    }
-    this.interior.setBowls(this.game.bowls.milk, this.game.bowls.food);
+    this.props.sync(this.game, dt);
+    this.interior.setBowls(this.game.kitchenBowl('milk').portions > 0, this.game.kitchenBowl('food').portions > 0);
+    this.interior.setMeal(this.game.meal);
     this.interior.setDeco(this.game.wardrobe.deco);
     this.effects.update(dt);
     this.tickLandscape(dt);

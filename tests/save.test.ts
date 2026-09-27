@@ -18,7 +18,16 @@ describe('saving and loading', () => {
     g.cats[1].love = 12;
     g.cats[1].plump = 0.3;
     g.cats[2].growth = 0.6;
-    g.bowls.milk = true;
+    g.kitchenBowl('milk').portions = 2;
+    g.wardrobe.toys.push('ball', 'yarn');
+    g.wardrobe.gear.push('backpack');
+    g.wardrobe.wearBackpack = true;
+    g.pushToy({ kind: 'ball', x: 40, z: 0, place: 'garden' });
+    g.pushBowl({ kind: 'food', x: 41, z: 0, place: 'garden', portions: 2 });
+    g.meal = 'kaesebrot';
+    g.heartsSinceCoin = 2;
+    g.heartsSinceKitten = 17;
+    g.girl.boost = 30;
     g.spotCoins.fridge = 3;
     g.girl.x = 30;
     g.girl.z = 1;
@@ -39,7 +48,14 @@ describe('saving and loading', () => {
     expect(back.cats[1]).toMatchObject({ love: 12, plump: 0.3 });
     expect(back.cats[2].growth).toBe(0.6);
     expect(back.coins.length).toBe(g.coins.length);
-    expect(back.bowls).toEqual({ milk: true, food: false });
+    expect(back.kitchenBowl('milk').portions).toBe(2);
+    expect(back.kitchenBowl('food').portions).toBe(0);
+    expect(back.bowls.find((b) => !b.fixed)).toMatchObject({ kind: 'food', x: 41, portions: 2 });
+    expect(back.toys.map((t) => t.kind)).toEqual(['ball']);
+    expect(back.meal).toBe('kaesebrot');
+    expect(back.heartsSinceCoin).toBe(2);
+    expect(back.heartsSinceKitten).toBe(17);
+    expect(back.girl.boost).toBeCloseTo(30, 1);
     expect(back.spotCoins.fridge).toBe(3);
     expect(back.girl).toMatchObject({ x: 30, place: 'garden', carrying: back.cats[0].id });
     expect(back.drainEvents()).toEqual([]);
@@ -76,6 +92,8 @@ describe('saving and loading', () => {
       coins: [{ x: 1e9, z: 0, place: 'garden' }, 'x'],
       spotCoins: { fridge: 99, cupboard: -1, table: 5 },
       bowls: { milk: 'yes', food: true },
+      meal: 'gift',
+      toys: [{ kind: 'ball', x: 5 }],
     });
     expect(g.hearts).toBe(0);
     expect(g.cats.length).toBe(2);
@@ -89,8 +107,11 @@ describe('saving and loading', () => {
     expect(g.coins[0].x).toBe(bounds('garden').maxX);
     expect(g.spotCoins.fridge).toBe(3);
     expect(g.spotCoins.cupboard).toBe(0);
-    expect(g.spotCoins.table).toBeUndefined();
-    expect(g.bowls).toEqual({ milk: false, food: true });
+    expect(g.spotCoins.table).toBe(0);
+    expect(g.kitchenBowl('milk').portions).toBe(0);
+    expect(g.kitchenBowl('food').portions).toBe(3);
+    expect(g.meal).toBeNull();
+    expect(g.toys).toEqual([]);
     expect(g.girl.place).toBe('garden');
     expect(g.girl.z).toBe(bounds('garden').maxZ);
     expect(g.girl.carrying).toBeNull();
@@ -101,5 +122,34 @@ describe('saving and loading', () => {
     expect(g.cats.length).toBe(1);
     expect(g.coins.length).toBe(0);
     expect(g.girl.place).toBe('garden');
+  });
+
+  it('keeps cats in the backpack, and moves an old save’s house to where the house is now', () => {
+    const g = new Game();
+    g.wardrobe.gear.push('backpack');
+    g.wardrobe.wearBackpack = true;
+    g.girl.x = 30;
+    for (const c of g.cats.slice(0, 2)) {
+      c.place = 'garden';
+      c.x = 31;
+      c.z = g.girl.z;
+      c.mood = 'sit';
+      g.step(1 / 60, { ...idle, carry: true });
+      g.step(1 / 60, { ...idle, backpack: true });
+    }
+    expect(g.girl.backpack.length).toBe(2);
+    const back = restore(JSON.parse(JSON.stringify(snapshot(g))));
+    expect(back.girl.backpack.length).toBe(2);
+    expect(back.cats.filter((c) => c.mood === 'backpack').length).toBe(2);
+
+    const old = restore({
+      version: 1,
+      cats: [{ name: 'Alt', place: 'house', x: 410, z: 0 }],
+      girl: { place: 'house', x: 420, z: 0 },
+      bowls: [{ kind: 'milk', fixed: true, portions: 2 }],
+    });
+    expect(old.cats[0].x).toBeCloseTo(INTERIOR_X + 10);
+    expect(old.girl.x).toBeCloseTo(INTERIOR_X + 20);
+    expect(old.kitchenBowl('milk').portions).toBe(2);
   });
 });

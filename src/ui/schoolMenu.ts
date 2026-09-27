@@ -18,6 +18,9 @@ export class SchoolMenu {
   private index = 0;
   private correct = 0;
   private level: Level = 'leicht';
+  /** The pending "next sum" timer, cleared whenever the lesson changes or the classroom closes. */
+  private nextTimer = 0;
+  private answers: HTMLButtonElement[] = [];
   isOpen = false;
 
   constructor(
@@ -47,7 +50,15 @@ export class SchoolMenu {
 
   close(): void {
     this.isOpen = false;
+    window.clearTimeout(this.nextTimer);
     this.root.classList.remove('open');
+  }
+
+  /** Keys 1–4 pick the answers from left to right. */
+  key(code: string): void {
+    const n = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Numpad1', 'Numpad2', 'Numpad3', 'Numpad4'].indexOf(code) % 4;
+    const b = n >= 0 ? this.answers[n] : undefined;
+    if (b && !b.disabled) b.click();
   }
 
   private button(text: string, className: string, onClick: () => void): HTMLButtonElement {
@@ -70,6 +81,7 @@ export class SchoolMenu {
   }
 
   private start(level: Level): void {
+    window.clearTimeout(this.nextTimer);
     this.level = level;
     this.tasks = lesson(this.rng, level);
     this.index = 0;
@@ -92,9 +104,8 @@ export class SchoolMenu {
         feedback.textContent = right ? TEXT.school.right : TEXT.school.wrong(task.answer);
         feedback.classList.toggle('bad', !right);
         this.onEvent({ type: 'answer', right });
-        window.setTimeout(
+        this.nextTimer = window.setTimeout(
           () => {
-            if (!this.isOpen) return;
             this.index++;
             if (this.index < this.tasks.length) this.showTask();
             else this.finish();
@@ -104,6 +115,7 @@ export class SchoolMenu {
       });
       answers.append(b);
     }
+    this.answers = [...answers.querySelectorAll('button')];
     this.body.replaceChildren(progress, sum, answers, feedback);
   }
 

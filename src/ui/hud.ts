@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Marcel Petrick <mail@marcelpetrick.it>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import type { Game } from '../core/game';
+import { BACKPACK_SIZE, type Game, THROWABLES } from '../core/game';
 import { ROOMS } from '../core/world';
 import type { World } from '../render/world';
 import { el } from './dom';
@@ -15,6 +15,8 @@ export class Hud {
   private readonly prompt: HTMLElement;
   private readonly toast: HTMLElement;
   private readonly supplies: HTMLElement;
+  private readonly seekBadge: HTMLElement;
+  private readonly help: HTMLElement;
   private readonly tags = new Map<number, HTMLElement>();
   private lastSupplies = '';
   private lastHearts = -1;
@@ -48,7 +50,15 @@ export class Hud {
     this.prompt = el('div', 'prompt');
     this.toast = el('div', 'toast');
     this.supplies = el('div', 'panel supplies');
-    root.append(top, help, this.prompt, this.toast, this.supplies);
+    this.seekBadge = el('div', 'panel seek-badge');
+    this.seekBadge.style.display = 'none';
+    this.help = help;
+    root.append(top, help, this.prompt, this.toast, this.supplies, this.seekBadge);
+  }
+
+  /** H: hide or show the list of keys. */
+  toggleHelp(): void {
+    this.help.classList.toggle('hidden');
   }
 
   /** Show a short message near the top of the screen. */
@@ -78,15 +88,20 @@ export class Hud {
     this.sub.textContent = `${where} · ${TEXT.catsCount(this.game.cats.length)}`;
 
     const w = this.game.wardrobe;
-    const key = `${w.supplies.food}/${w.supplies.treat}/${w.supplies.milk}/${w.hasYarn}`;
+    const inHand = THROWABLES.filter((t) => w.toys.includes(t) && !this.game.toys.some((g) => g.kind === t)).length;
+    const owned = THROWABLES.filter((t) => w.toys.includes(t)).length;
+    const pack = w.wearBackpack ? `${this.game.girl.backpack.length}/${BACKPACK_SIZE}` : '';
+    const key = `${w.supplies.food}/${w.supplies.treat}/${w.supplies.milk}/${inHand}/${owned}/${w.toys.includes('feather')}/${pack}`;
     if (key !== this.lastSupplies) {
       this.lastSupplies = key;
       const items: [string, string, string, number | null][] = [
         ['1', '🥫', TEXT.supplies.food, w.supplies.food],
-        ['2', '🐟', TEXT.supplies.treat, w.supplies.treat],
-        ['3', '🧶', TEXT.supplies.yarn, w.hasYarn ? null : 0],
         ['4', '🥛', TEXT.supplies.milk, w.supplies.milk],
+        ['2', '🐟', TEXT.supplies.treat, w.supplies.treat],
+        ['3', '🧶', TEXT.supplies.toys, owned === 0 ? 0 : inHand],
       ];
+      if (w.toys.includes('feather')) items.push(['5', '🪶', TEXT.supplies.feather, null]);
+      if (pack) items.push(['R', '🎒', `${TEXT.supplies.backpack} ${pack}`, null]);
       this.supplies.replaceChildren(
         ...items.map(([k, icon, name, n]) => {
           const s = el('div', 'supply' + (n === 0 ? ' empty' : ''));
@@ -95,6 +110,9 @@ export class Hud {
         }),
       );
     }
+    const seek = this.game.seek;
+    this.seekBadge.style.display = seek?.phase === 'seek' ? '' : 'none';
+    if (seek) this.seekBadge.textContent = TEXT.seeking(seek.found.length, seek.cats.length);
 
     const focus = this.game.focus();
     for (const c of this.game.cats) {
@@ -106,7 +124,7 @@ export class Hud {
       }
       const top = world.catTop(c.id);
       // The cat in her arms needs no name tag; the hint below already says who it is.
-      const p = top && c.place === g.place && c.mood !== 'carried' ? world.project(top) : null;
+      const p = top && c.place === g.place && c.mood !== 'carried' && c.mood !== 'backpack' ? world.project(top) : null;
       tag.style.display = p?.visible ? '' : 'none';
       if (!p) continue;
       if (tag.textContent !== c.name) tag.textContent = c.name;
@@ -121,7 +139,7 @@ export class Hud {
         this.tags.delete(id);
       }
 
-    const text = TEXT.prompt(focus, g.carrying !== null);
+    const text = TEXT.prompt(focus, g.carrying !== null, this.game.meal);
     if (text) {
       if (this.prompt.textContent !== text) this.prompt.textContent = text;
       this.prompt.classList.add('show');

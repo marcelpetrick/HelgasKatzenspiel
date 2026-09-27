@@ -66,7 +66,8 @@ export class CatsMenu {
     });
     // Typing into the name must not walk the girl around or open menus.
     name.addEventListener('keydown', (e) => {
-      e.stopPropagation();
+      // Esc still closes the menu; everything else is typing.
+      if (e.key !== 'Escape') e.stopPropagation();
       if (e.key === 'Enter') name.blur();
     });
     const info = el('div', 'cat-info');
@@ -105,7 +106,7 @@ export class CatsMenu {
       this.onChange();
     });
     slider.addEventListener('keydown', (e) => {
-      e.stopPropagation();
+      if (e.key !== 'Escape') e.stopPropagation();
     });
     sizeBox.append(el('span', '', `${TEXT.catsMenu.size}:`), slider, sizeLabel);
     row.append(head, colours, sizeBox);

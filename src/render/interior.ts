@@ -3,9 +3,11 @@
 
 import type { Scene } from '@babylonjs/core/scene';
 import type { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
+import { Color3 } from '@babylonjs/core/Maths/math.color';
 import type { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
+import { recipe } from '../core/kitchen';
 import { BOWLS, INTERIOR_MAX_Z, INTERIOR_WIDTH, INTERIOR_X, ROOMS, spot } from '../core/world';
 import { fanMesh, glowMaterial, heartOutline, material, signMaterial } from './shapes';
 
@@ -19,6 +21,8 @@ export interface Interior {
   setBowls(milk: boolean, food: boolean): void;
   /** Show the decorations that were bought. */
   setDeco(owned: readonly string[]): void;
+  /** Show the cooked dish on the kitchen table, or nothing. */
+  setMeal(recipeId: string | null): void;
 }
 
 /** Inside the girl's house: kitchen, hall, bathroom and bedroom, side by side like a doll's house. */
@@ -106,7 +110,35 @@ export function buildInterior(scene: Scene, addCaster: (m: Mesh) => void): Inter
   mat.scaling.setAll(3.2);
   mat.position.set((BOWLS.milk.x + BOWLS.food.x) / 2, 0.02, BOWLS.milk.z - 0.1);
 
+  // The stove with four hot plates and an oven door.
+  const stove = spot('stove');
+  put(box(1.7, 1.6, 1.2), white, stove.x, 0.8, BACK - 0.7);
+  put(box(1.5, 0.9, 0.05), material(scene, 'ovenGlass', '#3a3440', 0.8, 0.05), stove.x, 0.75, BACK - 1.32, false);
+  put(box(1.2, 0.08, 0.08), metal, stove.x, 1.3, BACK - 1.35, false);
+  const plate = material(scene, 'hotPlate', '#2a2a30', 0.6, 0);
+  for (const [dx, dz] of [
+    [-0.4, -0.25],
+    [0.4, -0.25],
+    [-0.4, 0.25],
+    [0.4, 0.25],
+  ])
+    put(MeshBuilder.CreateCylinder('hotplate', { height: 0.04, diameter: 0.5, tessellation: 20 }, scene), plate, stove.x + dx, 1.62, BACK - 0.7 + dz, false);
+
   const table = spot('table');
+  // The plate for cooked meals; the food on it takes the colour of the dish.
+  const dinner = new TransformNode('dinner', scene);
+  dinner.parent = root;
+  dinner.position.set(table.x + 0.4, 1.3, table.z - 0.2);
+  const dinnerPlate = MeshBuilder.CreateCylinder('dinnerPlate', { height: 0.05, diameter: 0.9, tessellation: 28 }, scene);
+  dinnerPlate.material = white;
+  dinnerPlate.parent = dinner;
+  const food = MeshBuilder.CreateSphere('dinnerFood', { diameter: 0.55, segments: 12 }, scene);
+  food.scaling.y = 0.35;
+  food.position.y = 0.07;
+  food.parent = dinner;
+  const dinnerMat = material(scene, 'dinnerFoodMat', '#ffd23f', 0.3, 0.2);
+  food.material = dinnerMat;
+  dinner.setEnabled(false);
   put(MeshBuilder.CreateCylinder('tableTop', { height: 0.15, diameter: 2.6, tessellation: 32 }, scene), wood, table.x, 1.2, table.z);
   put(MeshBuilder.CreateCylinder('tableLeg', { height: 1.2, diameter: 0.25 }, scene), darkWood, table.x, 0.6, table.z);
   put(MeshBuilder.CreateCylinder('tableFoot', { height: 0.1, diameter: 1.2 }, scene), darkWood, table.x, 0.05, table.z);
@@ -231,6 +263,11 @@ export function buildInterior(scene: Scene, addCaster: (m: Mesh) => void): Inter
     },
     setDeco(owned: readonly string[]) {
       for (const [id, node] of deco) node.setEnabled(owned.includes(id));
+    },
+    setMeal(recipeId: string | null) {
+      const r = recipeId === null ? undefined : recipe(recipeId);
+      dinner.setEnabled(r !== undefined);
+      if (r) dinnerMat.diffuseColor = Color3.FromHexString(r.color);
     },
   };
 }

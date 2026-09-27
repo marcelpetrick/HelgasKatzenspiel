@@ -761,3 +761,20 @@ kbd {
   background: linear-gradient(135deg, #ff7eb6, #b388ff);
   border-color: transparent;
 }
+
+.help.hidden {
+  display: none;
+}
+
+.seek-badge {
+  position: absolute;
+  left: 50%;
+  top: 16px;
+  transform: translateX(-50%);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.on-title .seek-badge {
+  display: none;
+}
