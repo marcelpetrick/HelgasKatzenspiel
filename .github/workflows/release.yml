@@ -1,0 +1,49 @@
+# SPDX-FileCopyrightText: 2026 Marcel Petrick <mail@marcelpetrick.it>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      # A release ships only what passed the whole gate.
+      - run: ./localPipeline.sh --no-docker
+
+      - name: Check tag matches package.json
+        run: test "${GITHUB_REF_NAME#v}" = "$(node -p "require('./package.json').version")"
+
+      - name: Package static build
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          (cd dist && zip -qr "../helgas-katzenspiel-${VERSION}-web.zip" .)
+          sha256sum "helgas-katzenspiel-${VERSION}-web.zip" > "helgas-katzenspiel-${VERSION}-web.zip.sha256"
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" helgas-katzenspiel-*-web.zip* \
+            --title "Helgas Katzenspiel ${GITHUB_REF_NAME}" \
+            --notes-file docs/release-notes.md
