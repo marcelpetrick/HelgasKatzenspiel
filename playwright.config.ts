@@ -12,15 +12,16 @@ export default defineConfig({
   reporter: [['list']],
   outputDir: 'test-results',
   use: {
-    baseURL: 'http://localhost:4173',
+    baseURL: 'http://localhost:4273',
     viewport: { width: 1280, height: 720 },
     // Software WebGL, so the suite runs the same on a laptop and on a headless CI runner.
     launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] },
   },
   webServer: {
     command: 'npm run build && npm run preview',
-    url: 'http://localhost:4173',
+    url: 'http://localhost:4273',
     // Always test a fresh build locally; a server left on the port could be serving a stale dist/.
+    // The port is our own (not Vite's default 4173), so other Vite projects' previews don't get in the way.
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },
