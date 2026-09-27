@@ -6,7 +6,7 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
-import { groundY, HOUSE_X } from '../core/game';
+import { groundY, HOUSE_X } from '../core/world';
 import { fanMesh, glowMaterial, heartOutline, material } from './shapes';
 
 const W = 12;

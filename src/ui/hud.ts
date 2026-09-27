@@ -2,34 +2,33 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { Game } from '../core/game';
+import { ROOMS } from '../core/world';
 import type { World } from '../render/world';
+import { el } from './dom';
 import { TEXT } from './text';
 
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text = ''): HTMLElementTagNameMap[K] {
-  const e = document.createElement(tag);
-  e.className = className;
-  e.textContent = text;
-  return e;
-}
-
-/** The overlay: counters, the controls hint, cat name tags and the petting prompt. */
+/** The overlay: counters, where you are, the controls hint, cat name tags, hints and messages. */
 export class Hud {
   private readonly hearts: HTMLElement;
   private readonly money: HTMLElement;
+  private readonly sub: HTMLElement;
   private readonly prompt: HTMLElement;
+  private readonly toast: HTMLElement;
   private readonly supplies: HTMLElement;
-  private lastSupplies = '';
   private readonly tags = new Map<number, HTMLElement>();
+  private lastSupplies = '';
   private lastHearts = -1;
   private lastMoney = -1;
+  private toastTimer = 0;
 
   constructor(
-    root: HTMLElement,
+    private readonly root: HTMLElement,
     private readonly game: Game,
   ) {
     const top = el('div', 'hud-top');
     const title = el('div', 'panel title-panel');
-    title.append(el('div', 'panel-title', TEXT.title), el('div', 'panel-sub', TEXT.catsCount(game.cats.length)));
+    this.sub = el('div', 'panel-sub');
+    title.append(el('div', 'panel-title', TEXT.title), this.sub);
     const counters = el('div', 'panel counters');
     this.hearts = el('span', 'counter', '0');
     this.money = el('span', 'counter', '0');
@@ -47,16 +46,23 @@ export class Hud {
       help.append(row);
     }
     this.prompt = el('div', 'prompt');
+    this.toast = el('div', 'toast');
     this.supplies = el('div', 'panel supplies');
-    root.append(top, help, this.prompt, this.supplies);
-    for (const c of game.cats) {
-      const tag = el('div', 'cat-tag', c.name);
-      root.append(tag);
-      this.tags.set(c.id, tag);
-    }
+    root.append(top, help, this.prompt, this.toast, this.supplies);
+  }
+
+  /** Show a short message near the top of the screen. */
+  say(text: string): void {
+    this.toast.textContent = text;
+    this.toast.classList.add('show');
+    window.clearTimeout(this.toastTimer);
+    this.toastTimer = window.setTimeout(() => {
+      this.toast.classList.remove('show');
+    }, 3000);
   }
 
   update(world: World): void {
+    const g = this.game.girl;
     if (this.game.hearts !== this.lastHearts) {
       this.lastHearts = this.game.hearts;
       this.hearts.textContent = String(this.game.hearts);
@@ -67,6 +73,10 @@ export class Hud {
       this.money.textContent = String(this.game.money);
       this.bump(this.money);
     }
+    const room = ROOMS.find((r) => g.x >= r.from && g.x < r.to);
+    const where = g.place === 'house' && room ? TEXT.inHouse(room.name) : TEXT.garden;
+    this.sub.textContent = `${where} · ${TEXT.catsCount(this.game.cats.length)}`;
+
     const w = this.game.wardrobe;
     const key = `${w.supplies.food}/${w.supplies.treat}/${w.hasYarn}`;
     if (key !== this.lastSupplies) {
@@ -84,19 +94,35 @@ export class Hud {
         }),
       );
     }
-    const near = this.game.nearestCat();
+
+    const focus = this.game.focus();
     for (const c of this.game.cats) {
-      const tag = this.tags.get(c.id);
+      let tag = this.tags.get(c.id);
+      if (!tag) {
+        tag = el('div', 'cat-tag');
+        this.root.append(tag);
+        this.tags.set(c.id, tag);
+      }
       const top = world.catTop(c.id);
-      if (!tag || !top) continue;
-      const p = world.project(top);
-      tag.style.display = p.visible ? '' : 'none';
+      // The cat in her arms needs no name tag; the hint below already says who it is.
+      const p = top && c.place === g.place && c.mood !== 'carried' ? world.project(top) : null;
+      tag.style.display = p?.visible ? '' : 'none';
+      if (!p) continue;
+      if (tag.textContent !== c.name) tag.textContent = c.name;
       tag.style.transform = `translate(${p.x}px, ${p.y}px) translate(-50%, -100%)`;
-      tag.classList.toggle('near', c === near);
+      tag.classList.toggle('near', focus?.kind === 'cat' && focus.cat === c);
       tag.classList.toggle('happy', c.mood === 'happy');
+      tag.classList.toggle('kitten', c.growth < 1);
     }
-    if (near) {
-      this.prompt.textContent = TEXT.petPrompt(near.name);
+    for (const [id, tag] of this.tags)
+      if (!this.game.cat(id)) {
+        tag.remove();
+        this.tags.delete(id);
+      }
+
+    const text = TEXT.prompt(focus, g.carrying !== null);
+    if (text) {
+      if (this.prompt.textContent !== text) this.prompt.textContent = text;
       this.prompt.classList.add('show');
     } else this.prompt.classList.remove('show');
   }

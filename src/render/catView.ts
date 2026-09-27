@@ -7,17 +7,9 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import type { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
-import type { Cat, CatCoat } from '../core/game';
+import { coat as coatOf } from '../core/cats';
+import type { Cat } from '../core/game';
 import { material } from './shapes';
-
-const COATS: Record<CatCoat, { fur: string; patch?: string; patch2?: string; eye: string }> = {
-  orange: { fur: '#f5a54a', patch: '#ffe2b8', eye: '#6fcf5f' },
-  grau: { fur: '#9ea6b3', patch: '#dfe3ea', eye: '#ffc93c' },
-  schwarz: { fur: '#34303a', patch: '#4a4552', eye: '#ffd23f' },
-  weiß: { fur: '#f7f4ef', patch: '#ffd9e4', eye: '#4fb3ff' },
-  creme: { fur: '#f1d9b0', patch: '#fff3dc', eye: '#7ad07a' },
-  dreifarbig: { fur: '#fbf7f0', patch: '#f09a3e', patch2: '#3a3438', eye: '#8fd35a' },
-};
 
 /** A round, friendly cat seen from the side, turned a little towards the camera. */
 export class CatView {
@@ -27,23 +19,28 @@ export class CatView {
   private readonly legs: TransformNode[] = [];
   private readonly tail: TransformNode[] = [];
   private readonly eyes: Mesh[] = [];
+  private readonly torso: Mesh;
+  private readonly belly: Mesh;
   private walk = Math.random() * 6;
   private yaw = 0.5;
   private time = Math.random() * 10;
   private blinkIn = 1 + Math.random() * 4;
   private happyBounce = 0;
+  /** The coat this view was built with; a different coat needs a new view. */
+  readonly coat: string;
 
   constructor(scene: Scene, cat: Cat, addCaster: (m: Mesh) => void) {
-    const coat = COATS[cat.coat];
+    const coat = coatOf(cat.coat);
+    this.coat = cat.coat;
     const fur = material(scene, 'fur', coat.fur, 0.12, 0.1);
-    const patch = material(scene, 'patch', coat.patch ?? coat.fur, 0.12, 0.1);
+    const patch = material(scene, 'patch', coat.patch, 0.12, 0.1);
     const pink = material(scene, 'catPink', '#ff9fb8', 0.1, 0.25);
     const iris = material(scene, 'iris', coat.eye, 0.6, 0.35);
     const pupil = material(scene, 'catPupil', '#141018', 0.9, 0);
     const shine = material(scene, 'catShine', '#ffffff', 0, 1);
 
     this.root = new TransformNode('cat', scene);
-    this.root.scaling.setAll(cat.size * 1.05);
+    this.root.scaling.setAll(cat.size * cat.growth * 1.05);
     this.body = new TransformNode('catBody', scene);
     this.body.parent = this.root;
     const add = (m: Mesh, mat: StandardMaterial, parent: TransformNode = this.body) => {
@@ -53,14 +50,14 @@ export class CatView {
       return m;
     };
 
-    const torso = add(MeshBuilder.CreateSphere('catTorso', { diameter: 1, segments: 16 }, scene), fur);
+    const torso = (this.torso = add(MeshBuilder.CreateSphere('catTorso', { diameter: 1, segments: 16 }, scene), fur));
     torso.scaling.set(1.15, 0.62, 0.6);
     torso.position.y = 0.52;
-    const belly = add(MeshBuilder.CreateSphere('catBelly', { diameter: 0.8, segments: 12 }, scene), patch);
+    const belly = (this.belly = add(MeshBuilder.CreateSphere('catBelly', { diameter: 0.8, segments: 12 }, scene), patch));
     belly.scaling.set(1.1, 0.5, 0.62);
     belly.position.set(0.05, 0.42, 0);
-    if (coat.patch2) {
-      const spot = add(MeshBuilder.CreateSphere('spot', { diameter: 0.5, segments: 10 }, scene), material(scene, 'spot', coat.patch2, 0.12, 0.08));
+    if (coat.spots) {
+      const spot = add(MeshBuilder.CreateSphere('spot', { diameter: 0.5, segments: 10 }, scene), material(scene, 'spot', coat.spots, 0.12, 0.08));
       spot.scaling.set(1, 0.5, 0.9);
       spot.position.set(-0.25, 0.72, 0);
       const spot2 = add(MeshBuilder.CreateSphere('spot2', { diameter: 0.42, segments: 10 }, scene), patch);
@@ -133,16 +130,30 @@ export class CatView {
     return this.root.position.add(new Vector3(0, 1.5 * this.root.scaling.y, 0));
   }
 
-  update(cat: Cat, dt: number): void {
+  dispose(): void {
+    this.root.dispose(false, true);
+  }
+
+  update(cat: Cat, dt: number, girlFacing: number): void {
     this.time += dt;
-    this.root.position.set(cat.x, cat.y, -0.6 + (cat.id % 3) * 0.6);
-    const targetYaw = cat.dir > 0 ? 0.55 : Math.PI - 0.55;
+    const carried = cat.mood === 'carried';
+    this.root.scaling.setAll(cat.size * cat.growth * 1.05 * (carried ? 0.85 : 1) * (1 + cat.plump * 0.12));
+    // A well-fed cat is rounder round the middle.
+    const p = cat.plump;
+    this.torso.scaling.set(1.15 + p * 0.3, 0.62 + p * 0.18, 0.6 + p * 0.45);
+    this.belly.scaling.set(1.1 + p * 0.3, 0.5 + p * 0.15, 0.62 + p * 0.45);
+    if (carried) {
+      // Snuggled in the girl's arms, in front of her chest.
+      this.root.position.set(cat.x + girlFacing * 0.15, cat.y + 1.05, cat.z - 0.45);
+    } else this.root.position.set(cat.x, cat.y, cat.z);
+    const targetYaw = carried ? (girlFacing > 0 ? 0.9 : Math.PI - 0.9) : cat.dir > 0 ? 0.55 : Math.PI - 0.55;
     this.yaw += (targetYaw - this.yaw) * Math.min(1, dt * 6);
     this.root.rotation.y = this.yaw;
 
-    const playing = cat.mood === 'play';
+    const playing = cat.mood === 'play' || cat.mood === 'toBowl';
     const walking = cat.mood === 'walk' || playing;
     const happy = cat.mood === 'happy';
+    const eating = cat.mood === 'eat';
     this.walk += walking ? dt * (playing ? 4 : cat.speed) * 7 : 0;
     const legPairs = [0, Math.PI, Math.PI, 0];
     this.legs.forEach((leg, i) => (leg.rotation.z = walking ? Math.sin(this.walk + legPairs[i]) * 0.5 : 0));
@@ -150,6 +161,9 @@ export class CatView {
     this.happyBounce = happy ? this.happyBounce + dt * 14 : 0;
     this.body.position.y = happy ? Math.abs(Math.sin(this.happyBounce)) * 0.12 : walking ? Math.abs(Math.sin(this.walk)) * 0.04 : 0;
     this.head.rotation.x = happy ? Math.sin(this.happyBounce * 0.5) * 0.25 : Math.sin(this.time * 0.7) * 0.06;
+    // Eating: head down into the bowl, bobbing.
+    this.head.rotation.z = eating ? -0.7 + Math.sin(this.time * 9) * 0.08 : 0;
+    if (carried) this.legs.forEach((leg, i) => (leg.rotation.z = (i < 2 ? 0.5 : -0.5) + Math.sin(this.time * 3 + i) * 0.1));
 
     // Tail: sways lazily, stands straight up when the cat is happy.
     this.tail.forEach((seg, i) => {
@@ -162,6 +176,6 @@ export class CatView {
     this.blinkIn -= dt;
     const blink = this.blinkIn < 0.12;
     if (this.blinkIn < 0) this.blinkIn = 1.5 + Math.random() * 4;
-    for (const e of this.eyes) e.scaling.y = happy ? 0.25 : blink ? 0.15 : e.name === 'pupil' ? 1.3 : 1.1;
+    for (const e of this.eyes) e.scaling.y = happy || eating ? 0.25 : blink ? 0.15 : e.name === 'pupil' ? 1.3 : 1.1;
   }
 }

@@ -1,17 +1,16 @@
 // SPDX-FileCopyrightText: 2026 Marcel Petrick <mail@marcelpetrick.it>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import { CAT_PRICE, type Game, MAX_CATS } from '../core/game';
 import { buy, CATALOG, SLOT_NAMES, type ShopItem, type Slot, type Wardrobe, wearItem } from '../core/shop';
+import { el } from './dom';
 import { TEXT } from './text';
 
 type Tab = 'clothes' | 'cats';
-
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text = ''): HTMLElementTagNameMap[K] {
-  const e = document.createElement(tag);
-  e.className = className;
-  e.textContent = text;
-  return e;
-}
+/** The shop sells everything; the wardrobe at home only shows the clothes you already have. */
+export type ShopMode = 'shop' | 'wardrobe';
+/** What just happened, so the app can play a sound or react. */
+export type ShopAction = 'bought' | 'poor' | 'wear' | 'newCat' | 'full';
 
 /** The shop window, opened with K: clothes for the girl and things for the cats. */
 export class ShopMenu {
@@ -19,17 +18,22 @@ export class ShopMenu {
   private readonly body: HTMLElement;
   private readonly money: HTMLElement;
   private readonly toast: HTMLElement;
+  private readonly title: HTMLElement;
+  private readonly tabBar: HTMLElement;
   private readonly tabs = new Map<Tab, HTMLButtonElement>();
   private tab: Tab = 'clothes';
+  private mode: ShopMode = 'shop';
+  private readonly wardrobe: Wardrobe;
   private toastTimer = 0;
   isOpen = false;
 
   constructor(
     parent: HTMLElement,
-    private readonly wardrobe: Wardrobe,
+    private readonly game: Game,
     /** Called after anything was bought or put on. */
-    private readonly onChange: () => void,
+    private readonly onChange: (action: ShopAction, detail?: string) => void,
   ) {
+    this.wardrobe = game.wardrobe;
     this.root = el('div', 'shop');
     const card = el('div', 'shop-card');
     const head = el('div', 'shop-head');
@@ -39,8 +43,9 @@ export class ShopMenu {
     close.addEventListener('click', () => {
       this.close();
     });
-    head.append(el('h2', '', TEXT.shop.title), this.money, close);
-    const tabs = el('div', 'shop-tabs');
+    this.title = el('h2', '', TEXT.shop.title);
+    head.append(this.title, this.money, close);
+    const tabs = (this.tabBar = el('div', 'shop-tabs'));
     for (const [id, label] of [
       ['clothes', TEXT.shop.tabClothes],
       ['cats', TEXT.shop.tabCats],
@@ -69,7 +74,11 @@ export class ShopMenu {
     else this.open();
   }
 
-  open(): void {
+  open(mode: ShopMode = 'shop'): void {
+    this.mode = mode;
+    if (mode === 'wardrobe') this.tab = 'clothes';
+    this.title.textContent = mode === 'shop' ? TEXT.shop.title : TEXT.shop.wardrobeTitle;
+    this.tabBar.style.display = mode === 'shop' ? '' : 'none';
     this.isOpen = true;
     this.root.classList.add('open');
     this.render();
@@ -94,13 +103,49 @@ export class ShopMenu {
     const w = this.wardrobe;
     if (item.kind === 'wear' && w.owned.includes(item.id)) {
       wearItem(w, item.id);
+      this.onChange('wear');
     } else {
       const result = buy(w, item.id);
-      if (result === 'poor') this.say(TEXT.shop.tooPoor, false);
-      else if (result === 'ok') this.say(TEXT.shop.bought(item.name), true);
+      if (result === 'poor') {
+        this.say(TEXT.shop.tooPoor, false);
+        this.onChange('poor');
+      } else if (result === 'ok') {
+        this.say(TEXT.shop.bought(item.name), true);
+        this.onChange('bought');
+      }
     }
-    this.onChange();
     this.render();
+  }
+
+  private adopt(): void {
+    if (this.game.cats.length >= MAX_CATS) {
+      this.say(TEXT.shop.tooManyCats, false);
+      this.onChange('full');
+    } else {
+      const cat = this.game.buyCat();
+      if (cat) {
+        this.say(TEXT.newCat(cat.name), true);
+        this.onChange('newCat', cat.name);
+      } else {
+        this.say(TEXT.shop.tooPoor, false);
+        this.onChange('poor');
+      }
+    }
+    this.render();
+  }
+
+  private catCard(): HTMLElement {
+    const c = el('div', 'shop-item');
+    const info = el('div', 'shop-info');
+    info.append(el('div', 'shop-name', TEXT.shop.newCat), el('div', 'shop-desc', TEXT.shop.newCatDesc));
+    const b = el('button', 'shop-buy', TEXT.shop.buy);
+    b.type = 'button';
+    if (this.wardrobe.money < CAT_PRICE) c.classList.add('poor');
+    b.addEventListener('click', () => {
+      this.adopt();
+    });
+    c.append(el('div', 'shop-icon', '🐈'), info, el('div', 'shop-price', `🪙 ${CAT_PRICE}`), b);
+    return c;
   }
 
   private card(item: ShopItem): HTMLElement {
@@ -147,12 +192,14 @@ export class ShopMenu {
       for (const slot of Object.keys(SLOT_NAMES) as Slot[]) {
         this.body.append(el('h3', '', SLOT_NAMES[slot]));
         const grid = el('div', 'shop-grid');
-        for (const item of CATALOG) if (item.kind === 'wear' && item.slot === slot) grid.append(this.card(item));
+        for (const item of CATALOG)
+          if (item.kind === 'wear' && item.slot === slot && (this.mode === 'shop' || this.wardrobe.owned.includes(item.id))) grid.append(this.card(item));
         this.body.append(grid);
       }
     } else {
       const grid = el('div', 'shop-grid');
       for (const item of CATALOG) if (item.kind !== 'wear') grid.append(this.card(item));
+      grid.append(this.catCard());
       this.body.append(grid, el('p', 'shop-hint', TEXT.shop.useHint));
     }
   }

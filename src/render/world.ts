@@ -15,28 +15,42 @@ import { Matrix, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import type { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { DefaultRenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline';
-import { type Game, type GameEvent, WORLD_MAX_X, WORLD_MIN_X } from '../core/game';
+import type { Game, GameEvent } from '../core/game';
 import { outfitColor } from '../core/shop';
+import { bounds, SPOTS } from '../core/world';
 import { CatView } from './catView';
 import { Effects } from './effects';
 import { DEFAULT_STYLE, GirlView } from './girlView';
 import { buildHouse } from './house';
+import { buildInterior, type Interior } from './interior';
 import { buildLandscape } from './landscape';
 import { material } from './shapes';
+import { buildShop } from './shopBuilding';
 
-const CAMERA_DISTANCE = 20;
+/** Camera distance and height above the girl, outdoors and in the house. */
+const VIEW = {
+  garden: { distance: 20, lift: 2.2, look: 2.4, halfWidth: 3, sun: 1.6, ambient: 0.75, bloom: 0.3 },
+  house: { distance: 14, lift: 1.2, look: 2.6, halfWidth: 9, sun: 0.75, ambient: 0.5, bloom: 0.08 },
+} as const;
+const SUN_DIR = new Vector3(-0.45, -0.8, 0.55).normalize();
 
-/** One Babylon scene showing the game: landscape, house, girl, cats, effects and a following camera. */
+/** One Babylon scene showing the game: garden, house, shop, girl, cats, effects and a following camera. */
 export class World {
   readonly scene: Scene;
   readonly camera: FreeCamera;
   private readonly girl: GirlView;
   private readonly cats = new Map<number, CatView>();
   private readonly effects: Effects;
+  private readonly interior: Interior;
   private readonly tickLandscape: (dt: number) => void;
   private readonly focus: Vector3;
-  private trailIn = 0;
+  private readonly sun: DirectionalLight;
+  private readonly hemi: HemisphericLight;
+  private readonly pipeline: DefaultRenderingPipeline;
+  private readonly addCaster: (m: Mesh) => void;
   private readonly yarn: Mesh;
+  private trailIn = 0;
+  private sparkleIn = 0;
 
   constructor(
     private readonly engine: AbstractEngine,
@@ -49,38 +63,51 @@ export class World {
     scene.fogColor = Color3.FromHexString('#cfe6f7');
     scene.clearColor = new Color4(0.8, 0.9, 0.97, 1);
 
-    this.focus = new Vector3(game.girl.x, game.girl.y + 2.5, 0);
-    this.camera = new FreeCamera('camera', new Vector3(this.focus.x, this.focus.y + 3, -CAMERA_DISTANCE), scene);
+    const g = game.girl;
+    this.focus = new Vector3(g.x, g.y + 2.5, 0);
+    this.camera = new FreeCamera('camera', new Vector3(g.x, g.y + 5, -20), scene);
     this.camera.fov = 0.72;
     this.camera.minZ = 0.3;
     this.camera.maxZ = 2500;
     this.camera.inputs.clear();
 
-    const hemi = new HemisphericLight('ambient', new Vector3(0.2, 1, -0.4), scene);
+    const hemi = (this.hemi = new HemisphericLight('ambient', new Vector3(0.2, 1, -0.4), scene));
     hemi.diffuse = Color3.FromHexString('#fff6ec');
     hemi.groundColor = Color3.FromHexString('#7d8fb0');
     hemi.intensity = 0.75;
     hemi.specular = Color3.Black();
 
-    const sun = new DirectionalLight('sun', new Vector3(-0.45, -0.8, 0.55).normalize(), scene);
-    sun.diffuse = Color3.FromHexString('#fff1d6');
-    sun.intensity = 1.6;
-    sun.position = new Vector3(60, 40, -30);
-    sun.autoUpdateExtends = true;
-    const shadows = new ShadowGenerator(2048, sun);
+    // The sun's shadow box follows the girl, so garden and house both get crisp shadows.
+    this.sun = new DirectionalLight('sun', SUN_DIR, scene);
+    this.sun.diffuse = Color3.FromHexString('#fff1d6');
+    this.sun.intensity = 1.6;
+    this.sun.autoUpdateExtends = false;
+    this.sun.shadowFrustumSize = 60;
+    this.sun.shadowMinZ = 1;
+    this.sun.shadowMaxZ = 160;
+    const shadows = new ShadowGenerator(2048, this.sun);
     shadows.usePercentageCloserFiltering = true;
     shadows.filteringQuality = ShadowGenerator.QUALITY_MEDIUM;
     shadows.darkness = 0.35;
     shadows.normalBias = 0.02;
-    const addCaster = (m: Mesh) => shadows.addShadowCaster(m, false);
+    this.addCaster = (m: Mesh) => {
+      shadows.addShadowCaster(m, false);
+    };
 
     const glow = new GlowLayer('glow', scene, { blurKernelSize: 32, mainTextureRatio: 0.5 });
     glow.intensity = 0.7;
 
-    this.tickLandscape = buildLandscape(scene, addCaster);
-    buildHouse(scene, addCaster);
-    this.girl = new GirlView(scene, DEFAULT_STYLE, addCaster);
+    this.tickLandscape = buildLandscape(scene, this.addCaster);
+    buildHouse(scene, this.addCaster);
+    buildShop(scene, this.addCaster);
+    this.interior = buildInterior(scene, this.addCaster);
+    this.girl = new GirlView(scene, DEFAULT_STYLE, this.addCaster);
     this.refreshOutfit();
+    this.effects = new Effects(scene, glow);
+    this.syncCats();
+    for (const coin of game.coins) this.effects.addCoin(coin.id, coin.x, coin.y, coin.z);
+    // The start-up coins were reported as events too; the scene already shows them.
+    game.drainEvents();
 
     // The yarn ball: a pink sphere wrapped in a few darker strands.
     this.yarn = MeshBuilder.CreateSphere('yarn', { diameter: 0.5, segments: 14 }, scene);
@@ -93,15 +120,10 @@ export class World {
       strand.rotation.set(i * 1.1, i * 0.7, i * 0.5);
     }
     this.yarn.setEnabled(false);
-    addCaster(this.yarn);
-    for (const c of game.cats) this.cats.set(c.id, new CatView(scene, c, addCaster));
-    this.effects = new Effects(scene, glow);
-    for (const coin of game.coins) this.effects.addCoin(coin.id, coin.x, coin.y);
-    // The start-up coins were reported as events too; the scene already shows them.
-    game.drainEvents();
+    this.addCaster(this.yarn);
 
     // The same look as Allium Assault: ACES tone mapping, a little bloom and a soft vignette.
-    const pipeline = new DefaultRenderingPipeline('post', true, scene, [this.camera]);
+    const pipeline = (this.pipeline = new DefaultRenderingPipeline('post', true, scene, [this.camera]));
     pipeline.fxaaEnabled = true;
     pipeline.bloomEnabled = true;
     pipeline.bloomThreshold = 0.8;
@@ -116,6 +138,23 @@ export class World {
     pipeline.imageProcessing.vignetteEnabled = true;
     pipeline.imageProcessing.vignetteWeight = 1.4;
     pipeline.imageProcessing.vignetteColor = new Color4(0, 0, 0, 0);
+    this.snapCamera();
+  }
+
+  /** Create views for new cats, rebuild the ones whose coat changed, drop the ones that left. */
+  syncCats(): void {
+    const ids = new Set(this.game.cats.map((c) => c.id));
+    for (const [id, view] of this.cats)
+      if (!ids.has(id)) {
+        view.dispose();
+        this.cats.delete(id);
+      }
+    for (const c of this.game.cats) {
+      const view = this.cats.get(c.id);
+      if (view?.coat === c.coat) continue;
+      view?.dispose();
+      this.cats.set(c.id, new CatView(this.scene, c, this.addCaster));
+    }
   }
 
   handleEvents(events: GameEvent[]): void {
@@ -131,20 +170,33 @@ export class World {
           this.effects.magic(this.girl.wandTip());
           break;
         case 'feed': {
-          const view = this.cats.get(e.cat);
-          const cat = this.game.cats.find((c) => c.id === e.cat);
-          if (view && cat) this.effects.feed(e.x + cat.dir * 0.9 * cat.size, e.y, view.root.position.z, e.supply === 'treat');
+          const cat = this.game.cat(e.cat);
+          // Cats eating from the kitchen bowls already have a bowl; food from the girl's hand gets a dish.
+          if (cat && !e.fromBowl) this.effects.feed(cat.x + cat.dir * 0.9 * cat.size, cat.y, cat.z, e.supply === 'treat');
           break;
         }
-        case 'yarn':
-        case 'coinSpawn':
-          if (e.type === 'coinSpawn') this.effects.addCoin(e.coin, e.x, e.y);
+        case 'coinSpawn': {
+          const coin = this.game.coins.find((c) => c.id === e.coin);
+          if (coin) this.effects.addCoin(coin.id, coin.x, coin.y, coin.z);
           break;
+        }
         case 'coin':
           this.effects.collectCoin(e.coin);
           break;
-        case 'jump':
-        case 'land':
+        case 'search':
+          if (e.found > 0) {
+            const s = SPOTS.find((p) => p.id === e.spot);
+            if (s) this.effects.magic(new Vector3(s.x, 2, s.z - 1));
+          }
+          break;
+        case 'kitten':
+        case 'newCat':
+          this.syncCats();
+          break;
+        case 'place':
+          this.snapCamera();
+          break;
+        default:
           break;
       }
     }
@@ -153,32 +205,54 @@ export class World {
   update(dt: number, flying: boolean): void {
     const g = this.game.girl;
     this.girl.update(g, dt, flying);
-    for (const c of this.game.cats) this.cats.get(c.id)?.update(c, dt);
+    for (const c of this.game.cats) this.cats.get(c.id)?.update(c, dt, g.facing);
     if (flying) {
       this.trailIn -= dt;
       if (this.trailIn <= 0) {
         this.trailIn = 0.03;
-        this.effects.trail(new Vector3(g.x, g.y + 0.6, 0));
+        this.effects.trail(new Vector3(g.x, g.y + 0.6, g.z));
       }
+    }
+    // Cupboards with coins inside twinkle now and then, as a hint.
+    this.sparkleIn -= dt;
+    if (this.sparkleIn <= 0 && g.place === 'house') {
+      this.sparkleIn = 0.9;
+      for (const s of SPOTS)
+        if ((this.game.spotCoins[s.id] ?? 0) > 0) this.effects.trail(new Vector3(s.x + (Math.random() - 0.5), 2 + Math.random() * 1.5, s.z - 1));
     }
     const y = this.game.yarn;
     this.yarn.setEnabled(y !== null);
     if (y) {
-      this.yarn.position.set(y.x, y.y, -0.4);
+      this.yarn.position.set(y.x, y.y, y.z - 0.3);
       this.yarn.rotation.z = -y.spin;
     }
+    this.interior.setBowls(this.game.bowls.milk, this.game.bowls.food);
     this.effects.update(dt);
     this.tickLandscape(dt);
+    this.followGirl(Math.min(1, dt * 3));
+  }
 
-    // Follow the girl smoothly, staying inside the world and rising when she flies.
-    const half = 12;
-    const tx = Math.min(WORLD_MAX_X - half + 4, Math.max(WORLD_MIN_X + half - 4, g.x + g.facing * 1.5));
-    const ty = g.y + 2.4;
-    const k = Math.min(1, dt * 3);
+  private followGirl(k: number): void {
+    const g = this.game.girl;
+    const view = VIEW[g.place];
+    const b = bounds(g.place);
+    const tx = Math.min(b.maxX - view.halfWidth, Math.max(b.minX + view.halfWidth, g.x + g.facing * 1.5));
+    const ty = g.y + view.look;
     this.focus.x += (tx - this.focus.x) * k;
     this.focus.y += (ty - this.focus.y) * k;
-    this.camera.position.set(this.focus.x, this.focus.y + 2.2, -CAMERA_DISTANCE);
+    this.camera.position.set(this.focus.x, this.focus.y + view.lift, -view.distance);
     this.camera.setTarget(new Vector3(this.focus.x, this.focus.y, 0));
+    this.sun.position = new Vector3(this.focus.x, this.focus.y, 0).subtract(SUN_DIR.scale(70));
+    // Indoors the light is softer, so the pale walls do not glow.
+    this.scene.fogDensity = g.place === 'house' ? 0 : 0.006;
+    this.sun.intensity = view.sun;
+    this.hemi.intensity = view.ambient;
+    this.pipeline.bloomWeight = view.bloom;
+  }
+
+  /** Jump the camera straight to the girl, e.g. after walking through a door. */
+  private snapCamera(): void {
+    this.followGirl(1);
   }
 
   /** Dress the girl in whatever the wardrobe says she wears. */

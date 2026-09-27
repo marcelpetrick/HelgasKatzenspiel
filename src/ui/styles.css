@@ -285,6 +285,7 @@ kbd {
 
 .shop {
   position: absolute;
+  z-index: 10;
   inset: 0;
   display: none;
   place-items: center;
@@ -475,4 +476,131 @@ kbd {
 
 .on-title .supplies {
   display: none;
+}
+
+.toast {
+  position: absolute;
+  left: 50%;
+  top: 96px;
+  transform: translate(-50%, -10px);
+  opacity: 0;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+  background: rgb(255 126 182 / 92%);
+  border-radius: 999px;
+  padding: 10px 24px;
+  font-size: 18px;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
+  text-align: center;
+  max-width: calc(100vw - 32px);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.cat-tag.kitten::before {
+  content: '🍼 ';
+}
+
+.on-title .toast {
+  display: none;
+}
+
+/* Meine Katzen */
+
+.cats-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.cat-row {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgb(255 255 255 / 8%);
+  border: 1px solid var(--line);
+}
+
+.cat-row-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cat-name {
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  background: rgb(255 255 255 / 12%);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 6px 12px;
+  width: 12em;
+  user-select: text;
+}
+
+.cat-info {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.shop .swatch-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  border: 3px solid rgb(255 255 255 / 35%);
+}
+
+.shop .swatch-btn.active {
+  border-color: #fff;
+  box-shadow: 0 0 0 3px var(--pink);
+}
+
+.size-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+}
+
+.size-slider {
+  width: 220px;
+  accent-color: var(--pink);
+}
+
+.size-label {
+  font-weight: 600;
+  min-width: 4em;
+}
+
+.title-card .title-new {
+  display: block;
+  margin: 14px auto 0;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 16px;
+  background: transparent;
+  box-shadow: none;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.toast,
+.prompt {
+  z-index: 5;
 }

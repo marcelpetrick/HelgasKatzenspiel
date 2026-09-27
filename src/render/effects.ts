@@ -126,9 +126,9 @@ export class Effects {
     this.bowls.push({ node, age: 0 });
   }
 
-  addCoin(id: number, x: number, y: number): void {
+  addCoin(id: number, x: number, y: number, z: number): void {
     const node = new TransformNode('coinNode', this.scene);
-    node.position.set(x, y, -0.3);
+    node.position.set(x, y, z);
     const m = this.coinTemplate.createInstance(`coin${id}`);
     m.parent = node;
     m.rotation.x = Math.PI / 2;

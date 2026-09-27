@@ -183,14 +183,17 @@ export class GirlView {
   }
 
   update(girl: Girl, dt: number, flying: boolean): void {
+    const carrying = girl.carrying !== null;
     this.time += dt;
-    this.root.position.set(girl.x, girl.y, 0);
-    // Turn mostly towards the camera so the face stays visible, like the garlic buddies do.
-    const targetYaw = girl.facing > 0 ? -0.6 : 0.6;
+    this.root.position.set(girl.x, girl.y, girl.z);
+    // Turn mostly towards the camera so the face stays visible, like the garlic buddies do; walking
+    // away into the scene she shows her back, walking towards the camera her face.
+    const side = girl.facing > 0 ? -1 : 1;
+    const targetYaw = girl.vz > 0 && girl.vx === 0 ? side * 2.6 : girl.vz < 0 && girl.vx === 0 ? side * 0.15 : side * 0.6;
     this.yaw += (targetYaw - this.yaw) * Math.min(1, dt * 10);
     this.body.rotation.y = this.yaw;
 
-    const moving = girl.vx !== 0 && girl.onGround;
+    const moving = (girl.vx !== 0 || girl.vz !== 0) && girl.onGround;
     this.walk = moving ? this.walk + dt * 11 : this.walk * Math.max(0, 1 - dt * 10);
     const swing = Math.sin(this.walk) * (moving ? 0.7 : 0);
     if (!girl.onGround) {
@@ -209,6 +212,11 @@ export class GirlView {
       this.arms[0].rotation.z = -0.25;
       this.arms[1].rotation.z = 0.25;
       this.body.position.y = Math.abs(Math.sin(this.walk)) * (moving ? 0.08 : 0) + Math.sin(this.time * 2) * 0.012;
+    }
+    if (carrying) {
+      // Both arms forward, holding the cat.
+      this.arms[0].rotation.set(-1.25, 0, -0.35);
+      this.arms[1].rotation.set(-1.25, 0, 0.35);
     }
     if (this.castTime > 0) {
       this.castTime -= dt;
