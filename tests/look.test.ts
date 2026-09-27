@@ -37,6 +37,15 @@ describe('jewellery, nail polish and decorations', () => {
     expect(outfitStyle(w, 'nails')).toBe('none');
   });
 
+  it('trousers are worn instead of a skirt', () => {
+    const w = newWardrobe();
+    expect(outfitStyle(w, 'skirt')).toBe('none');
+    w.money = 10;
+    expect(buy(w, 'pants-jeans')).toBe('ok');
+    expect(w.outfit.skirt).toBe('pants-jeans');
+    expect(outfitStyle(w, 'skirt')).toBe('pants');
+  });
+
   it('bows, earrings and polish are bought and worn', () => {
     const w = newWardrobe();
     w.money = 20;

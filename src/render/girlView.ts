@@ -16,6 +16,8 @@ import { fanMesh, glowMaterial, heartOutline, material, starOutline } from './sh
 export interface GirlLook extends Look {
   top: string;
   skirt: string;
+  /** Trousers instead of a skirt. */
+  pants: boolean;
   shoes: string;
   hairAcc: { style: Accessory; color: string };
   earrings: { style: Accessory; color: string };
@@ -30,6 +32,7 @@ export function girlLook(w: Wardrobe): GirlLook {
     ...w.look,
     top: outfitColor(w, 'top'),
     skirt: outfitColor(w, 'skirt'),
+    pants: outfitStyle(w, 'skirt') === 'pants',
     shoes: outfitColor(w, 'shoes'),
     hairAcc: { style: outfitStyle(w, 'headband'), color: outfitColor(w, 'headband') },
     earrings: { style: outfitStyle(w, 'earrings'), color: outfitColor(w, 'earrings') },
@@ -89,7 +92,9 @@ export class GirlView {
       const hip = new TransformNode('hip', scene);
       hip.parent = this.body;
       hip.position.set(side * 0.14, 0.72, 0);
-      add(MeshBuilder.CreateCylinder('leg', { height: 0.62, diameter: 0.17, tessellation: 10 }, scene), skin, hip).position.y = -0.33;
+      // Trousers cover the legs down to the shoes; under a skirt the legs are bare.
+      const legWidth = look.pants ? 0.21 : 0.17;
+      add(MeshBuilder.CreateCylinder('leg', { height: 0.62, diameter: legWidth, tessellation: 10 }, scene), look.pants ? skirt : skin, hip).position.y = -0.33;
       const shoe = add(MeshBuilder.CreateSphere('shoe', { diameter: 0.28, segments: 10 }, scene), shoes, hip);
       shoe.scaling.set(0.9, 0.6, 1.3);
       shoe.position.set(0, -0.66, -0.05);
@@ -127,8 +132,10 @@ export class GirlView {
     this.wandStar.scaling.setAll(0.32);
     this.wandStar.billboardMode = TransformNode.BILLBOARDMODE_ALL;
 
-    const dress = add(MeshBuilder.CreateCylinder('skirt', { height: 0.62, diameterTop: 0.5, diameterBottom: 1.05, tessellation: 20 }, scene), skirt);
-    dress.position.y = 0.98;
+    const dress = look.pants
+      ? add(MeshBuilder.CreateCylinder('trousers', { height: 0.5, diameterTop: 0.5, diameterBottom: 0.56, tessellation: 20 }, scene), skirt)
+      : add(MeshBuilder.CreateCylinder('skirt', { height: 0.62, diameterTop: 0.5, diameterBottom: 1.05, tessellation: 20 }, scene), skirt);
+    dress.position.y = look.pants ? 1.04 : 0.98;
     const torso = add(MeshBuilder.CreateCylinder('torso', { height: 0.5, diameterTop: 0.46, diameterBottom: 0.52, tessellation: 16 }, scene), top);
     torso.position.y = 1.52;
     add(MeshBuilder.CreateCylinder('neck', { height: 0.15, diameter: 0.14 }, scene), skin).position.y = 1.82;

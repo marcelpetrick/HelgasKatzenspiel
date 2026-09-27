@@ -5,11 +5,11 @@ import { cleanLook, DEFAULT_LOOK, type Look } from './look';
 
 /** What the shop sells. Pure data and rules, no DOM. */
 
-/** `headband` holds all hair jewellery: cat ears, bows and clips. */
+/** `headband` holds all hair jewellery: cat ears, bows and clips. `skirt` holds skirts and trousers. */
 export type Slot = 'top' | 'skirt' | 'headband' | 'shoes' | 'earrings' | 'nails';
 export type Supply = 'food' | 'treat' | 'milk';
 /** The shape of an accessory; plain clothes have none. */
-export type Accessory = 'ears' | 'band' | 'flowers' | 'bow' | 'clip-star' | 'clip-heart' | 'pearl' | 'heart' | 'star' | 'none';
+export type Accessory = 'ears' | 'band' | 'flowers' | 'bow' | 'clip-star' | 'clip-heart' | 'pearl' | 'heart' | 'star' | 'pants' | 'none';
 
 export interface WearItem {
   kind: 'wear';
@@ -80,7 +80,7 @@ export type ShopItem = WearItem | SupplyItem | ToyItem | GearItem | GroceryItem 
 
 export const SLOT_NAMES: Record<Slot, string> = {
   top: 'Oberteile',
-  skirt: 'Röcke',
+  skirt: 'Röcke und Hosen',
   headband: 'Haarschmuck',
   shoes: 'Schuhe',
   earrings: 'Ohrringe',
@@ -110,6 +110,9 @@ export const CATALOG: readonly ShopItem[] = [
   wear('skirt', 'skirt-tuerkis', 'Türkiser Rock', '#3fd0d4', 4),
   wear('skirt', 'skirt-rot', 'Roter Rock', '#ff5a6e', 4),
   wear('skirt', 'skirt-jeans', 'Jeansrock', '#4a78c2', 6),
+  wear('skirt', 'pants-jeans', 'Jeanshose', '#3f6fb8', 5, 'pants'),
+  wear('skirt', 'pants-rosa', 'Rosa Leggings', '#ff9fc6', 4, 'pants'),
+  wear('skirt', 'pants-gruen', 'Grüne Latzhose', '#5cc98a', 6, 'pants'),
   wear('headband', 'band-rosa', 'Rosa Katzenohren', '#ff9fc6', 0, 'ears'),
   wear('headband', 'band-gold', 'Goldene Katzenohren', '#ffc83d', 6, 'ears'),
   wear('headband', 'band-weiss', 'Weiße Katzenohren', '#ffffff', 4, 'ears'),

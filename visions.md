@@ -113,5 +113,5 @@ Kampf, kein Krieg.
 - [x] Je mehr Herzen, desto schneller Münzen: erst alle 3 Herzen, ab 60 Herzen alle 2, ab 250 für jedes.
 - [x] Münzen tauchen auch am Anziehschrank auf.
 - [x] Getränke für das Mädchen: Kakao und Orangensaft in der Küche machen und trinken.
-- [ ] Hosen als Unterteil (bisher nur Röcke).
+- [x] Hosen als Unterteil: Jeanshose, rosa Leggings, grüne Latzhose.
 - [ ] HUD: „H: Hilfe“ bleibt sichtbar, Esc steht in der Liste; Klick-Geräusch für H, T und Esc.
