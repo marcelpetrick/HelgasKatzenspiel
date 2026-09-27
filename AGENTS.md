@@ -36,9 +36,11 @@ scripts/docker-check.sh            # Docker-Image bauen und prüfen
   - `world.ts` Weltaufbau (Garten, Haus-Inneres, Gebäude, Türen, Schränke),
   - `game.ts` Mädchen, Katzen, Münzen, Füttern, Tragen, Babys,
   - `shop.ts` Katalog und Kleiderschrank, `look.ts` Aussehen des Mädchens,
-  - `cats.ts` Katzenfarben und -namen, `school.ts` Rechenaufgaben und Noten, `save.ts` Speichern.
-- `src/render/` — Babylon-Szene: Landschaft, Haus, Hausinneres, Laden, Schule, Mädchen, Katzen, Effekte.
-- `src/ui/` — DOM-Overlay (HUD, Startbildschirm, Menüs für Laden, Katzen, Figur, Schule), Texte,
+  - `cats.ts` Katzenfarben und -namen, `school.ts` Rechenaufgaben und Noten, `kitchen.ts` Rezepte,
+    `save.ts` Speichern (Version 2; Version 1 wird noch gelesen).
+- `src/render/` — Babylon-Szene: Landschaft mit Wald und Strand, Haus, Hausinneres, Laden, Schule,
+  Mädchen, Katzen, Näpfe und Spielzeug (`props.ts`), Effekte.
+- `src/ui/` — DOM-Overlay (HUD, Startbildschirm, Menüs für Laden, Katzen, Figur, Schule, Kochen), Texte,
   CSS, `localStorage`.
 - `src/audio.ts` — niedliche Geräusche, synthetisch mit Web Audio.
 - `src/app.ts` — Tastatur, Spielschleife, verbindet alles.

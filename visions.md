@@ -49,6 +49,15 @@ Kampf, kein Krieg.
 24. Spielzeug für die Katzen, mit den Katzen spielen.
 25. Wenn die Katzen viel fressen, werden sie runder und größer.
 
+- Füttern sieht man: Das Mädchen stellt einen Napf hin, alle Katzen kommen angerannt, wollen schnell
+  fressen und streiten sich manchmal.
+- Spielzeug (Wollknäuel, Ball, Maus, Federwedel) liegt einfach auf dem Boden; die Katzen spielen damit.
+- Ein Rucksack (10 Münzen) zum Anziehen, sichtbar am Mädchen; Katzen hochheben und hineinstecken.
+- Frisuren: ein Zopf, zwei Zöpfe, Pippi Langstrumpf, ganz kurz; Haarfarben blond, braun, schwarz …;
+  Katzenohren-Haarreif oder anderer Haarreif.
+- Ein viel größeres Spielfeld ohne Absperrung — weit weg vom Haus bis an den Strand. Verstecken spielen.
+- Im Laden Lebensmittel (Tomaten, Lauch, Eier …), Bratpfanne und Besteck kaufen; kochen und essen.
+
 ## Münzen & Schule
 
 26. In der Schule Rechenaufgaben lösen; gut rechnen und gute Noten bringen Münzen.
@@ -89,3 +98,14 @@ Kampf, kein Krieg.
 - [x] Deko fürs Haus: Kratzbaum, Kissen, Blumentöpfe, Katzenbild, Herzteppich, Lichterkette.
 - [x] Niedliche Geräusche für alle Aktionen (T schaltet den Ton aus).
 - [x] Docker-Image (nginx), Veröffentlichung auf ghcr, Pushen nach GitHub und Releases.
+- [x] Näpfe (1 Futter, 4 Milch): Katzen rennen hin, fressen nacheinander, streiten manchmal.
+- [x] Spielzeug bleibt liegen (Wollknäuel, Glöckchenball, Spielzeugmaus), Enter hebt es auf;
+      Federwedel (5).
+- [x] Rucksack: kaufen, anziehen, sichtbar; R steckt bis zu drei Katzen hinein.
+- [x] Frisuren Ein Zopf, Pippi Langstrumpf, Ganz kurz; Haarreif ohne Ohren und Blumen-Haarreif.
+- [x] Riesige Welt: Wiese, Wald, Strand mit Meer, Palmen und Sonnenschirm.
+- [x] Verstecken (V) hinter den Büschen, Münzen fürs Finden.
+- [x] Kochen: Lebensmittel und Küchensachen im Laden, sechs Rezepte am Herd, am Tisch essen,
+      danach doppelt so hoch fliegen.
+- [x] Fehler aus der Selbstprüfung behoben (Wände, Türen im Flug, Schul-Timer, Tastatur in Menüs,
+      Lautstärke, Schilder, Speichern der Zähler).

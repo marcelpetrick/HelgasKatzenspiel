@@ -29,7 +29,7 @@ It is designed together with Helga, who decides what goes in; her wishes are col
 **Note: this project is generated with AI.**
 
 <p align="center">
-  <img src="docs/screenshots/play.jpg" alt="The girl petting the cat Mimi on a flowery meadow next to the school; pink hearts rise" width="100%">
+  <img src="docs/screenshots/play.jpg" alt="The girl with a backpack has put down a bowl; the cats come running to eat" width="100%">
 </p>
 
 <table>
@@ -38,44 +38,51 @@ It is designed together with Helga, who decides what goes in; her wishes are col
     <td width="50%"><img src="docs/screenshots/school.jpg" alt="School: a sum with four answers to choose from"></td>
   </tr>
   <tr>
+    <td width="50%"><img src="docs/screenshots/beach.jpg" alt="The beach at the end of the garden: sand, palms, a sunshade and the sea"></td>
     <td width="50%"><img src="docs/screenshots/shop.jpg" alt="The cat shop with clothes in many colours"></td>
-    <td width="50%"><img src="docs/screenshots/title.jpg" alt="Title screen: Helgas Katzenspiel, Los geht’s!"></td>
   </tr>
 </table>
 
 ## How to play
 
-| Key       | Action                                                                          |
-| --------- | ------------------------------------------------------------------------------- |
-| ← →       | walk                                                                            |
-| ↑ ↓       | walk further back / to the front; ↑ at a door goes in                           |
-| Space     | jump — **hold** to fly, let go to float down                                    |
-| Enter     | pet the cat next to you, or use what is in front of you (door, cupboard, bowls) |
-| N         | pick up the nearest cat, or put it down — you can fly with it                   |
-| Z (or Y)  | cast a spell: sparkles, and every cat nearby is delighted                       |
-| 1 / 2 / 4 | give the nearest cat food / a treat / milk (bought in the shop)                 |
-| 3         | throw the yarn ball — the cats chase it                                         |
-| K         | the cat shop: clothes, jewellery, nail polish, cat supplies, decorations, cats  |
-| M         | "Meine Katzen": name, colour (twelve, including green) and size of every cat    |
-| F         | "Meine Figur": skin, hair colour, hairstyle, eyes, mouth, freckles              |
-| S         | save the whole game in this browser (leaving the page saves too)                |
-| T         | sound on/off                                                                    |
-| Esc       | close a menu                                                                    |
+| Key       | Action                                                                               |
+| --------- | ------------------------------------------------------------------------------------ |
+| ← →       | walk                                                                                 |
+| ↑ ↓       | walk further back / to the front; ↑ at a door goes in                                |
+| Space     | jump — **hold** to fly, let go to float down                                         |
+| Enter     | pet the cat next to you, pick up a toy, or use a door, cupboard, bowl, stove, table  |
+| N         | pick up the nearest cat, or put it down — you can fly with it                        |
+| R         | put the cat in your arms into the backpack (up to three), or take one out again      |
+| 1 / 4     | put down a bowl of food / milk — the cats come running, eat in turn, and squabble    |
+| 2         | give the cat next to you a treat                                                     |
+| 3 / 5     | throw a toy (yarn ball, bell ball, toy mouse) / wave the feather wand                |
+| Z (or Y)  | cast a spell: sparkles, and every cat nearby is delighted                            |
+| V         | hide-and-seek: the cats hide behind the bushes, walk past a bush to find them        |
+| K         | the cat shop: clothes, jewellery, a backpack, cat things, kitchen things, decoration |
+| M / F     | "Meine Katzen" (name, colour, size) / "Meine Figur" (skin, hair, hairstyle, face)    |
+| S / T / H | save the whole game / sound on or off / hide the list of keys                        |
+| Esc       | close a menu                                                                         |
 
-**The world.** The garden has the school on the left, the girl's house in the middle and the cat
-shop on the right. Walk up into a door to go in. The house has a kitchen, a hall, a bathroom and a
-bedroom.
+**The world.** A long garden: the school on the left, the girl's house and the cat shop, a meadow,
+a wood with hiding bushes, and far to the right a beach with the sea, palm trees and a sunshade.
+Walk up into a door to go in. The house has a kitchen (bowls, stove, table), a hall, a bathroom and
+a bedroom with the wardrobe.
 
 **Coins.** Every three hearts a happy cat drops a coin; walk over coins to collect them. At school,
-five sums earn a German grade (1–6) and up to 30 coins. In the house, the fridge, the kitchen
-cupboard, the bath cabinet and the wardrobe hide coins that refill over time — faster the more the
-house is decorated. Cats that eat from the kitchen bowls leave a coin in the empty bowl.
+five sums earn a German grade (1–6) and up to 30 coins. Cupboards in the house hide coins that refill
+over time — faster the more the house is decorated. Cats that empty a kitchen bowl leave a coin in
+it, and finding every cat at hide-and-seek pays two coins per cat.
 
-**Cats.** Fed cats grow rounder; chasing the yarn ball slims them down again. A new cat costs 100
-coins. With four or more cats, happy grown-ups have kittens, which grow up with every heart.
+**Cats.** Food makes cats rounder; chasing toys slims them down again. Thrown toys stay on the floor,
+and cats play with them by themselves. A new cat costs 100 coins. With four or more cats, happy
+grown-ups have kittens, which grow up with every heart.
 
-**Sound.** Every action has a small synthesized sound — meows, purrs, coin plings, sparkles, a
-doorbell, a shop bell — made with the Web Audio API, no sound files.
+**Cooking.** Buy groceries (tomato, leek, egg, bread, cheese, apple), a pan, a pot and cutlery. At
+the stove, cook a fried egg, an omelette, leek soup, tomato salad, a cheese sandwich or apple slices;
+eat it at the table, and for a minute the girl can fly twice as high.
+
+**Sound.** Every action has a small synthesized sound — meows, purrs, a squabbling hiss, coin
+plings, sparkles, a doorbell, a shop bell — made with the Web Audio API, no sound files.
 
 ## Setup
 
@@ -148,7 +155,7 @@ Single steps: `npm test`, `npm run coverage`, `npm run lint`, `npm run typecheck
 
 ```text
 src/core/    game rules without Babylon or the DOM (unit tested): world layout, cats, shop,
-             school, the girl's look, saving
+             school, kitchen, the girl's look, saving
 src/render/  Babylon.js scene: garden, house interior, shop, school, girl, cats, effects
 src/ui/      HUD, title screen, menus (shop, cats, figure, school), German texts, storage
 src/audio.ts synthesized sound effects
