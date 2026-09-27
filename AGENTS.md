@@ -27,6 +27,7 @@ npm test             # nur Unit-Tests (Vitest)
 npm run e2e          # nur Browser-Tests (Playwright)
 npm run format       # Formatierung automatisch reparieren
 node scripts/screenshot.mjs [url]  # README-Screenshots neu aufnehmen
+scripts/docker-check.sh            # Docker-Image bauen und prüfen
 ```
 
 ## Aufbau
@@ -55,5 +56,6 @@ explizit importieren.
 - Vor jedem Commit: `./localPipeline.sh` muss grün sein (GitHub Actions führt dasselbe aus).
 - Coverage von `src/core` ≥ 95 %; neue Regeln gehören nach `src/core` und bekommen Tests.
 - Neue Dateien bekommen den SPDX-Header (GPL-3.0-or-later, Marcel Petrick).
-- Pushen nur, wenn die Nutzer es wollen. Docker/ghcr kommt später.
+- Pushen nach `main` ist erlaubt, wenn die Pipeline grün ist. Releases entstehen über Tags `vX.Y.Z`
+  (Workflow `release.yml`); das Docker-Image landet auf ghcr (`docker.yml`).
 - Nach jedem größeren Schritt das Spiel in Firefox öffnen, damit Helga es ausprobieren kann.

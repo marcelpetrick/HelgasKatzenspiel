@@ -4,6 +4,8 @@
 # 🐱 Helgas Katzenspiel
 
 [![CI](https://github.com/marcelpetrick/HelgasKatzenspiel/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/marcelpetrick/HelgasKatzenspiel/actions/workflows/ci.yml)
+[![Docker](https://github.com/marcelpetrick/HelgasKatzenspiel/actions/workflows/docker.yml/badge.svg?branch=main)](https://github.com/marcelpetrick/HelgasKatzenspiel/actions/workflows/docker.yml)
+[![Release](https://img.shields.io/github/v/release/marcelpetrick/HelgasKatzenspiel?sort=semver)](https://github.com/marcelpetrick/HelgasKatzenspiel/releases/latest)
 [![License: GPL v3 or later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](LICENSE)
 [![Coverage ≥ 95 %](https://img.shields.io/badge/coverage-%E2%89%A595%25-brightgreen.svg)](vite.config.ts)
 [![Babylon.js](https://img.shields.io/github/package-json/dependency-version/marcelpetrick/HelgasKatzenspiel/@babylonjs/core?label=Babylon.js&color=bb464b)](https://www.babylonjs.com/)
@@ -86,6 +88,26 @@ npm run dev        # http://localhost:5173
 
 `npm run build` writes a static site to `dist/`; `npm run preview` serves it on port 4173.
 
+## Docker
+
+The image builds the game with Node 24 and serves the static files with nginx.
+
+```sh
+docker build -t helgas-katzenspiel .
+docker run --rm -p 8080:80 helgas-katzenspiel      # open http://localhost:8080
+```
+
+Every push to `main` publishes `ghcr.io/marcelpetrick/helgas-katzenspiel:latest` (plus `main` and
+`sha-<commit>`); every release tag publishes the version, e.g. `:0.10.0`.
+[`scripts/docker-check.sh`](scripts/docker-check.sh) builds the image and proves it serves the page
+and its bundle.
+
+## Releases
+
+Pushing a tag `vX.Y.Z` that matches `package.json` runs the whole pipeline and publishes a GitHub
+release with the zipped static site (`helgas-katzenspiel-X.Y.Z-web.zip` plus its SHA-256). Unzip it
+and serve the folder with any static web server.
+
 ## Testing and the pipeline
 
 ```sh
@@ -93,29 +115,33 @@ npm run dev        # http://localhost:5173
 ./localPipeline.sh --no-e2e  # skip the browser tests
 ```
 
-| Stage     | What it checks                                                     |
-| --------- | ------------------------------------------------------------------ |
-| install   | `npm ci` when dependencies are missing or stale                    |
-| eslint    | type-aware `typescript-eslint` strict rules                        |
-| prettier  | formatting                                                         |
-| stylelint | CSS                                                                |
-| markdown  | markdownlint                                                       |
-| typecheck | `tsc --noEmit`, strict                                             |
-| coverage  | Vitest unit tests of the game rules in `src/core`, ≥ 95 % enforced |
-| build     | Vite production build                                              |
-| e2e       | Playwright in headless Chromium against the built game             |
+| Stage     | What it checks                                                       |
+| --------- | -------------------------------------------------------------------- |
+| install   | `npm ci` when dependencies are missing or stale                      |
+| eslint    | type-aware `typescript-eslint` strict rules                          |
+| prettier  | formatting                                                           |
+| stylelint | CSS                                                                  |
+| markdown  | markdownlint                                                         |
+| typecheck | `tsc --noEmit`, strict                                               |
+| coverage  | Vitest unit tests of the game rules in `src/core`, ≥ 95 % enforced   |
+| build     | Vite production build                                                |
+| e2e       | Playwright in headless Chromium against the built game               |
+| docker    | builds the image and checks it serves the game (`--no-docker` skips) |
 
-GitHub Actions ([`ci.yml`](.github/workflows/ci.yml)) runs the same script on every push to `main`.
+GitHub Actions runs the same script: [`ci.yml`](.github/workflows/ci.yml) on every push,
+[`docker.yml`](.github/workflows/docker.yml) builds and publishes the image, and
+[`release.yml`](.github/workflows/release.yml) makes releases from tags.
 
 Single steps: `npm test`, `npm run coverage`, `npm run lint`, `npm run typecheck`, `npm run e2e`,
 `npm run format` (auto-fix formatting).
 
 ## Scripts
 
-| Script                                             | Purpose                                                                                         |
-| -------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| [`localPipeline.sh`](localPipeline.sh)             | The full quality gate described above; `--help` lists the stages.                               |
-| [`scripts/screenshot.mjs`](scripts/screenshot.mjs) | Takes the README screenshots from a running game: `node scripts/screenshot.mjs [url] [outDir]`. |
+| Script                                               | Purpose                                                                                                            |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| [`localPipeline.sh`](localPipeline.sh)               | The full quality gate described above; `--help` lists the stages.                                                  |
+| [`scripts/docker-check.sh`](scripts/docker-check.sh) | Builds the Docker image, starts it on a free port and checks the page and bundle: `scripts/docker-check.sh [tag]`. |
+| [`scripts/screenshot.mjs`](scripts/screenshot.mjs)   | Takes the README screenshots from a running game: `node scripts/screenshot.mjs [url] [outDir]`.                    |
 
 ## Project layout
 

@@ -88,4 +88,4 @@ Kampf, kein Krieg.
 - [x] Katzen werden vom Fressen runder; mit dem Wollknäuel spielen macht sie wieder schlanker.
 - [x] Deko fürs Haus: Kratzbaum, Kissen, Blumentöpfe, Katzenbild, Herzteppich, Lichterkette.
 - [x] Niedliche Geräusche für alle Aktionen (T schaltet den Ton aus).
-- [ ] Später: Docker-Image und Veröffentlichung auf ghcr; Pushen nach GitHub.
+- [x] Docker-Image (nginx), Veröffentlichung auf ghcr, Pushen nach GitHub und Releases.
