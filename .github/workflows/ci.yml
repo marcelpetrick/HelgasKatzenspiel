@@ -34,6 +34,10 @@ jobs:
       - name: Install Chromium and Firefox for Playwright
         run: npx playwright install --with-deps chromium firefox
 
+      # The runner has no GPU and no GL driver; Mesa's software renderer gives Firefox its WebGL.
+      - name: Install Mesa for WebGL in Firefox
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libegl1 libgl1-mesa-dri libgles2
+
       # Exactly what runs locally before every commit.
       # The Docker image is built and checked by docker.yml; building it here too would be a duplicate.
       - run: ./localPipeline.sh --no-docker

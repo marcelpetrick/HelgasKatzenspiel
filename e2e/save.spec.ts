@@ -20,7 +20,8 @@ const logs = new WeakMap<Page, string[]>();
 /** Wait until the game runs; the hook is only there once the scene exists, so ask for it first. */
 async function running(page: Page): Promise<void> {
   try {
-    await page.waitForFunction(() => Reflect.has(window, '__katzen') && window.__katzen.app.engine.frameId > 5);
+    // A game without WebGL never starts, so give up long before the test timeout.
+    await page.waitForFunction(() => Reflect.has(window, '__katzen') && window.__katzen.app.engine.frameId > 5, undefined, { timeout: 60_000 });
   } catch (e) {
     // Without this a missing WebGL only shows up as "__katzen is undefined".
     throw new Error(`the game did not start: ${String(e)}\nbrowser said: ${(logs.get(page) ?? []).join(' | ') || 'nothing'}`, { cause: e });
