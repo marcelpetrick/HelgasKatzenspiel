@@ -56,6 +56,8 @@ export const TEXT = {
   newGame: 'Neues Spiel beginnen',
   newGameButton: '🔄 Neues Spiel',
   newGameConfirm: 'Wirklich ganz von vorne anfangen? Alle Katzen, Münzen und Sachen sind dann weg.',
+  elsewhere: 'Das Spiel läuft jetzt in einem anderen Fenster weiter. 🐾',
+  playHere: 'Hier weiterspielen',
   saveFailed: 'Speichern klappt in diesem Browserfenster leider nicht.',
   muted: (off: boolean) => (off ? 'Ton aus 🔇' : 'Ton an 🔊'),
   hearts: 'Herzen',

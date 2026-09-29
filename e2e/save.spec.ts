@@ -67,6 +67,15 @@ test('the game keeps itself without pressing S and goes on after a reload', asyn
   await page.evaluate(() => {
     window.__katzen.app.game.cats[0].name = 'Sternchen';
   });
+  // Hiding the tab (another tab, a closed laptop) saves right away, without waiting for the next round.
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  expect(await page.evaluate((key) => localStorage.getItem(key) ?? '', KEY)).toContain('Sternchen');
+  await page.evaluate(() => {
+    window.__katzen.app.game.cats[0].name = 'Mondschein';
+  });
   // Leaving the page saves the very latest state too.
   await page.reload();
   await running(page);
@@ -75,7 +84,7 @@ test('the game keeps itself without pressing S and goes on after a reload', asyn
     const { game } = window.__katzen.app;
     return { cat: game.cats[0].name, money: game.money };
   });
-  expect(state).toEqual({ cat: 'Sternchen', money: 7 });
+  expect(state).toEqual({ cat: 'Mondschein', money: 7 });
   expect(errors).toEqual([]);
 });
 
@@ -101,4 +110,48 @@ test('"Neues Spiel" in the game starts over and does not bring the old game back
   expect(state.names).not.toContain('Wolke');
   expect(state.money).toBe(0);
   expect(errors).toEqual([]);
+});
+
+test('only the tab that plays last keeps the game, the other one stops saving', async ({ page, context }) => {
+  // Two games render at once, which software WebGL on a CI runner takes its time over.
+  test.setTimeout(300_000);
+  const errors = await open(page);
+  await playFresh(page);
+  await page.keyboard.press('KeyS');
+  await expect(page.locator('.toast.show')).toContainText('Gespeichert');
+
+  // A second tab of the same browser continues the game and takes it over.
+  const other = await context.newPage();
+  const otherErrors = await open(other);
+  await other.getByRole('button', { name: 'Weiterspielen' }).click();
+  await expect(page.getByText('läuft jetzt in einem anderen Fenster')).toBeVisible();
+  await other.evaluate(() => {
+    window.__katzen.app.game.cats[0].name = 'Neu';
+  });
+  await other.keyboard.press('KeyS');
+  await expect(other.locator('.toast.show')).toContainText('Gespeichert');
+
+  // The first tab plays on in memory, but neither S nor leaving it writes that over the newer game.
+  await page.evaluate(() => {
+    window.__katzen.app.game.cats[0].name = 'Alt';
+  });
+  await page.keyboard.press('KeyS');
+  await page.reload();
+  await running(page);
+  expect(await page.evaluate((key) => localStorage.getItem(key) ?? '', KEY)).toContain('Neu');
+
+  // Back in the first tab after a reload, it takes the game back from the second one.
+  await page.getByRole('button', { name: 'Weiterspielen' }).click();
+  await expect(other.getByText('läuft jetzt in einem anderen Fenster')).toBeVisible();
+  expect(await page.evaluate(() => window.__katzen.app.game.cats[0].name)).toBe('Neu');
+
+  // "Neues Spiel" in one tab is not undone by the other one.
+  page.once('dialog', (d) => void d.accept());
+  await page.getByRole('button', { name: 'Neues Spiel' }).click();
+  await expect(page.getByRole('button', { name: 'Los geht’s!' })).toBeVisible();
+  await other.reload();
+  await running(other);
+  expect(await page.evaluate((key) => localStorage.getItem(key), KEY)).toBeNull();
+  await expect(other.getByRole('button', { name: 'Los geht’s!' })).toBeVisible();
+  expect([...errors, ...otherErrors]).toEqual([]);
 });

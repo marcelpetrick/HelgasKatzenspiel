@@ -11,7 +11,7 @@ import { el } from './ui/dom';
 import { FigureMenu } from './ui/figureMenu';
 import { Hud } from './ui/hud';
 import { type SchoolEvent, SchoolMenu } from './ui/schoolMenu';
-import { clearSave, hasSave, loadGame, saveGame } from './ui/save';
+import { clearSave, guardTabs, hasSave, loadGame, saveGame } from './ui/save';
 import { type ShopAction, ShopMenu } from './ui/shop';
 import { TEXT } from './ui/text';
 
@@ -71,6 +71,11 @@ export class App {
   private started = false;
   /** Set while "Neues Spiel" reloads the page, so no save brings the old game back. */
   private resetting = false;
+  /** Another tab of this browser plays now; this one must not save over it. */
+  private elsewhere = false;
+  private readonly tabs = guardTabs(() => {
+    this.goneElsewhere();
+  });
   private twinkleIn = 0;
   private lastClick = 0;
 
@@ -154,7 +159,7 @@ export class App {
   }
 
   private onKey(e: KeyboardEvent): void {
-    if (!KEYS.has(e.code)) return;
+    if (!KEYS.has(e.code) || this.elsewhere) return;
     this.sound.unlock();
     // While a menu is open, Enter and Space press the focused button as usual, and 1–4 answer sums.
     if (this.menuOpen && e.code !== 'Escape') {
@@ -272,7 +277,28 @@ export class App {
 
   /** Quietly keep the running game in this browser. */
   private autosave(): void {
-    if (this.started && !this.resetting) saveGame(this.game);
+    if (this.started && !this.resetting && !this.elsewhere) saveGame(this.game);
+  }
+
+  /** Another tab took over: stop here and offer to come back, with that tab's newer game. */
+  private goneElsewhere(): void {
+    if (this.elsewhere || this.resetting) return;
+    this.elsewhere = true;
+    this.closeMenus();
+    this.held.clear();
+    this.ui.querySelector('.title-screen')?.remove();
+    this.ui.classList.add('on-title');
+    const screen = el('div', 'title-screen');
+    const card = el('div', 'title-card');
+    const back = el('button', '', TEXT.playHere);
+    back.addEventListener('click', () => {
+      // Reloading picks up the newer save; starting there takes the game back to this tab.
+      window.location.reload();
+    });
+    card.append(el('div', 'title-cats', '🐱 🐈 🐱'), el('p', '', TEXT.elsewhere), back);
+    screen.append(card);
+    this.ui.append(screen);
+    this.sound.play('door');
   }
 
   /** "Neues Spiel": after asking, forget the saved game and start again from the title screen. */
@@ -284,8 +310,9 @@ export class App {
   }
 
   start(): void {
-    if (this.started) return;
+    if (this.started || this.elsewhere) return;
     this.started = true;
+    this.tabs.claim();
     this.ui.classList.remove('on-title');
     this.ui.querySelector('.title-screen')?.remove();
   }
