@@ -28,7 +28,12 @@ export default defineConfig({
       // Saving and continuing in the browser is also checked in Firefox, where the game is played too.
       name: 'firefox',
       testMatch: 'save.spec.ts',
-      use: { ...devices['Desktop Firefox'], viewport: { width: 1280, height: 720 } },
+      use: {
+        ...devices['Desktop Firefox'],
+        viewport: { width: 1280, height: 720 },
+        // A CI runner has no GPU; Firefox would otherwise refuse WebGL on the software renderer.
+        launchOptions: { firefoxUserPrefs: { 'webgl.force-enabled': true } },
+      },
     },
   ],
   webServer: {

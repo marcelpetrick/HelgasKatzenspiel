@@ -14,11 +14,32 @@ declare global {
 
 const KEY = 'helgas-katzenspiel/save';
 
+/** What the browser reported, only to explain a game that did not start. */
+const logs = new WeakMap<Page, string[]>();
+
+/** Wait until the game runs; the hook is only there once the scene exists, so ask for it first. */
+async function running(page: Page): Promise<void> {
+  try {
+    await page.waitForFunction(() => Reflect.has(window, '__katzen') && window.__katzen.app.engine.frameId > 5);
+  } catch (e) {
+    // Without this a missing WebGL only shows up as "__katzen is undefined".
+    throw new Error(`the game did not start: ${String(e)}\nbrowser said: ${(logs.get(page) ?? []).join(' | ') || 'nothing'}`, { cause: e });
+  }
+}
+
 async function open(page: Page): Promise<string[]> {
   const errors: string[] = [];
-  page.on('pageerror', (e) => errors.push(e.message));
+  const log: string[] = [];
+  logs.set(page, log);
+  page.on('pageerror', (e) => {
+    errors.push(e.message);
+    log.push(e.message);
+  });
+  page.on('console', (m) => {
+    if (m.type() === 'error' || m.type() === 'warning') log.push(m.text());
+  });
   await page.goto('/');
-  await page.waitForFunction(() => window.__katzen.app.engine.frameId > 5);
+  await running(page);
   return errors;
 }
 
@@ -28,7 +49,7 @@ async function playFresh(page: Page): Promise<void> {
     localStorage.clear();
   });
   await page.reload();
-  await page.waitForFunction(() => window.__katzen.app.engine.frameId > 5);
+  await running(page);
   await page.getByRole('button', { name: 'Los geht’s!' }).click();
   await page.evaluate(() => {
     const { game } = window.__katzen.app;
@@ -47,7 +68,7 @@ test('the game keeps itself without pressing S and goes on after a reload', asyn
   });
   // Leaving the page saves the very latest state too.
   await page.reload();
-  await page.waitForFunction(() => window.__katzen.app.engine.frameId > 5);
+  await running(page);
   await page.getByRole('button', { name: 'Weiterspielen' }).click();
   const state = await page.evaluate(() => {
     const { game } = window.__katzen.app;
