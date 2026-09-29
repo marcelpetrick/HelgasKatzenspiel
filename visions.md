@@ -126,3 +126,17 @@ Kampf, kein Krieg.
 - [x] Namensschilder der Katzen liegen unter den Tafeln (Tastenliste, Vorräte), nicht darüber.
 - [x] Eigene Ports (Spiel 5273, Test 4273); die Pipeline installiert nur neu, wenn sich die
       Abhängigkeiten wirklich ändern, damit das laufende Spiel nicht kaputtgeht.
+
+## Später (größere Aufgaben)
+
+Noch nicht begonnen; erst mit Helga und Papa besprechen, dann oben als Wunsch eintragen.
+
+- [ ] Auf TypeScript 7 umsteigen, sobald `typescript-eslint` es unterstützt (8.71.0 kann nur < 6.1).
+      `@types/node` erst mit dem nächsten Node-LTS in CI und Docker anheben (jetzt Node 24).
+- [ ] Riesenkatze, größer als Helga: heute höchstens etwa 2,1-mal so groß wie normal (Größe 1,6 ×
+      Wachstum 1,25), sie reicht nur bis zum Gesicht. Dafür müssen Türen, Räume, Näpfe, Tragen und
+      Rucksack mit der größeren Katze noch passen.
+- [ ] Hinweis im privaten Fenster: Dort klappt Speichern nicht, das automatische Speichern scheitert
+      bisher still. Einmal freundlich sagen, dass der Spielstand hier nicht bleibt.
+- [ ] Firefox und zwei Tabs auch auf GitHub testen, falls es einmal Runner mit GPU gibt (heute nur
+      lokal, siehe AGENTS.md).
