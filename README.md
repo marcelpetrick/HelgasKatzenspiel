@@ -144,7 +144,7 @@ and serve the folder with any static web server.
 | typecheck | `tsc --noEmit`, strict                                               |
 | coverage  | Vitest unit tests of the game rules in `src/core`, ≥ 95 % enforced   |
 | build     | Vite production build                                                |
-| e2e       | Playwright in headless Chromium (locally also saving in Firefox)     |
+| e2e       | Playwright in headless Chromium (locally also Firefox and two tabs)  |
 | docker    | builds the image and checks it serves the game (`--no-docker` skips) |
 
 GitHub Actions runs the same script: [`ci.yml`](.github/workflows/ci.yml) on every push,

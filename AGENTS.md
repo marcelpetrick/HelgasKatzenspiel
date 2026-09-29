@@ -48,7 +48,11 @@ scripts/docker-check.sh            # Docker-Image bauen und prüfen
 - `src/app.ts` — Tastatur, Spielschleife, verbindet alles.
 - `tests/` — Vitest-Tests für `src/core`.
 - `e2e/` — Playwright-Tests im echten Browser (Hook: `window.__katzen`); `save.spec.ts` läuft lokal auch
-  in Firefox (auf GitHub nur Chromium, dort hat Firefox kein WebGL).
+  in Firefox.
+- Entscheidung (2026-09-29): Die GitHub-Runner sind knapp und haben keine GPU. Deshalb laufen dort nur
+  die Chromium-Tests. Nur lokal (`./localPipeline.sh`) laufen die Firefox-Tests (Firefox bekommt auf
+  dem Runner kein WebGL) und der Zwei-Tab-Test (zwei Spiele gleichzeitig dauern dort Minuten). Solche
+  schweren Tests mit `process.env.CI` abschalten, nicht die Runner aufrüsten.
 
 Babylon immer per Deep-Import einbinden (`@babylonjs/core/…`), nie über das Paket-Root. Fehlende
 Seiteneffekte (z. B. `Meshes/instancedMesh`, `Lights/Shadows/shadowGeneratorSceneComponent`)
