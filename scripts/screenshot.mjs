@@ -9,8 +9,10 @@
  * Defaults: url http://localhost:5273/, outDir docs/screenshots.
  *
  * Writes title.jpg (title screen), play.jpg (feeding the cats in the garden, with a backpack),
- * house.jpg (cats eating in the kitchen), shop.jpg (inside the cat shop), school.jpg (a sum at school) and
- * beach.jpg (the beach at the far end of the garden). It starts from a fresh
+ * carry.jpg (flying with a cat in her arms), house.jpg (cats eating in the kitchen), shop.jpg (inside
+ * the cat shop), shopmenu.jpg (a shelf's page open), cats.jpg (the cat editor), school.jpg (a sum just
+ * answered right) and beach.jpg (the beach at the far end of the garden). The key list is hidden (H)
+ * in the game shots so the scene shows. It starts from a fresh
  * game, so it clears the game's saved state in that browser profile (a throwaway one by default).
  */
 import { chromium } from '@playwright/test';
@@ -30,6 +32,7 @@ await shot('title');
 
 // The garden: dress up a little, put the backpack on, and set down a bowl for the cats.
 await page.keyboard.press('Enter');
+await page.keyboard.press('KeyH');
 await page.evaluate(() => {
   const { app } = window.__katzen;
   const { game } = app;
@@ -60,8 +63,35 @@ await page.evaluate(() => {
 await page.waitForTimeout(1500);
 await page.keyboard.press('Digit1');
 await page.waitForFunction(() => window.__katzen.app.game.cats.some((c) => c.mood === 'eat'), null, { timeout: 60000 });
-await page.waitForTimeout(600);
+// Let her straighten up again after bending down to the bowl.
+await page.waitForTimeout(1500);
 await shot('play');
+
+// Pick up a cat and fly with it.
+await page.evaluate(() => {
+  const { game } = window.__katzen.app;
+  const cat = game.cats.find((c) => c.place === 'garden' && c.mood !== 'eat') ?? game.cats[0];
+  game.girl.x = 70;
+  game.girl.z = 0;
+  game.girl.facing = 1;
+  cat.place = 'garden';
+  cat.x = 71.2;
+  cat.z = 0;
+  cat.mood = 'sit';
+  cat.timer = 0;
+});
+await page.waitForTimeout(800);
+await page.keyboard.press('KeyN');
+await page.waitForFunction(() => window.__katzen.app.game.girl.carrying !== null);
+await page.keyboard.down('Space');
+await page.waitForFunction(() => window.__katzen.app.game.girl.y > 2.5, null, { timeout: 30000 });
+// The cats at the bowl keep squabbling; their message should not cover the picture.
+await page.evaluate(() => document.querySelector('.toast')?.classList.remove('show'));
+await page.waitForTimeout(400);
+await shot('carry');
+await page.keyboard.up('Space');
+await page.keyboard.press('KeyN');
+await page.waitForFunction(() => window.__katzen.app.game.girl.carrying === null, null, { timeout: 30000 });
 
 // The kitchen: fill the bowls and let the cats come.
 await page.evaluate(() => {
@@ -100,6 +130,16 @@ await page.evaluate(() => {
 });
 await page.waitForTimeout(2500);
 await shot('shop');
+await page.keyboard.press('Enter');
+await page.waitForFunction(() => window.__katzen.app.shop.isOpen);
+await page.waitForTimeout(400);
+await shot('shopmenu');
+await page.keyboard.press('Escape');
+await page.keyboard.press('KeyM');
+await page.waitForFunction(() => window.__katzen.app.catsMenu.isOpen);
+await page.waitForTimeout(400);
+await shot('cats');
+await page.keyboard.press('Escape');
 
 await page.evaluate(() => {
   const { game } = window.__katzen.app;
@@ -110,8 +150,15 @@ await page.evaluate(() => {
 });
 await page.keyboard.press('ArrowUp');
 await page.waitForFunction(() => window.__katzen.app.school.isOpen);
-await page.getByText('Mittel').click();
+await page.locator('.school .level-name', { hasText: /^Mittel$/ }).click();
 await page.waitForTimeout(400);
+// Answer right, and take the picture while the green answer and the praise are showing.
+const answer = await page.evaluate(() => {
+  const s = window.__katzen.app.school;
+  return String(s.tasks[s.index].answer);
+});
+await page.locator('.answer-btn', { hasText: new RegExp(`^${answer}$`) }).click();
+await page.waitForTimeout(250);
 await shot('school');
 await page.keyboard.press('Escape');
 

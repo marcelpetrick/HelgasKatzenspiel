@@ -29,17 +29,25 @@ It is designed together with Helga, who decides what goes in; her wishes are col
 **Note: this project is generated with AI.**
 
 <p align="center">
-  <img src="docs/screenshots/play.jpg" alt="The girl with a backpack has put down a bowl; the cats come running to eat" width="100%">
+  <img src="docs/screenshots/play.jpg" alt="The girl with a backpack has put down a bowl in the garden; the cats come running to eat" width="100%">
 </p>
 
 <table>
   <tr>
+    <td width="50%"><img src="docs/screenshots/carry.jpg" alt="Flying over the garden with a cat in her arms, a trail of sparkles below"></td>
+    <td width="50%"><img src="docs/screenshots/school.jpg" alt="School: 11 − 3 = ?, the right answer 8 lights up green: „Richtig! Super gerechnet!“"></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/shop.jpg" alt="Inside the cat shop: shelves with clothes, cat things, kitchen things and decoration, and a cat at the till"></td>
+    <td width="50%"><img src="docs/screenshots/shopmenu.jpg" alt="The shop page „Für Katzen“: food, treats, milk, toys, the feather wand, the backpack and a new cat, with prices in coins"></td>
+  </tr>
+  <tr>
     <td width="50%"><img src="docs/screenshots/house.jpg" alt="The kitchen: cats walking to the milk and food bowls"></td>
-    <td width="50%"><img src="docs/screenshots/school.jpg" alt="School: a sum with four answers to choose from"></td>
+    <td width="50%"><img src="docs/screenshots/cats.jpg" alt="„Meine Katzen“: rename each cat, pick one of twelve colours and set its size"></td>
   </tr>
   <tr>
     <td width="50%"><img src="docs/screenshots/beach.jpg" alt="The beach at the end of the garden: sand, palms, a sunshade and the sea"></td>
-    <td width="50%"><img src="docs/screenshots/shop.jpg" alt="Inside the cat shop: shelves with clothes, cat things, kitchen things and decoration, and a cat at the till"></td>
+    <td width="50%"><img src="docs/screenshots/title.jpg" alt="The title screen"></td>
   </tr>
 </table>
 
