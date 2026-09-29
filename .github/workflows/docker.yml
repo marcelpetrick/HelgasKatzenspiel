@@ -3,27 +3,24 @@
 
 name: Docker
 
+# Only builds and checks the image. Publishing to ghcr happens in release.yml, after a successful release,
+# so the registry holds nothing but official releases.
 on:
   push:
     branches: [main]
-    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
-  packages: write
 
 concurrency:
   group: docker-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  IMAGE: ghcr.io/${{ github.repository_owner }}/helgas-katzenspiel
-
 jobs:
   image:
-    name: Build, check and publish image
+    name: Build and check image
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -32,19 +29,3 @@ jobs:
       # The same check as the local pipeline: the image must serve the page and its bundle.
       - name: Build and smoke-test the image
         run: scripts/docker-check.sh helgas-katzenspiel:ci
-
-      - name: Log in to ghcr.io
-        if: github.event_name != 'pull_request'
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-
-      - name: Tag and push
-        if: github.event_name != 'pull_request'
-        run: |
-          VERSION="$(node -p "require('./package.json').version")"
-          TAGS=("sha-${GITHUB_SHA::7}")
-          if [[ "$GITHUB_REF" == refs/heads/main ]]; then TAGS+=("latest" "main"); fi
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then TAGS+=("$VERSION"); fi
-          for t in "${TAGS[@]}"; do
-            docker tag helgas-katzenspiel:ci "$IMAGE:$t"
-            docker push "$IMAGE:$t"
-          done

@@ -62,5 +62,6 @@ explizit importieren.
 - Coverage von `src/core` ≥ 95 %; neue Regeln gehören nach `src/core` und bekommen Tests.
 - Neue Dateien bekommen den SPDX-Header (GPL-3.0-or-later, Marcel Petrick).
 - Pushen nach `main` ist erlaubt, wenn die Pipeline grün ist. Releases entstehen über Tags `vX.Y.Z`
-  (Workflow `release.yml`); das Docker-Image landet auf ghcr (`docker.yml`).
+  (Workflow `release.yml`); erst nach einem erfolgreichen Release landet
+  das Docker-Image auf ghcr (ebenfalls `release.yml`; `docker.yml` baut und prüft nur).
 - Das Spiel nur dann in Firefox öffnen, wenn der Nutzer es ausdrücklich sagt — nie von selbst zwischendurch.

@@ -48,3 +48,31 @@ jobs:
           gh release create "$GITHUB_REF_NAME" helgas-katzenspiel-*-web.zip* \
             --title "Helgas Katzenspiel ${GITHUB_REF_NAME}" \
             --notes-file docs/release-notes.md
+
+  image:
+    name: Publish Docker image
+    # Only after the release itself succeeded, so a failed release leaves no image behind.
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/helgas-katzenspiel
+    steps:
+      - uses: actions/checkout@v7
+
+      # The same check as the local pipeline: the image must serve the page and its bundle.
+      - name: Build and smoke-test the image
+        run: scripts/docker-check.sh helgas-katzenspiel:ci
+
+      - name: Log in to ghcr.io
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Tag and push
+        run: |
+          for t in "${GITHUB_REF_NAME#v}" latest; do
+            docker tag helgas-katzenspiel:ci "$IMAGE:$t"
+            docker push "$IMAGE:$t"
+          done

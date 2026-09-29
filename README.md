@@ -117,8 +117,8 @@ docker build -t helgas-katzenspiel .
 docker run --rm -p 8080:80 helgas-katzenspiel      # open http://localhost:8080
 ```
 
-Every push to `main` publishes `ghcr.io/marcelpetrick/helgas-katzenspiel:latest` (plus `main` and
-`sha-<commit>`); every release tag publishes its version, e.g. `:0.15.2`. The package is private like
+Only successful releases publish an image: `ghcr.io/marcelpetrick/helgas-katzenspiel:<version>`, e.g.
+`:0.16.4`, and `:latest` for the newest release. The package is private like
 the repository: `docker login ghcr.io` with a token that has `read:packages` before pulling.
 
 ## Releases
@@ -148,8 +148,8 @@ and serve the folder with any static web server.
 | docker    | builds the image and checks it serves the game (`--no-docker` skips) |
 
 GitHub Actions runs the same script: [`ci.yml`](.github/workflows/ci.yml) on every push,
-[`docker.yml`](.github/workflows/docker.yml) builds and publishes the image, and
-[`release.yml`](.github/workflows/release.yml) makes releases from tags.
+[`docker.yml`](.github/workflows/docker.yml) builds and checks the image, and
+[`release.yml`](.github/workflows/release.yml) makes releases from tags and then publishes the image.
 
 Single steps: `npm test`, `npm run coverage`, `npm run lint`, `npm run typecheck`, `npm run e2e`,
 `npm run format` (auto-fix formatting).
