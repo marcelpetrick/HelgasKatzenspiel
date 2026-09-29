@@ -3,6 +3,15 @@
 
 import { defineConfig, devices } from '@playwright/test';
 
+const FIREFOX = {
+  name: 'firefox',
+  testMatch: 'save.spec.ts',
+  use: {
+    ...devices['Desktop Firefox'],
+    viewport: { width: 1280, height: 720 },
+  },
+};
+
 export default defineConfig({
   testDir: 'e2e',
   timeout: 120_000,
@@ -24,17 +33,9 @@ export default defineConfig({
         launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] },
       },
     },
-    {
-      // Saving and continuing in the browser is also checked in Firefox, where the game is played too.
-      name: 'firefox',
-      testMatch: 'save.spec.ts',
-      use: {
-        ...devices['Desktop Firefox'],
-        viewport: { width: 1280, height: 720 },
-        // A CI runner has no GPU; Firefox would otherwise refuse WebGL on the software renderer.
-        launchOptions: { firefoxUserPrefs: { 'webgl.force-enabled': true } },
-      },
-    },
+    // Saving and continuing is also checked in Firefox, where the game is played too. Not on CI: the
+    // GitHub runner has no GPU, and Firefox finds no WebGL driver there.
+    ...(process.env.CI ? [] : [FIREFOX]),
   ],
   webServer: {
     command: 'npm run build && npm run preview',

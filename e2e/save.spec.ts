@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Marcel Petrick <mail@marcelpetrick.it>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// Runs in Chromium and in Firefox (see playwright.config.ts): the game has to keep itself in both.
+// Runs in Chromium and, locally, in Firefox (see playwright.config.ts): the game has to keep itself in both.
 
 import { expect, type Page, test } from '@playwright/test';
 import type { App } from '../src/app';
