@@ -47,7 +47,8 @@ scripts/docker-check.sh            # Docker-Image bauen und prüfen
 - `src/audio.ts` — niedliche Geräusche, synthetisch mit Web Audio.
 - `src/app.ts` — Tastatur, Spielschleife, verbindet alles.
 - `tests/` — Vitest-Tests für `src/core`.
-- `e2e/` — Playwright-Tests im echten Browser (Hook: `window.__katzen`).
+- `e2e/` — Playwright-Tests im echten Browser (Hook: `window.__katzen`); `save.spec.ts` läuft auch in
+  Firefox.
 
 Babylon immer per Deep-Import einbinden (`@babylonjs/core/…`), nie über das Paket-Root. Fehlende
 Seiteneffekte (z. B. `Meshes/instancedMesh`, `Lights/Shadows/shadowGeneratorSceneComponent`)

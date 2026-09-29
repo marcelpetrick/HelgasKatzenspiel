@@ -83,6 +83,8 @@ Kampf, kein Krieg.
 - [x] Kaufmenü (K): Kleidung, Futter (1), Leckerli (2), Wollknäuel (3), Milch zum Trinken (4).
 - [x] Pipeline (`localPipeline.sh`), Linting, Tests ≥ 95 %, E2E, GitHub-Actions-Workflow, README.
 - [x] Speichern (S) und Laden des ganzen Spielstands; beim Verlassen der Seite wird auch gespeichert.
+- [x] Pro Browser immer weiterspielen: das Spiel speichert sich alle 15 Sekunden von selbst (auch in
+      Firefox); „🔄 Neues Spiel“ in der Hilfe (H) fängt nach einer Rückfrage ganz von vorne an.
 - [x] Nach hinten/vorne laufen (↑ ↓).
 - [x] Katze hochnehmen (N) und mit ihr fliegen.
 - [x] Katzen-Editor (M): Name, zwölf Farben (auch Grün, Blau, Lila), Größe von winzig bis riesig.

@@ -54,6 +54,7 @@ export const TEXT = {
   startHint: 'oder Enter drücken',
   continueGame: 'Weiterspielen',
   newGame: 'Neues Spiel beginnen',
+  newGameButton: '🔄 Neues Spiel',
   newGameConfirm: 'Wirklich ganz von vorne anfangen? Alle Katzen, Münzen und Sachen sind dann weg.',
   saveFailed: 'Speichern klappt in diesem Browserfenster leider nicht.',
   muted: (off: boolean) => (off ? 'Ton aus 🔇' : 'Ton an 🔊'),

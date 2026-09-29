@@ -63,7 +63,7 @@ It is designed together with Helga, who decides what goes in; her wishes are col
 | S / T / H | save the game / sound on or off / hide or show the list of keys                                         |
 | Esc       | close a menu                                                                                            |
 
-The number keys and Enter on the number pad work too. The game also saves when the page is closed.
+The number keys and Enter on the number pad work too. The game saves itself every 15 seconds and when the page is closed, so each browser simply continues where it left off; “🔄 Neues Spiel” in the key list starts over.
 
 **The world.** A long garden with no fences: the school on the left, the girl's house and the cat
 shop, a meadow, a wood with hiding bushes, and far to the right a beach with the sea, palm trees and
@@ -144,7 +144,7 @@ and serve the folder with any static web server.
 | typecheck | `tsc --noEmit`, strict                                               |
 | coverage  | Vitest unit tests of the game rules in `src/core`, ≥ 95 % enforced   |
 | build     | Vite production build                                                |
-| e2e       | Playwright in headless Chromium against the built game               |
+| e2e       | Playwright in headless Chromium (saving also in Firefox)             |
 | docker    | builds the image and checks it serves the game (`--no-docker` skips) |
 
 GitHub Actions runs the same script: [`ci.yml`](.github/workflows/ci.yml) on every push,

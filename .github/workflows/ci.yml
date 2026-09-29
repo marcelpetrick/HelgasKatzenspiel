@@ -31,8 +31,8 @@ jobs:
 
       - run: npm ci
 
-      - name: Install Chromium for Playwright
-        run: npx playwright install --with-deps chromium
+      - name: Install Chromium and Firefox for Playwright
+        run: npx playwright install --with-deps chromium firefox
 
       # Exactly what runs locally before every commit.
       # The Docker image is built and checked by docker.yml; building it here too would be a duplicate.

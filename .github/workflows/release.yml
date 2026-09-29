@@ -25,8 +25,8 @@ jobs:
 
       - run: npm ci
 
-      - name: Install Chromium for Playwright
-        run: npx playwright install --with-deps chromium
+      - name: Install Chromium and Firefox for Playwright
+        run: npx playwright install --with-deps chromium firefox
 
       # A release ships only what passed the whole gate.
       - run: ./localPipeline.sh --no-docker

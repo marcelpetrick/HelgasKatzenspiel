@@ -48,6 +48,9 @@ const KEYS = new Set([
   'Numpad5',
 ]);
 
+/** How often the running game saves itself, in milliseconds. */
+const AUTOSAVE_MS = 15_000;
+
 /** Keys that keep acting while held down. */
 const HOLD_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space']);
 
@@ -66,6 +69,8 @@ export class App {
   private readonly held = new Set<string>();
   private pressed = new Set<string>();
   private started = false;
+  /** Set while "Neues Spiel" reloads the page, so no save brings the old game back. */
+  private resetting = false;
   private twinkleIn = 0;
   private lastClick = 0;
 
@@ -76,7 +81,10 @@ export class App {
     this.engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, antialias: true }, true);
     this.game = loadGame();
     this.world = new World(this.engine, this.game);
-    this.hud = new Hud(ui, this.game);
+    this.hud = new Hud(ui, this.game, () => {
+      this.sound.play('click');
+      this.newGame();
+    });
     this.shop = new ShopMenu(ui, this.game, (action) => {
       this.onShop(action);
     });
@@ -116,9 +124,16 @@ export class App {
     window.addEventListener('pointerdown', () => {
       this.sound.unlock();
     });
-    // Leaving the page keeps the progress too, in case S was forgotten.
+    // The game keeps itself: every few seconds, when the tab is hidden and when the page is left, so a
+    // crash or a closed laptop loses almost nothing even when S was forgotten.
+    window.setInterval(() => {
+      this.autosave();
+    }, AUTOSAVE_MS);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') this.autosave();
+    });
     window.addEventListener('pagehide', () => {
-      if (this.started) saveGame(this.game);
+      this.autosave();
     });
 
     this.engine.runRenderLoop(() => {
@@ -247,15 +262,25 @@ export class App {
     if (saved) {
       const fresh = el('button', 'title-new', TEXT.newGame);
       fresh.addEventListener('click', () => {
-        if (window.confirm(TEXT.newGameConfirm)) {
-          clearSave();
-          window.location.reload();
-        }
+        this.newGame();
       });
       card.append(fresh);
     }
     screen.append(card);
     this.ui.append(screen);
+  }
+
+  /** Quietly keep the running game in this browser. */
+  private autosave(): void {
+    if (this.started && !this.resetting) saveGame(this.game);
+  }
+
+  /** "Neues Spiel": after asking, forget the saved game and start again from the title screen. */
+  private newGame(): void {
+    if (!window.confirm(TEXT.newGameConfirm)) return;
+    this.resetting = true;
+    clearSave();
+    window.location.reload();
   }
 
   start(): void {

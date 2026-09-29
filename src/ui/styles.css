@@ -762,6 +762,25 @@ kbd {
   border-color: transparent;
 }
 
+.help-reset {
+  pointer-events: auto;
+  margin-top: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 4px 12px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.help-reset:hover {
+  color: inherit;
+  background: rgb(255 255 255 / 10%);
+}
+
 .help .help-show {
   display: none;
 }

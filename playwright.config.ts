@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Marcel Petrick <mail@marcelpetrick.it>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: 'e2e',
@@ -13,10 +13,24 @@ export default defineConfig({
   outputDir: 'test-results',
   use: {
     baseURL: 'http://localhost:4273',
-    viewport: { width: 1280, height: 720 },
-    // Software WebGL, so the suite runs the same on a laptop and on a headless CI runner.
-    launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] },
   },
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 720 },
+        // Software WebGL, so the suite runs the same on a laptop and on a headless CI runner.
+        launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] },
+      },
+    },
+    {
+      // Saving and continuing in the browser is also checked in Firefox, where the game is played too.
+      name: 'firefox',
+      testMatch: 'save.spec.ts',
+      use: { ...devices['Desktop Firefox'], viewport: { width: 1280, height: 720 } },
+    },
+  ],
   webServer: {
     command: 'npm run build && npm run preview',
     url: 'http://localhost:4273',

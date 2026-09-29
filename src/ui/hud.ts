@@ -26,6 +26,7 @@ export class Hud {
   constructor(
     private readonly root: HTMLElement,
     private readonly game: Game,
+    onNewGame: () => void,
   ) {
     const top = el('div', 'hud-top');
     const title = el('div', 'panel title-panel');
@@ -47,6 +48,16 @@ export class Hud {
       row.append(el('kbd', '', key), el('span', '', what));
       help.append(row);
     }
+    // Starting over lives with the keys, out of the way, and is hidden together with them.
+    const reset = el('button', 'help-reset', TEXT.newGameButton);
+    reset.addEventListener('click', () => {
+      // Without the focus, Enter and Space go on petting cats instead of pressing this again.
+      reset.blur();
+      onNewGame();
+    });
+    const resetRow = el('div', 'help-row');
+    resetRow.append(reset);
+    help.append(resetRow);
     // With the list hidden, this is all that is left of it, so she knows how to get it back.
     help.append(el('div', 'help-show', TEXT.help));
     this.prompt = el('div', 'prompt');

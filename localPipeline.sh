@@ -15,7 +15,7 @@
 #   6. typecheck   tsc --noEmit (strict)
 #   7. coverage    Vitest unit tests with ≥ 95 % coverage of src/core enforced
 #   8. build       production build into dist/
-#   9. e2e         Playwright in headless Chromium against the built game (skip with --no-e2e)
+#   9. e2e         Playwright in headless Chromium (saving also in Firefox) against the built game (skip with --no-e2e)
 #  10. docker      build the Docker image and check it serves the game (scripts/docker-check.sh;
 #                  skip with --no-docker, skipped automatically when Docker is not available)
 #
