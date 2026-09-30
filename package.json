@@ -1,6 +1,6 @@
 {
   "name": "helgas-katzenspiel",
-  "version": "0.17.3",
+  "version": "0.17.4",
   "description": "Ein niedliches Katzenspiel für den Browser: Ein Mädchen streichelt und versorgt ganz viele Katzen.",
   "private": true,
   "type": "module",
@@ -26,7 +26,7 @@
     "@eslint/js": "10.0.1",
     "@playwright/test": "1.63.0",
     "@types/node": "24.19.0",
-    "@vitest/coverage-v8": "5.0.2",
+    "@vitest/coverage-v8": "5.0.3",
     "eslint": "10.11.0",
     "globals": "17.12.0",
     "markdownlint-cli2": "0.23.3",
@@ -36,6 +36,6 @@
     "typescript": "6.0.3",
     "typescript-eslint": "8.71.0",
     "vite": "8.3.1",
-    "vitest": "5.0.2"
+    "vitest": "5.0.3"
   }
 }
