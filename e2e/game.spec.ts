@@ -26,6 +26,7 @@ test('title screen, walking, petting and magic work without errors', async ({ pa
     localStorage.clear();
   });
   await page.getByRole('button', { name: 'Los geht’s!' }).click();
+  await expect(page.locator('.title-screen')).toHaveCount(0);
   await expect(page.getByText('streicheln · benutzen')).toBeVisible();
 
   const x0 = await page.evaluate(() => window.__katzen.app.game.girl.x);
@@ -59,6 +60,7 @@ test('the shop sells clothes and cat supplies, and remembers them after a reload
     localStorage.clear();
   });
   await page.keyboard.press('Enter');
+  await expect(page.locator('.title-screen')).toHaveCount(0);
   await page.evaluate(() => (window.__katzen.app.game.wardrobe.money = 20));
   await page.keyboard.press('KeyK');
   await expect(page.getByRole('heading', { name: /Katzenladen/ })).toBeVisible();
@@ -91,6 +93,7 @@ test('walk into the cat shop, open a shelf and walk out again', async ({ page })
     localStorage.clear();
   });
   await page.keyboard.press('Enter');
+  await expect(page.locator('.title-screen')).toHaveCount(0);
   await page.evaluate(() => {
     const { game } = window.__katzen.app;
     for (const c of game.cats) if (c.place === 'garden') c.x = 130;
@@ -127,6 +130,7 @@ test('walk into the house, fill the bowls, rename a cat, save with S and come ba
     localStorage.clear();
   });
   await page.keyboard.press('Enter');
+  await expect(page.locator('.title-screen')).toHaveCount(0);
   await page.evaluate(() => {
     const { game } = window.__katzen.app;
     for (const c of game.cats) c.x = 110;
@@ -163,6 +167,7 @@ test('walk into the house, fill the bowls, rename a cat, save with S and come ba
   await page.waitForFunction(() => window.__katzen.app.engine.frameId > 5);
   await expect(page.getByRole('button', { name: 'Weiterspielen' })).toBeVisible();
   await page.keyboard.press('Enter');
+  await expect(page.locator('.title-screen')).toHaveCount(0);
   const state = await page.evaluate(() => {
     const { game } = window.__katzen.app;
     return { place: game.girl.place, cat: game.cats[0].name, coat: game.cats[0].coat, milk: game.kitchenBowl('milk').portions > 0 };
@@ -177,6 +182,7 @@ test('bowl, toys, backpack and hide-and-seek work in the browser', async ({ page
     localStorage.clear();
   });
   await page.keyboard.press('Enter');
+  await expect(page.locator('.title-screen')).toHaveCount(0);
   await page.evaluate(() => {
     const { app } = window.__katzen;
     const w = app.game.wardrobe;

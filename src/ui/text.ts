@@ -4,6 +4,7 @@
 import type { Focus } from '../core/game';
 import { recipe } from '../core/kitchen';
 import type { Grocery, Gear, Supply } from '../core/shop';
+import type { Level } from '../core/school';
 import type { Building, Place, ShelfId, SpotId } from '../core/world';
 
 const SPOT_ACTIONS: Record<SpotId, string> = {
@@ -170,6 +171,34 @@ export const TEXT = {
     title: '🛍️ Katzenladen',
     wardrobeTitle: '👗 Anziehschrank',
     close: 'Schließen (Esc)',
+    itemDescriptions: {
+      food: 'Drei Portionen mit je drei Herzen',
+      treat: 'Ein Fischleckerli: zwei Herzen',
+      milk: 'Zwei Portionen mit je zwei Herzen',
+      yarn: 'Werfen, und die Katzen rennen hinterher',
+      ball: 'Hüpft weit und klingelt',
+      mouse: 'Flitzt vor den Katzen davon',
+      feather: 'Taste 5: wedeln, die Katzen springen danach',
+      backpack: 'Taste R: bis zu 3 Katzen einpacken',
+      pan: 'Für Spiegelei und Omelett',
+      pot: 'Für Suppe',
+      cutlery: 'Messer, Gabel, Löffel zum Essen',
+      tomato: 'Rot und saftig',
+      leek: 'Für Suppe und Omelett',
+      egg: 'Für Spiegelei und Omelett',
+      bread: 'Frisch vom Bäcker',
+      cheese: 'Mit Löchern',
+      apple: 'Knackig',
+      dairy: 'Für Kakao',
+      cocoa: 'Für Kakao',
+      orange: 'Für Orangensaft',
+      'deco-kratzbaum': 'Zum Klettern und Kratzen, im Flur',
+      'deco-kissen': 'Weiche Kissen im Flur',
+      'deco-blumen': 'Bunte Blumen für die Küche',
+      'deco-bild': 'Ein Bild mit Katze fürs Schlafzimmer',
+      'deco-teppich': 'Ein Herzteppich fürs Bad',
+      'deco-lichter': 'Leuchtet im ganzen Haus',
+    } as Record<string, string>,
     tabClothes: '👗 Kleidung',
     tabCats: '🐱 Für Katzen',
     tabDeco: '🏠 Deko',
@@ -195,6 +224,11 @@ export const TEXT = {
   school: {
     title: '✏️ Schule',
     close: 'Schließen (Esc)',
+    levelHints: {
+      leicht: 'Plus bis 10',
+      mittel: 'Plus und Minus bis 20',
+      schwer: 'Plus und Minus bis 100, kleines Einmaleins',
+    } satisfies Record<Level, string>,
     intro: 'Guten Morgen! Wie schwer sollen die Rechenaufgaben heute sein?',
     progress: (n: number, of: number) => `Aufgabe ${n} von ${of}`,
     right: 'Richtig! Super gerechnet! ⭐',

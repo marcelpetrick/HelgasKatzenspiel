@@ -17,10 +17,10 @@ export interface Task {
 
 export const TASKS_PER_LESSON = 5;
 
-export const LEVELS: readonly { id: Level; name: string; hint: string }[] = [
-  { id: 'leicht', name: 'Leicht', hint: 'Plus bis 10' },
-  { id: 'mittel', name: 'Mittel', hint: 'Plus und Minus bis 20' },
-  { id: 'schwer', name: 'Schwer', hint: 'Plus und Minus bis 100, kleines Einmaleins' },
+export const LEVELS: readonly { id: Level; name: string }[] = [
+  { id: 'leicht', name: 'Leicht' },
+  { id: 'mittel', name: 'Mittel' },
+  { id: 'schwer', name: 'Schwer' },
 ];
 
 const int = (rng: () => number, from: number, to: number): number => from + Math.floor(rng() * (to - from + 1));

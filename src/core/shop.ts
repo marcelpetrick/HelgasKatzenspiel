@@ -26,7 +26,6 @@ export interface SupplyItem {
   id: Supply;
   name: string;
   icon: string;
-  description: string;
   price: number;
 }
 
@@ -44,7 +43,6 @@ export interface ToyItem {
   id: Toy;
   name: string;
   icon: string;
-  description: string;
   price: number;
 }
 
@@ -53,7 +51,6 @@ export interface GearItem {
   id: Gear;
   name: string;
   icon: string;
-  description: string;
   price: number;
 }
 
@@ -62,7 +59,6 @@ export interface GroceryItem {
   id: Grocery;
   name: string;
   icon: string;
-  description: string;
   price: number;
 }
 
@@ -72,7 +68,6 @@ export interface DecoItem {
   id: string;
   name: string;
   icon: string;
-  description: string;
   price: number;
 }
 
@@ -96,7 +91,7 @@ const wear = (slot: Slot, id: string, name: string, color: string, price: number
   price,
   ...(style ? { style } : {}),
 });
-const deco = (id: string, name: string, icon: string, description: string, price: number): DecoItem => ({ kind: 'deco', id, name, icon, description, price });
+const deco = (id: string, name: string, icon: string, price: number): DecoItem => ({ kind: 'deco', id, name, icon, price });
 
 export const CATALOG: readonly ShopItem[] = [
   wear('top', 'top-rosa', 'Rosa Shirt', '#ff7eb6', 0),
@@ -140,32 +135,32 @@ export const CATALOG: readonly ShopItem[] = [
   wear('nails', 'nails-lila', 'Lila Nagellack', '#9b6bff', 2),
   wear('nails', 'nails-tuerkis', 'Türkiser Nagellack', '#2fd3cf', 2),
   wear('nails', 'nails-gold', 'Glitzer-Goldlack', '#ffc83d', 4),
-  { kind: 'supply', id: 'food', name: 'Katzenfutter', icon: '🥫', description: 'Eine volle Schüssel: 3 Herzen', price: 2 },
-  { kind: 'supply', id: 'treat', name: 'Leckerli', icon: '🐟', description: 'Ein Fischleckerli: 2 Herzen', price: 1 },
-  { kind: 'supply', id: 'milk', name: 'Katzenmilch', icon: '🥛', description: 'Ein Schälchen zum Trinken: 2 Herzen', price: 1 },
-  { kind: 'toy', id: 'yarn', name: 'Wollknäuel', icon: '🧶', description: 'Werfen, und die Katzen rennen hinterher', price: 5 },
-  { kind: 'toy', id: 'ball', name: 'Glöckchenball', icon: '⚽', description: 'Hüpft weit und klingelt', price: 3 },
-  { kind: 'toy', id: 'mouse', name: 'Spielzeugmaus', icon: '🐭', description: 'Flitzt vor den Katzen davon', price: 4 },
-  { kind: 'toy', id: 'feather', name: 'Federwedel', icon: '🪶', description: 'Taste 5: wedeln, die Katzen springen danach', price: 4 },
-  { kind: 'gear', id: 'backpack', name: 'Rucksack', icon: '🎒', description: 'Taste R: bis zu 3 Katzen einpacken', price: 10 },
-  { kind: 'gear', id: 'pan', name: 'Bratpfanne', icon: '🍳', description: 'Für Spiegelei und Omelett', price: 6 },
-  { kind: 'gear', id: 'pot', name: 'Kochtopf', icon: '🍲', description: 'Für Suppe', price: 6 },
-  { kind: 'gear', id: 'cutlery', name: 'Besteck', icon: '🍴', description: 'Messer, Gabel, Löffel zum Essen', price: 4 },
-  { kind: 'grocery', id: 'tomato', name: 'Tomate', icon: '🍅', description: 'Rot und saftig', price: 1 },
-  { kind: 'grocery', id: 'leek', name: 'Lauch', icon: '🥬', description: 'Für Suppe und Omelett', price: 1 },
-  { kind: 'grocery', id: 'egg', name: 'Ei', icon: '🥚', description: 'Für Spiegelei und Omelett', price: 1 },
-  { kind: 'grocery', id: 'bread', name: 'Brot', icon: '🍞', description: 'Frisch vom Bäcker', price: 1 },
-  { kind: 'grocery', id: 'cheese', name: 'Käse', icon: '🧀', description: 'Mit Löchern', price: 2 },
-  { kind: 'grocery', id: 'apple', name: 'Apfel', icon: '🍎', description: 'Knackig', price: 1 },
-  { kind: 'grocery', id: 'dairy', name: 'Milch', icon: '🥛', description: 'Für Kakao', price: 1 },
-  { kind: 'grocery', id: 'cocoa', name: 'Kakaopulver', icon: '🍫', description: 'Für Kakao', price: 2 },
-  { kind: 'grocery', id: 'orange', name: 'Orange', icon: '🍊', description: 'Für Orangensaft', price: 1 },
-  deco('deco-kratzbaum', 'Kratzbaum', '🌳', 'Zum Klettern und Kratzen, im Flur', 12),
-  deco('deco-kissen', 'Kuschelkissen', '🛋️', 'Weiche Kissen im Flur', 4),
-  deco('deco-blumen', 'Blumentöpfe', '🌷', 'Bunte Blumen für die Küche', 6),
-  deco('deco-bild', 'Katzenbild', '🖼️', 'Ein Bild mit Katze fürs Schlafzimmer', 5),
-  deco('deco-teppich', 'Herzteppich', '💗', 'Ein Herzteppich fürs Bad', 6),
-  deco('deco-lichter', 'Lichterkette', '✨', 'Leuchtet im ganzen Haus', 8),
+  { kind: 'supply', id: 'food', name: 'Katzenfutter', icon: '🥫', price: 2 },
+  { kind: 'supply', id: 'treat', name: 'Leckerli', icon: '🐟', price: 1 },
+  { kind: 'supply', id: 'milk', name: 'Katzenmilch', icon: '🥛', price: 1 },
+  { kind: 'toy', id: 'yarn', name: 'Wollknäuel', icon: '🧶', price: 5 },
+  { kind: 'toy', id: 'ball', name: 'Glöckchenball', icon: '⚽', price: 3 },
+  { kind: 'toy', id: 'mouse', name: 'Spielzeugmaus', icon: '🐭', price: 4 },
+  { kind: 'toy', id: 'feather', name: 'Federwedel', icon: '🪶', price: 4 },
+  { kind: 'gear', id: 'backpack', name: 'Rucksack', icon: '🎒', price: 10 },
+  { kind: 'gear', id: 'pan', name: 'Bratpfanne', icon: '🍳', price: 6 },
+  { kind: 'gear', id: 'pot', name: 'Kochtopf', icon: '🍲', price: 6 },
+  { kind: 'gear', id: 'cutlery', name: 'Besteck', icon: '🍴', price: 4 },
+  { kind: 'grocery', id: 'tomato', name: 'Tomate', icon: '🍅', price: 1 },
+  { kind: 'grocery', id: 'leek', name: 'Lauch', icon: '🥬', price: 1 },
+  { kind: 'grocery', id: 'egg', name: 'Ei', icon: '🥚', price: 1 },
+  { kind: 'grocery', id: 'bread', name: 'Brot', icon: '🍞', price: 1 },
+  { kind: 'grocery', id: 'cheese', name: 'Käse', icon: '🧀', price: 2 },
+  { kind: 'grocery', id: 'apple', name: 'Apfel', icon: '🍎', price: 1 },
+  { kind: 'grocery', id: 'dairy', name: 'Milch', icon: '🥛', price: 1 },
+  { kind: 'grocery', id: 'cocoa', name: 'Kakaopulver', icon: '🍫', price: 2 },
+  { kind: 'grocery', id: 'orange', name: 'Orange', icon: '🍊', price: 1 },
+  deco('deco-kratzbaum', 'Kratzbaum', '🌳', 12),
+  deco('deco-kissen', 'Kuschelkissen', '🛋️', 4),
+  deco('deco-blumen', 'Blumentöpfe', '🌷', 6),
+  deco('deco-bild', 'Katzenbild', '🖼️', 5),
+  deco('deco-teppich', 'Herzteppich', '💗', 6),
+  deco('deco-lichter', 'Lichterkette', '✨', 8),
 ];
 
 /** Every decoration makes the cupboards fill up this much faster (the cats are happier at home). */

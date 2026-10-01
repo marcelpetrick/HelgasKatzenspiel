@@ -32,6 +32,7 @@ await shot('title');
 
 // The garden: dress up a little, put the backpack on, and set down a bowl for the cats.
 await page.keyboard.press('Enter');
+await page.waitForSelector('.title-screen', { state: 'detached' });
 await page.keyboard.press('KeyH');
 await page.evaluate(() => {
   const { app } = window.__katzen;

@@ -3,6 +3,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { buy, CATALOG, owns, DEFAULT_OUTFIT, findItem, loadWardrobe, newWardrobe, outfitColor, wearItem } from '../src/core/shop';
+import { TEXT } from '../src/ui/text';
 
 describe('shop', () => {
   it('starts with the free outfit and no money', () => {
@@ -16,6 +17,7 @@ describe('shop', () => {
     const ids = CATALOG.map((i) => i.id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const i of CATALOG) expect(i.name.length).toBeGreaterThanOrEqual(2);
+    for (const i of CATALOG) if (i.kind !== 'wear') expect(TEXT.shop.itemDescriptions[i.id]).toBeTruthy();
   });
 
   it('refuses when there is not enough money', () => {

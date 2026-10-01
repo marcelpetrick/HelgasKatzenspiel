@@ -52,6 +52,7 @@ async function playFresh(page: Page): Promise<void> {
   await page.reload();
   await running(page);
   await page.getByRole('button', { name: 'Los geht’s!' }).click();
+  await expect(page.locator('.title-screen')).toHaveCount(0);
   await page.evaluate(() => {
     const { game } = window.__katzen.app;
     game.cats[0].name = 'Wolke';
@@ -113,6 +114,22 @@ test('"Neues Spiel" in the game starts over and does not bring the old game back
   expect(errors).toEqual([]);
 });
 
+test('the title screen New Game button works with Enter', async ({ page }) => {
+  const errors = await open(page);
+  await playFresh(page);
+  await page.keyboard.press('KeyS');
+  await page.reload();
+  await running(page);
+
+  const fresh = page.getByRole('button', { name: 'Neues Spiel' });
+  await fresh.focus();
+  page.once('dialog', (d) => void d.accept());
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('button', { name: 'Los geht’s!' })).toBeVisible({ timeout: 60_000 });
+  expect(await page.evaluate(() => window.__katzen.app.game.cats[0].name)).not.toBe('Wolke');
+  expect(errors).toEqual([]);
+});
+
 test('only the tab that plays last keeps the game, the other one stops saving', async ({ page, context }) => {
   // Two games render at once. That is too much for the small GitHub runner (minutes of software WebGL),
   // so this test runs only locally, like the Firefox project (see AGENTS.md).
@@ -122,12 +139,26 @@ test('only the tab that plays last keeps the game, the other one stops saving', 
   await playFresh(page);
   await page.keyboard.press('KeyS');
   await expect(page.locator('.toast.show')).toContainText('Gespeichert');
-
-  // A second tab of the same browser continues the game and takes it over.
+  // A second tab loads the saved state at first, then receives the first tab's unsaved changes.
   const other = await context.newPage();
   const otherErrors = await open(other);
+  expect(await other.evaluate(() => window.__katzen.app.game.cats[0].name)).toBe('Wolke');
+  await page.evaluate(() => {
+    window.__katzen.app.game.cats[0].name = 'Ungespeichert';
+  });
   await other.getByRole('button', { name: 'Weiterspielen' }).click();
   await expect(page.getByText('läuft jetzt in einem anderen Fenster')).toBeVisible();
+  await expect.poll(() => other.evaluate(() => window.__katzen.app.game.cats[0].name).catch(() => null), { timeout: 60_000 }).toBe('Ungespeichert');
+  await expect(other.locator('#ui')).not.toHaveClass(/on-title/, { timeout: 60_000 });
+  const oldFrame = await page.evaluate(() => {
+    const { app } = window.__katzen;
+    app.game.girl.boost = 5;
+    app.frame(1);
+    return { frame: app.engine.frameId, boost: app.game.girl.boost };
+  });
+  expect(oldFrame.boost).toBe(5);
+  await page.waitForTimeout(100);
+  expect(await page.evaluate(() => window.__katzen.app.engine.frameId)).toBe(oldFrame.frame);
   await other.evaluate(() => {
     window.__katzen.app.game.cats[0].name = 'Neu';
   });
@@ -146,7 +177,8 @@ test('only the tab that plays last keeps the game, the other one stops saving', 
   // Back in the first tab after a reload, it takes the game back from the second one.
   await page.getByRole('button', { name: 'Weiterspielen' }).click();
   await expect(other.getByText('läuft jetzt in einem anderen Fenster')).toBeVisible();
-  expect(await page.evaluate(() => window.__katzen.app.game.cats[0].name)).toBe('Neu');
+  await expect.poll(() => page.evaluate(() => window.__katzen.app.game.cats[0].name).catch(() => null), { timeout: 60_000 }).toBe('Neu');
+  await expect(page.locator('#ui')).not.toHaveClass(/on-title/, { timeout: 60_000 });
 
   // "Neues Spiel" in one tab is not undone by the other one.
   page.once('dialog', (d) => void d.accept());

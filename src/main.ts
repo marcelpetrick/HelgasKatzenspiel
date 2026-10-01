@@ -13,6 +13,6 @@ const app = new App(canvas, ui);
 (window as unknown as { __katzen: unknown }).__katzen = {
   app,
   start: () => {
-    app.start();
+    void app.start();
   },
 };

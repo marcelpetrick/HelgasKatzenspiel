@@ -923,6 +923,21 @@ describe('the cats', () => {
     expect(kitten.growth).toBeLessThan(1.05);
   });
 
+  it('keeps extra hearts after a two-heart treat brings a kitten', () => {
+    const g = new Game();
+    quiet(g);
+    for (const c of g.cats) c.love = 20;
+    beside(g, g.cats[0]);
+    beside(g, g.cats[1], -1);
+    g.heartsSinceKitten = KITTEN_HEARTS - 1;
+    g.wardrobe.supplies.treat = 1;
+
+    tap(g, { treat: true });
+
+    expect(g.cats.length).toBe(7);
+    expect(g.heartsSinceKitten).toBe(1);
+  });
+
   it('no kitten without two loving grown-ups, or with too few cats', () => {
     const g = new Game(7, 3);
     quiet(g);

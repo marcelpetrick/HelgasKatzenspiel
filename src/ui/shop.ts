@@ -162,7 +162,7 @@ export class ShopMenu {
     } else icon.textContent = item.icon;
     const info = el('div', 'shop-info');
     info.append(el('div', 'shop-name', item.name));
-    if (item.kind !== 'wear') info.append(el('div', 'shop-desc', item.description));
+    if (item.kind !== 'wear') info.append(el('div', 'shop-desc', TEXT.shop.itemDescriptions[item.id] ?? ''));
     if (item.kind === 'supply') info.append(el('div', 'shop-desc', TEXT.shop.have(w.supplies[item.id])));
     if (item.kind === 'grocery') info.append(el('div', 'shop-desc', TEXT.shop.have(w.pantry[item.id])));
     const price = el('div', 'shop-price', item.price === 0 ? TEXT.shop.free : `🪙 ${item.price}`);

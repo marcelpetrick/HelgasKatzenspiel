@@ -51,6 +51,7 @@ export class SchoolMenu {
   close(): void {
     this.isOpen = false;
     window.clearTimeout(this.nextTimer);
+    this.answers = [];
     this.root.classList.remove('open');
   }
 
@@ -69,12 +70,13 @@ export class SchoolMenu {
   }
 
   private chooseLevel(): void {
+    this.answers = [];
     const grid = el('div', 'level-grid');
     for (const l of LEVELS) {
       const b = this.button('', 'level-btn', () => {
         this.start(l.id);
       });
-      b.append(el('span', 'level-name', l.name), el('span', 'level-hint', l.hint));
+      b.append(el('span', 'level-name', l.name), el('span', 'level-hint', TEXT.school.levelHints[l.id]));
       grid.append(b);
     }
     this.body.replaceChildren(el('p', 'school-intro', TEXT.school.intro), grid);

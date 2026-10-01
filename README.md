@@ -125,15 +125,19 @@ docker build -t helgas-katzenspiel .
 docker run --rm -p 8080:80 helgas-katzenspiel      # open http://localhost:8080
 ```
 
-Only successful releases publish an image: `ghcr.io/marcelpetrick/helgas-katzenspiel:<version>`, e.g.
-`:0.16.4`, and `:latest` for the newest release. The package is private like
-the repository: `docker login ghcr.io` with a token that has `read:packages` before pulling.
+After a successful GitHub release, the workflow publishes
+`ghcr.io/marcelpetrick/helgas-katzenspiel:<version>` and updates `:latest` for the newest release.
+The image job runs separately, so an image can appear later than the web package or fail to publish;
+check the Release workflow and rerun its failed image job if needed. The package is private like the
+repository: `docker login ghcr.io` with a token that has `read:packages` before pulling.
 
 ## Releases
 
-Pushing a tag `vX.Y.Z` that matches `package.json` runs the whole pipeline and publishes a GitHub
-release with the zipped static site (`helgas-katzenspiel-X.Y.Z-web.zip` plus its SHA-256). Unzip it
-and serve the folder with any static web server.
+Pushing a tag `vX.Y.Z` on `main`, newer than all published releases and matching `package.json`, runs
+the whole pipeline and publishes a GitHub release with the zipped static site
+(`helgas-katzenspiel-X.Y.Z-web.zip` plus its SHA-256). Unzip it and serve the folder with any static
+web server. The Docker image follows in a separate job; the Release workflow shows whether both jobs
+have succeeded.
 
 ## Testing and the pipeline
 

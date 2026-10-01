@@ -10,6 +10,12 @@ on:
 permissions:
   contents: write
 
+# Serialize releases: a newer tag must not publish while an older tag is still being checked.
+concurrency:
+  group: release-publishing
+  cancel-in-progress: false
+  queue: max
+
 jobs:
   release:
     name: Build and publish release
@@ -17,11 +23,37 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
+
+      - name: Check release tag and ancestry
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "Release tag must have the form vX.Y.Z." >&2
+            exit 1
+          fi
+          test "${GITHUB_REF_NAME#v}" = "$(node -p "require('./package.json').version")"
+          git fetch origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "Release tag must point to a commit on main." >&2
+            exit 1
+          fi
+          published_tags="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/releases?per_page=100" --jq '.[] | select(.draft == false) | .tag_name')"
+          while IFS= read -r published_tag; do
+            [[ "$published_tag" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || continue
+            if [[ "$published_tag" == "$GITHUB_REF_NAME" ]] ||
+              [[ "$(printf '%s\n%s\n' "$published_tag" "$GITHUB_REF_NAME" | sort -V | tail -n1)" != "$GITHUB_REF_NAME" ]]; then
+              echo "Release tag must be newer than the published release $published_tag." >&2
+              exit 1
+            fi
+          done <<< "$published_tags"
 
       - run: npm ci
 
@@ -31,9 +63,6 @@ jobs:
 
       # A release ships only what passed the whole gate.
       - run: ./localPipeline.sh --no-docker
-
-      - name: Check tag matches package.json
-        run: test "${GITHUB_REF_NAME#v}" = "$(node -p "require('./package.json').version")"
 
       - name: Package static build
         run: |
@@ -71,8 +100,13 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
       - name: Tag and push
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          for t in "${GITHUB_REF_NAME#v}" latest; do
-            docker tag helgas-katzenspiel:ci "$IMAGE:$t"
-            docker push "$IMAGE:$t"
-          done
+          docker tag helgas-katzenspiel:ci "$IMAGE:${GITHUB_REF_NAME#v}"
+          docker push "$IMAGE:${GITHUB_REF_NAME#v}"
+          # Re-running an old image job must not move :latest back to an old version.
+          if [[ "$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" --jq .tag_name)" == "$GITHUB_REF_NAME" ]]; then
+            docker tag helgas-katzenspiel:ci "$IMAGE:latest"
+            docker push "$IMAGE:latest"
+          fi

@@ -1006,7 +1006,7 @@ export class Game {
     }
     this.heartsSinceKitten += count;
     if (this.heartsSinceKitten >= KITTEN_HEARTS) {
-      this.heartsSinceKitten = 0;
+      this.heartsSinceKitten -= KITTEN_HEARTS;
       this.maybeKitten(cat);
     }
   }

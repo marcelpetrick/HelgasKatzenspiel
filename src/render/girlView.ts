@@ -281,6 +281,16 @@ export class GirlView {
 
   private buildHairAcc(scene: Scene, look: GirlLook, head: TransformNode, add: (m: Mesh, mat: StandardMaterial, p?: TransformNode) => Mesh): void {
     const { style, color } = look.hairAcc;
+    if (style === 'clip-star' || style === 'clip-heart') {
+      const clip = fanMesh(scene, 'hairClip', style === 'clip-star' ? starOutline() : heartOutline());
+      clip.material = glowMaterial(scene, 'hairClipMat', color);
+      clip.parent = head;
+      clip.scaling.setAll(style === 'clip-star' ? 0.28 : 0.2);
+      clip.position.set(0.26, 0.24, -0.36);
+      clip.rotation.set(0.35, -0.5, 0);
+      return;
+    }
+    if (style === 'none') return;
     const mat = material(scene, 'hairAccMat', color, 0.3, 0.15);
     if (style === 'ears') {
       // Cat-ear headband: a thin arc over the head with two pointy ears.
@@ -321,13 +331,6 @@ export class GirlView {
         loop.position.x = side * 0.13;
       }
       add(MeshBuilder.CreateSphere('bowKnot', { diameter: 0.1, segments: 8 }, scene), mat, bow);
-    } else if (style === 'clip-star' || style === 'clip-heart') {
-      const clip = fanMesh(scene, 'hairClip', style === 'clip-star' ? starOutline() : heartOutline());
-      clip.material = glowMaterial(scene, 'hairClipMat', color);
-      clip.parent = head;
-      clip.scaling.setAll(style === 'clip-star' ? 0.28 : 0.2);
-      clip.position.set(0.26, 0.24, -0.36);
-      clip.rotation.set(0.35, -0.5, 0);
     }
   }
 

@@ -11,7 +11,7 @@ import { el } from './ui/dom';
 import { FigureMenu } from './ui/figureMenu';
 import { Hud } from './ui/hud';
 import { type SchoolEvent, SchoolMenu } from './ui/schoolMenu';
-import { clearSave, guardTabs, hasSave, loadGame, saveGame } from './ui/save';
+import { clearSave, guardTabs, hasSave, loadGame, saveGame, saveRevision } from './ui/save';
 import { type ShopAction, ShopMenu } from './ui/shop';
 import { TEXT } from './ui/text';
 
@@ -50,6 +50,7 @@ const KEYS = new Set([
 
 /** How often the running game saves itself, in milliseconds. */
 const AUTOSAVE_MS = 15_000;
+const RESUME_KEY = 'helgas-katzenspiel/resume-after-handoff';
 
 /** Keys that keep acting while held down. */
 const HOLD_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space']);
@@ -58,6 +59,7 @@ const HOLD_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'S
 export class App {
   readonly engine: Engine;
   readonly game: Game;
+  private readonly savedAtLoad: string;
   readonly world: World;
   readonly sound = new Sound();
   private readonly hud: Hud;
@@ -73,9 +75,8 @@ export class App {
   private resetting = false;
   /** Another tab of this browser plays now; this one must not save over it. */
   private elsewhere = false;
-  private readonly tabs = guardTabs(() => {
-    this.goneElsewhere();
-  });
+  private readonly tabs = guardTabs((reason) => this.goneElsewhere(reason));
+  private claiming = false;
   private twinkleIn = 0;
   private lastClick = 0;
 
@@ -84,6 +85,7 @@ export class App {
     private readonly ui: HTMLElement,
   ) {
     this.engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, antialias: true }, true);
+    this.savedAtLoad = saveRevision();
     this.game = loadGame();
     this.world = new World(this.engine, this.game);
     this.hud = new Hud(ui, this.game, () => {
@@ -129,7 +131,7 @@ export class App {
     window.addEventListener('pointerdown', () => {
       this.sound.unlock();
     });
-    // The game keeps itself: every few seconds, when the tab is hidden and when the page is left, so a
+    // The game keeps itself: every few seconds and when the tab is hidden, so a
     // crash or a closed laptop loses almost nothing even when S was forgotten.
     window.setInterval(() => {
       this.autosave();
@@ -137,13 +139,17 @@ export class App {
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') this.autosave();
     });
-    window.addEventListener('pagehide', () => {
-      this.autosave();
-    });
-
     this.engine.runRenderLoop(() => {
       this.frame(Math.min(this.engine.getDeltaTime() / 1000, 1 / 20));
     });
+    try {
+      if (sessionStorage.getItem(RESUME_KEY) === 'yes') {
+        sessionStorage.removeItem(RESUME_KEY);
+        void this.start();
+      }
+    } catch {
+      // Private browsers can refuse session storage; the title button still works.
+    }
   }
 
   private get menuOpen(): boolean {
@@ -161,6 +167,8 @@ export class App {
   private onKey(e: KeyboardEvent): void {
     if (!KEYS.has(e.code) || this.elsewhere) return;
     this.sound.unlock();
+    // Enter and Space belong to a focused button, including "Neues Spiel" on the title screen.
+    if ((e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space') && e.target instanceof Element && e.target.closest('button')) return;
     // While a menu is open, Enter and Space press the focused button as usual, and 1–4 answer sums.
     if (this.menuOpen && e.code !== 'Escape') {
       if (this.school.isOpen) this.school.key(e.code);
@@ -168,7 +176,7 @@ export class App {
       else return;
     } else e.preventDefault();
     if (!this.started) {
-      if (e.code === 'Enter' || e.code === 'Space') this.start();
+      if (e.code === 'Enter' || e.code === 'Space') void this.start();
       return;
     }
     if (e.repeat && !HOLD_KEYS.has(e.code)) return;
@@ -261,7 +269,7 @@ export class App {
     const button = el('button', '', saved ? TEXT.continueGame : TEXT.start);
     button.addEventListener('click', () => {
       this.sound.unlock();
-      this.start();
+      void this.start();
     });
     card.append(el('div', 'title-cats', '🐱 🐈 🐱'), el('h1', '', TEXT.title), el('p', '', TEXT.tagline), button, el('div', 'title-hint', TEXT.startHint));
     if (saved) {
@@ -281,11 +289,19 @@ export class App {
   }
 
   /** Another tab took over: stop here and offer to come back, with that tab's newer game. */
-  private goneElsewhere(): void {
-    if (this.elsewhere || this.resetting) return;
+  private goneElsewhere(reason: 'claim' | 'reset' | 'leave'): boolean {
+    if (reason === 'leave') return !this.started || this.resetting || this.elsewhere || saveGame(this.game);
+    if (this.elsewhere || this.resetting) return true;
+    // The new tab has already loaded its scene, so it will reload after this save is acknowledged.
+    if (reason === 'claim' && this.started && !saveGame(this.game)) {
+      this.say(TEXT.saveFailed, 'nope');
+      return false;
+    }
     this.elsewhere = true;
     this.closeMenus();
     this.held.clear();
+    this.pressed.clear();
+    this.engine.stopRenderLoop();
     this.ui.querySelector('.title-screen')?.remove();
     this.ui.classList.add('on-title');
     const screen = el('div', 'title-screen');
@@ -299,6 +315,7 @@ export class App {
     screen.append(card);
     this.ui.append(screen);
     this.sound.play('door');
+    return true;
   }
 
   /** "Neues Spiel": after asking, forget the saved game and start again from the title screen. */
@@ -309,10 +326,28 @@ export class App {
     window.location.reload();
   }
 
-  start(): void {
-    if (this.started || this.elsewhere) return;
+  async start(): Promise<void> {
+    if (this.started || this.elsewhere || this.claiming) return;
+    this.claiming = true;
+    const claim = await this.tabs.claim(this.savedAtLoad);
+    this.claiming = false;
+    // Another tab may reset the game while the lock request is pending.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (this.elsewhere) return;
+    if (claim === 'denied') {
+      this.say(TEXT.saveFailed, 'nope');
+      return;
+    }
+    if (claim === 'updated') {
+      try {
+        sessionStorage.setItem(RESUME_KEY, 'yes');
+      } catch {
+        // The title remains available after reloading when session storage is blocked.
+      }
+      window.location.reload();
+      return;
+    }
     this.started = true;
-    this.tabs.claim();
     this.ui.classList.remove('on-title');
     this.ui.querySelector('.title-screen')?.remove();
   }
@@ -448,6 +483,7 @@ export class App {
 
   /** Advance one frame; exposed so tests can drive the game deterministically. */
   frame(dt: number): void {
+    if (this.elsewhere) return;
     const has = (...codes: string[]) => codes.some((c) => this.held.has(c));
     const was = (...codes: string[]) => codes.some((c) => this.pressed.has(c));
     const active = this.started && !this.menuOpen;
