@@ -3,8 +3,13 @@
 
 # 🐱 Helgas Katzenspiel
 
+<p align="center">
+  <a href="https://marcelpetrick.github.io/HelgasKatzenspiel/"><strong>▶ Jetzt kostenlos im Browser spielen</strong></a>
+</p>
+
 [![CI](https://github.com/marcelpetrick/HelgasKatzenspiel/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/marcelpetrick/HelgasKatzenspiel/actions/workflows/ci.yml)
 [![Docker](https://github.com/marcelpetrick/HelgasKatzenspiel/actions/workflows/docker.yml/badge.svg?branch=main)](https://github.com/marcelpetrick/HelgasKatzenspiel/actions/workflows/docker.yml)
+[![Pages](https://github.com/marcelpetrick/HelgasKatzenspiel/actions/workflows/pages.yml/badge.svg?branch=main)](https://github.com/marcelpetrick/HelgasKatzenspiel/actions/workflows/pages.yml)
 [![Release](https://img.shields.io/github/v/release/marcelpetrick/HelgasKatzenspiel?sort=semver)](https://github.com/marcelpetrick/HelgasKatzenspiel/releases/latest)
 [![License: GPL v3 or later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](LICENSE)
 [![Coverage ≥ 95 %](https://img.shields.io/badge/coverage-%E2%89%A595%25-brightgreen.svg)](vite.config.ts)
@@ -52,6 +57,8 @@ It is designed together with Helga, who decides what goes in; her wishes are col
 </table>
 
 ## How to play
+
+Play directly without installing anything: **[Helgas Katzenspiel on GitHub Pages](https://marcelpetrick.github.io/HelgasKatzenspiel/)**
 
 | Key       | Action                                                                                                  |
 | --------- | ------------------------------------------------------------------------------------------------------- |
@@ -128,8 +135,8 @@ docker run --rm -p 8080:80 helgas-katzenspiel      # open http://localhost:8080
 After a successful GitHub release, the workflow publishes
 `ghcr.io/marcelpetrick/helgas-katzenspiel:<version>` and updates `:latest` for the newest release.
 The image job runs separately, so an image can appear later than the web package or fail to publish;
-check the Release workflow and rerun its failed image job if needed. The package is private like the
-repository: `docker login ghcr.io` with a token that has `read:packages` before pulling.
+check the Release workflow and rerun its failed image job if needed. The container package is private:
+run `docker login ghcr.io` with a token that has `read:packages` before pulling.
 
 ## Releases
 
@@ -138,6 +145,11 @@ the whole pipeline and publishes a GitHub release with the zipped static site
 (`helgas-katzenspiel-X.Y.Z-web.zip` plus its SHA-256). Unzip it and serve the folder with any static
 web server. The Docker image follows in a separate job; the Release workflow shows whether both jobs
 have succeeded.
+
+Every push to `main` also builds the static site with [`pages.yml`](.github/workflows/pages.yml) and
+publishes it at
+[`marcelpetrick.github.io/HelgasKatzenspiel`](https://marcelpetrick.github.io/HelgasKatzenspiel/).
+GitHub Pages uses **GitHub Actions** as its publishing source.
 
 ## Testing and the pipeline
 
@@ -161,7 +173,8 @@ have succeeded.
 
 GitHub Actions runs the same script: [`ci.yml`](.github/workflows/ci.yml) on every push,
 [`docker.yml`](.github/workflows/docker.yml) builds and checks the image, and
-[`release.yml`](.github/workflows/release.yml) makes releases from tags and then publishes the image.
+[`pages.yml`](.github/workflows/pages.yml) publishes the playable site. Tags are handled by
+[`release.yml`](.github/workflows/release.yml), which makes the release and then publishes the image.
 
 Single steps: `npm test`, `npm run coverage`, `npm run lint`, `npm run typecheck`, `npm run e2e`,
 `npm run format` (auto-fix formatting).

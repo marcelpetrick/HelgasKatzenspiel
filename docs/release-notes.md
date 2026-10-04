@@ -8,6 +8,7 @@ fliegt, geht zur Schule, verdient Münzen, kauft im Katzenladen ein und schmück
 
 ## Neu in dieser Version
 
+- Das Spiel ist jetzt öffentlich und kann ohne Installation direkt auf GitHub Pages gespielt werden.
 - Babylon.js, Vite, ESLint, Stylelint, globale Typen und die Node.js-24-Typen wurden auf ihre
   neuesten kompatiblen Versionen aktualisiert; Vitest und die Testabdeckung auf Version 5.0.3.
 - Nur ein Tab kann gleichzeitig spielen. Ein zweiter wartet, bis das erste Spiel geschlossen ist, und
@@ -29,11 +30,12 @@ fliegt, geht zur Schule, verdient Münzen, kauft im Katzenladen ein und schmück
 
 ## Spielen
 
+- **Direkt im Browser:** <https://marcelpetrick.github.io/HelgasKatzenspiel/>
 - **Web-Paket:** `helgas-katzenspiel-<version>-web.zip` entpacken, mit einem beliebigen statischen
   Webserver ausliefern (z. B. `npx serve`) und im Browser öffnen.
 - **Docker:** Das Image wird nach dem GitHub-Release in einem eigenen Job veröffentlicht. Falls es
   noch fehlt, den Release-Workflow prüfen und den fehlgeschlagenen Image-Job erneut starten. Das
-  Paket ist privat wie das Repository, deshalb zuerst mit einem GitHub-Token
+  Das Container-Paket bleibt privat, deshalb zuerst mit einem GitHub-Token
   (Recht `read:packages`) anmelden: `docker login ghcr.io -u <github-name>`. Dann
   `docker run --rm -p 8080:80 ghcr.io/marcelpetrick/helgas-katzenspiel:<version>` und
   <http://localhost:8080> öffnen.
