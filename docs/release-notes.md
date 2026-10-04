@@ -8,7 +8,8 @@ fliegt, geht zur Schule, verdient Münzen, kauft im Katzenladen ein und schmück
 
 ## Neu in dieser Version
 
-- Vitest und die Testabdeckung wurden auf Version 5.0.3 aktualisiert.
+- Babylon.js, Vite, ESLint, Stylelint, globale Typen und die Node.js-24-Typen wurden auf ihre
+  neuesten kompatiblen Versionen aktualisiert; Vitest und die Testabdeckung auf Version 5.0.3.
 - Nur ein Tab kann gleichzeitig spielen. Ein zweiter wartet, bis das erste Spiel geschlossen ist, und
   lädt dann dessen letzten Spielstand.
 - Die Schule verwirft Antworten aus abgebrochenen Aufgaben; Schaltflächen lassen sich wieder mit der
