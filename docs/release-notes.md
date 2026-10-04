@@ -9,7 +9,8 @@ fliegt, geht zur Schule, verdient Münzen, kauft im Katzenladen ein und schmück
 ## Neu in dieser Version
 
 - Vitest und die Testabdeckung wurden auf Version 5.0.3 aktualisiert.
-- Beim Wechsel zwischen zwei Tabs bleibt jetzt auch der noch ungespeicherte Spielstand erhalten.
+- Nur ein Tab kann gleichzeitig spielen. Ein zweiter wartet, bis das erste Spiel geschlossen ist, und
+  lädt dann dessen letzten Spielstand.
 - Die Schule verwirft Antworten aus abgebrochenen Aufgaben; Schaltflächen lassen sich wieder mit der
   Tastatur bedienen. Überschüssige Herzen zählen für das nächste Katzenbaby weiter.
 - Der Release-Ablauf prüft vor der Veröffentlichung, dass der Tag auf `main` liegt und neuer als die

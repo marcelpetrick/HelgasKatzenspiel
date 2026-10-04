@@ -85,8 +85,8 @@ Kampf, kein Krieg.
 - [x] Speichern (S) und Laden des ganzen Spielstands; beim Verlassen der Seite wird auch gespeichert.
 - [x] Pro Browser immer weiterspielen: das Spiel speichert sich alle 15 Sekunden von selbst (auch in
       Firefox); „🔄 Neues Spiel“ in der Hilfe (H) fängt nach einer Rückfrage ganz von vorne an.
-- [x] Zwei Tabs mit dem Spiel überschreiben sich nicht: nur der zuletzt gestartete speichert, der andere
-      zeigt „Das Spiel läuft jetzt in einem anderen Fenster weiter“ und „Hier weiterspielen“.
+- [x] Nur ein Tab spielt gleichzeitig: Ein zweiter Tab wartet, solange das Spiel im ersten offen ist.
+      Erst nach dem Schließen des ersten Tabs kann er den zuletzt gespeicherten Stand starten.
 - [x] Nach hinten/vorne laufen (↑ ↓).
 - [x] Katze hochnehmen (N) und mit ihr fliegen.
 - [x] Katzen-Editor (M): Name, zwölf Farben (auch Grün, Blau, Lila), Größe von winzig bis riesig.

@@ -71,7 +71,7 @@ It is designed together with Helga, who decides what goes in; her wishes are col
 | S / T / H | save the game / sound on or off / hide or show the list of keys                                         |
 | Esc       | close a menu                                                                                            |
 
-The number keys and Enter on the number pad work too. The game saves itself every 15 seconds and when the page is closed, so each browser simply continues where it left off (with two tabs open, only the one played last keeps the game); “🔄 Neues Spiel” in the key list starts over.
+The number keys and Enter on the number pad work too. The game saves itself every 15 seconds and when the page is closed, so each browser continues where it left off. Only one tab can play at a time: a second tab waits until the first is closed, then starts from its latest save. “🔄 Neues Spiel” in the key list starts over.
 
 **The world.** A long garden with no fences: the school on the left, the girl's house and the cat
 shop, a meadow, a wood with hiding bushes, and far to the right a beach with the sea, palm trees and

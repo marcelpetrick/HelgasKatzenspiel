@@ -50,7 +50,7 @@ const KEYS = new Set([
 
 /** How often the running game saves itself, in milliseconds. */
 const AUTOSAVE_MS = 15_000;
-const RESUME_KEY = 'helgas-katzenspiel/resume-after-handoff';
+const RESUME_KEY = 'helgas-katzenspiel/resume-after-waiting';
 
 /** Keys that keep acting while held down. */
 const HOLD_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space']);
@@ -73,9 +73,11 @@ export class App {
   private started = false;
   /** Set while "Neues Spiel" reloads the page, so no save brings the old game back. */
   private resetting = false;
-  /** Another tab of this browser plays now; this one must not save over it. */
-  private elsewhere = false;
-  private readonly tabs = guardTabs((reason) => this.goneElsewhere(reason));
+  /** This tab may have loaded a scene, but it cannot play while another tab owns the lock. */
+  private blocked = false;
+  private readonly tabs = guardTabs(() => {
+    this.autosave();
+  });
   private claiming = false;
   private twinkleIn = 0;
   private lastClick = 0;
@@ -90,7 +92,7 @@ export class App {
     this.world = new World(this.engine, this.game);
     this.hud = new Hud(ui, this.game, () => {
       this.sound.play('click');
-      this.newGame();
+      void this.newGame();
     });
     this.shop = new ShopMenu(ui, this.game, (action) => {
       this.onShop(action);
@@ -165,7 +167,7 @@ export class App {
   }
 
   private onKey(e: KeyboardEvent): void {
-    if (!KEYS.has(e.code) || this.elsewhere) return;
+    if (!KEYS.has(e.code) || this.blocked) return;
     this.sound.unlock();
     // Enter and Space belong to a focused button, including "Neues Spiel" on the title screen.
     if ((e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space') && e.target instanceof Element && e.target.closest('button')) return;
@@ -275,7 +277,7 @@ export class App {
     if (saved) {
       const fresh = el('button', 'title-new', TEXT.newGame);
       fresh.addEventListener('click', () => {
-        this.newGame();
+        void this.newGame();
       });
       card.append(fresh);
     }
@@ -285,19 +287,13 @@ export class App {
 
   /** Quietly keep the running game in this browser. */
   private autosave(): void {
-    if (this.started && !this.resetting && !this.elsewhere) saveGame(this.game);
+    if (this.started && !this.resetting && !this.blocked) saveGame(this.game);
   }
 
-  /** Another tab took over: stop here and offer to come back, with that tab's newer game. */
-  private goneElsewhere(reason: 'claim' | 'reset' | 'leave'): boolean {
-    if (reason === 'leave') return !this.started || this.resetting || this.elsewhere || saveGame(this.game);
-    if (this.elsewhere || this.resetting) return true;
-    // The new tab has already loaded its scene, so it will reload after this save is acknowledged.
-    if (reason === 'claim' && this.started && !saveGame(this.game)) {
-      this.say(TEXT.saveFailed, 'nope');
-      return false;
-    }
-    this.elsewhere = true;
+  /** A second tab waits without running the scene or changing the active game. */
+  private showBusy(message: string): void {
+    if (this.blocked) return;
+    this.blocked = true;
     this.closeMenus();
     this.held.clear();
     this.pressed.clear();
@@ -306,36 +302,40 @@ export class App {
     this.ui.classList.add('on-title');
     const screen = el('div', 'title-screen');
     const card = el('div', 'title-card');
-    const back = el('button', '', TEXT.playHere);
-    back.addEventListener('click', () => {
-      // Reloading picks up the newer save; starting there takes the game back to this tab.
-      window.location.reload();
+    const retry = el('button', '', TEXT.tryAgain);
+    retry.addEventListener('click', () => {
+      this.sound.unlock();
+      void this.start();
     });
-    card.append(el('div', 'title-cats', '🐱 🐈 🐱'), el('p', '', TEXT.elsewhere), back);
+    card.append(el('div', 'title-cats', '🐱 🐈 🐱'), el('p', '', message), retry);
     screen.append(card);
     this.ui.append(screen);
     this.sound.play('door');
-    return true;
   }
 
   /** "Neues Spiel": after asking, forget the saved game and start again from the title screen. */
-  private newGame(): void {
+  private async newGame(): Promise<void> {
+    if (this.claiming || this.blocked) return;
     if (!window.confirm(TEXT.newGameConfirm)) return;
+    this.claiming = true;
+    const claim = await this.tabs.claim(this.savedAtLoad);
+    this.claiming = false;
+    if (claim === 'busy' || claim === 'unavailable') {
+      this.showBusy(claim === 'busy' ? TEXT.otherTabBusy : TEXT.lockUnavailable);
+      return;
+    }
     this.resetting = true;
     clearSave();
     window.location.reload();
   }
 
   async start(): Promise<void> {
-    if (this.started || this.elsewhere || this.claiming) return;
+    if (this.started || this.claiming) return;
     this.claiming = true;
     const claim = await this.tabs.claim(this.savedAtLoad);
     this.claiming = false;
-    // Another tab may reset the game while the lock request is pending.
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (this.elsewhere) return;
-    if (claim === 'denied') {
-      this.say(TEXT.saveFailed, 'nope');
+    if (claim === 'busy' || claim === 'unavailable') {
+      this.showBusy(claim === 'busy' ? TEXT.otherTabBusy : TEXT.lockUnavailable);
       return;
     }
     if (claim === 'updated') {
@@ -348,6 +348,12 @@ export class App {
       return;
     }
     this.started = true;
+    if (this.blocked) {
+      this.blocked = false;
+      this.engine.runRenderLoop(() => {
+        this.frame(Math.min(this.engine.getDeltaTime() / 1000, 1 / 20));
+      });
+    }
     this.ui.classList.remove('on-title');
     this.ui.querySelector('.title-screen')?.remove();
   }
@@ -483,7 +489,7 @@ export class App {
 
   /** Advance one frame; exposed so tests can drive the game deterministically. */
   frame(dt: number): void {
-    if (this.elsewhere) return;
+    if (this.blocked) return;
     const has = (...codes: string[]) => codes.some((c) => this.held.has(c));
     const was = (...codes: string[]) => codes.some((c) => this.pressed.has(c));
     const active = this.started && !this.menuOpen;
